@@ -39,18 +39,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <Card className="w-full max-w-md shadow-xl border-none">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md shadow-2xl border-border bg-card">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
-              <Heart className="text-white w-6 h-6 fill-white" />
+              <Heart className="text-primary-foreground w-6 h-6 fill-current" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">
+          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
             {isSignUp ? "Join Nomance" : "Welcome Back"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {isSignUp 
               ? "Start your journey towards meaningful connection." 
               : "Enter your credentials to continue your search."}
@@ -59,7 +59,7 @@ export default function AuthPage() {
         <form onSubmit={handleAuth}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email" className="text-foreground">Email address</Label>
               <Input 
                 id="email" 
                 type="email" 
@@ -67,28 +67,30 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-foreground">Password</Label>
               <Input 
                 id="password" 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
+                className="bg-background border-border"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full h-12 text-lg" disabled={loading}>
+            <Button className="w-full h-12 text-lg font-bold" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSignUp ? "Create Account" : "Sign In"}
             </Button>
             <button 
               type="button"
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-primary hover:underline font-medium"
+              className="text-sm text-primary hover:underline font-semibold"
             >
               {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
             </button>

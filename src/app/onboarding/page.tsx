@@ -98,55 +98,57 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-2xl">
         {/* Progress Bar */}
         <div className="flex justify-between mb-8 px-2">
           {STEPS.map((s, i) => (
             <div key={s.id} className="flex flex-col items-center gap-2">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
-                i <= step ? "bg-primary border-primary text-white" : "bg-white border-slate-200 text-slate-400"
+                i <= step ? "bg-primary border-primary text-primary-foreground" : "bg-card border-border text-muted-foreground"
               }`}>
                 {i < step ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
               </div>
-              <span className={`text-xs font-medium hidden sm:block ${i <= step ? "text-primary" : "text-slate-400"}`}>
+              <span className={`text-xs font-medium hidden sm:block ${i <= step ? "text-primary" : "text-muted-foreground"}`}>
                 {s.title}
               </span>
             </div>
           ))}
         </div>
 
-        <Card className="shadow-xl border-none">
+        <Card className="shadow-2xl border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-2xl">{STEPS[step].title}</CardTitle>
-            <CardDescription>{STEPS[step].description}</CardDescription>
+            <CardTitle className="text-2xl text-foreground">{STEPS[step].title}</CardTitle>
+            <CardDescription className="text-muted-foreground">{STEPS[step].description}</CardDescription>
           </CardHeader>
           <CardContent className="min-h-[300px]">
             {step === 0 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label className="text-foreground">Full Name</Label>
                   <Input 
                     placeholder="Jane Doe" 
                     value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                    className="bg-background border-border"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Birth Date</Label>
+                  <Label className="text-foreground">Birth Date</Label>
                   <Input 
                     type="date" 
                     value={formData.birth_date}
                     onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
+                    className="bg-background border-border"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Gender</Label>
+                  <Label className="text-foreground">Gender</Label>
                   <Select 
                     value={formData.gender}
                     onValueChange={(val) => setFormData({...formData, gender: val})}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background border-border">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -167,10 +169,10 @@ export default function OnboardingPage() {
                     key={intent.value}
                     onClick={() => setFormData({...formData, intent: intent.value})}
                     className={`p-4 rounded-xl border-2 text-left transition-all hover:border-primary/50 ${
-                      formData.intent === intent.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-slate-100"
+                      formData.intent === intent.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-background"
                     }`}
                   >
-                    <div className="font-bold text-lg">{intent.label}</div>
+                    <div className="font-bold text-lg text-foreground">{intent.label}</div>
                     <div className="text-sm text-muted-foreground">{intent.description}</div>
                   </button>
                 ))}
@@ -180,22 +182,26 @@ export default function OnboardingPage() {
             {step === 2 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Bio</Label>
+                  <Label className="text-foreground">Bio</Label>
                   <Textarea 
                     placeholder="Tell us about yourself and what you're looking for..." 
-                    className="h-32"
+                    className="h-32 bg-background border-border"
                     value={formData.bio}
                     onChange={(e) => setFormData({...formData, bio: e.target.value})}
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label>Select 3-5 core values</Label>
+                  <Label className="text-foreground">Select 3-5 core values</Label>
                   <div className="flex flex-wrap gap-2">
                     {VALUES.map((val) => (
                       <Badge
                         key={val}
                         variant={formData.selectedValues.includes(val) ? "default" : "outline"}
-                        className="px-4 py-2 text-sm cursor-pointer hover:bg-primary/10 transition-colors"
+                        className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                          formData.selectedValues.includes(val) 
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-background border-border text-muted-foreground hover:bg-secondary/20"
+                        }`}
                         onClick={() => toggleValue(val)}
                       >
                         {val}
@@ -208,34 +214,34 @@ export default function OnboardingPage() {
 
             {step === 3 && (
               <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
-                <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
-                  <Heart className="w-10 h-10 text-green-600 fill-green-600" />
+                <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center">
+                  <Heart className="w-10 h-10 text-primary fill-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2">You're all set!</h3>
+                  <h3 className="text-xl font-bold mb-2 text-foreground">You're all set!</h3>
                   <p className="text-muted-foreground">
                     We've captured your intent. Now we'll show you high-quality matches based on your values.
                   </p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-lg text-sm text-slate-500 italic max-w-sm">
+                <div className="bg-secondary/20 p-4 rounded-lg text-sm text-primary italic max-w-sm">
                   "Remember: Nomance only shows you a few matches per day. Take your time with each one."
                 </div>
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex justify-between border-t pt-6">
-            <Button variant="ghost" onClick={handleBack} disabled={step === 0}>
+          <CardFooter className="flex justify-between border-t border-border pt-6">
+            <Button variant="ghost" onClick={handleBack} disabled={step === 0} className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
             {step === STEPS.length - 1 ? (
-              <Button onClick={handleSubmit} disabled={loading}>
+              <Button onClick={handleSubmit} disabled={loading} className="font-bold">
                 {loading ? "Creating Profile..." : "Start Discovery"}
               </Button>
             ) : (
               <Button onClick={handleNext} disabled={
                 (step === 0 && (!formData.full_name || !formData.birth_date || !formData.gender)) ||
                 (step === 1 && !formData.intent)
-              }>
+              } className="font-bold">
                 Continue <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}

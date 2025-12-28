@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Send, Sparkles, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
@@ -59,7 +58,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
 
     fetchData();
 
-    // Realtime subscription (simplified)
+    // Realtime subscription
     const channel = supabase
       .channel(`match:${matchId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `match_id=eq.${matchId}` }, payload => {
@@ -97,51 +96,51 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
       <main className="flex-grow pt-24 pb-6 flex flex-col container mx-auto px-4 max-w-4xl">
         {/* Chat Header */}
-        <header className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between mb-6">
+        <header className="bg-card p-4 rounded-2xl shadow-sm border border-border flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10">
+            <Avatar className="w-10 h-10 border border-primary/10">
               <AvatarImage src={matchInfo?.otherProfile?.avatar_url || `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop`} />
-              <AvatarFallback>{matchInfo?.otherProfile?.full_name?.[0]}</AvatarFallback>
+              <AvatarFallback className="bg-secondary text-primary">{matchInfo?.otherProfile?.full_name?.[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="font-bold text-slate-900 flex items-center gap-1">
+              <h2 className="font-bold text-foreground flex items-center gap-1">
                 {matchInfo?.otherProfile?.full_name}
-                <ShieldCheck className="w-3 h-3 text-blue-500" />
+                <ShieldCheck className="w-3 h-3 text-primary fill-primary" />
               </h2>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                Looking for: <span className="font-medium text-primary uppercase tracking-tighter">{matchInfo?.otherProfile?.intent.replace('_', ' ')}</span>
+                Looking for: <span className="font-bold text-primary uppercase tracking-tighter">{matchInfo?.otherProfile?.intent.replace('_', ' ')}</span>
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] text-slate-400 border-slate-200">
+          <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
             High Intent Match
           </Badge>
         </header>
 
         {/* Message Bubble Area */}
-        <div className="flex-grow bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col mb-4">
+        <div className="flex-grow bg-card rounded-3xl shadow-sm border border-border overflow-hidden flex flex-col mb-4">
           <div className="flex-grow overflow-y-auto p-6 space-y-4">
             {messages.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-6 max-w-sm mx-auto">
-                <div className="p-4 bg-primary/5 rounded-2xl">
+                <div className="p-4 bg-accent/20 rounded-2xl">
                   <Sparkles className="w-8 h-8 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg mb-2">Break the shallow ice</h3>
+                  <h3 className="font-bold text-lg mb-2 text-foreground">Break the shallow ice</h3>
                   <p className="text-sm text-muted-foreground">
-                    Meaningful conversations start with curiosity. Try one of these context-aware starters based on their values:
+                    Meaningful conversations start with curiosity. Try one of these context-aware starters:
                   </p>
                 </div>
                 <div className="space-y-2 w-full">
@@ -149,7 +148,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
                     <button 
                       key={i}
                       onClick={() => setNewMessage(s)}
-                      className="w-full text-left p-3 text-sm rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-100 text-slate-700"
+                      className="w-full text-left p-3 text-sm rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors border border-border text-foreground"
                     >
                       "{s}"
                     </button>
@@ -163,10 +162,10 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
                 key={msg.id}
                 className={`flex ${msg.sender_id === user?.id ? "justify-end" : "justify-start"}`}
               >
-                <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${
+                <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-medium ${
                   msg.sender_id === user?.id 
-                    ? "bg-primary text-white rounded-tr-none" 
-                    : "bg-slate-100 text-slate-900 rounded-tl-none"
+                    ? "bg-primary text-primary-foreground rounded-tr-none" 
+                    : "bg-secondary/30 text-foreground rounded-tl-none border border-border"
                 }`}>
                   {msg.content}
                 </div>
@@ -175,21 +174,21 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t bg-slate-50">
+          <div className="p-4 border-t border-border bg-secondary/10">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <Input 
                 placeholder="Message with intent..." 
-                className="bg-white rounded-xl h-12 border-none shadow-inner"
+                className="bg-background rounded-xl h-12 border-border shadow-inner"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
-              <Button type="submit" size="icon" className="h-12 w-12 rounded-xl shrink-0">
-                <Send className="w-5 h-5" />
+              <Button type="submit" size="icon" className="h-12 w-12 rounded-xl shrink-0 bg-primary hover:bg-primary/90">
+                <Send className="w-5 h-5 text-primary-foreground" />
               </Button>
             </form>
             <div className="flex items-center gap-1 mt-2 px-1">
-              <AlertCircle className="w-3 h-3 text-slate-300" />
-              <span className="text-[10px] text-slate-400 italic">Respectful behavior increases your Quality Score.</span>
+              <AlertCircle className="w-3 h-3 text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground italic">Respectful behavior increases your Quality Score.</span>
             </div>
           </div>
         </div>
