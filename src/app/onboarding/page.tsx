@@ -218,13 +218,13 @@ export default function OnboardingPage() {
                   <Heart className="w-10 h-10 text-primary fill-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2 text-foreground">You're all set!</h3>
-                  <p className="text-muted-foreground">
-                    We've captured your intent. Now we'll show you high-quality matches based on your values.
-                  </p>
-                </div>
-                <div className="bg-secondary/20 p-4 rounded-lg text-sm text-primary italic max-w-sm">
-                  "Remember: Nomance only shows you a few matches per day. Take your time with each one."
+                <h3 className="text-xl font-bold mb-2 text-foreground">You&apos;re all set!</h3>
+                    <p className="text-muted-foreground">
+                      We&apos;ve captured your intent. Now we&apos;ll show you high-quality matches based on your values.
+                    </p>
+                  </div>
+                  <div className="bg-secondary/20 p-4 rounded-lg text-sm text-primary italic max-w-sm">
+                    &quot;Remember: Nomance only shows you a few matches per day. Take your time with each one.&quot;
                 </div>
               </div>
             )}

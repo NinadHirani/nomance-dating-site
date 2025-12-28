@@ -2,11 +2,20 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Heart, User } from "lucide-react";
+import { Heart, User, Sparkles, Users, Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 export function Navbar() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/discovery", label: "Discovery" },
+    { href: "/matches", label: "Matches" },
+    { href: "/events", label: "Events" },
+    { href: "/coach", label: "Coach" },
+  ];
 
   return (
     <nav className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-md z-50">
@@ -16,31 +25,76 @@ export function Navbar() {
           <span className="text-xl font-bold tracking-tighter text-foreground">NOMANCE</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/discovery" className={`text-sm font-bold transition-colors hover:text-primary ${pathname === '/discovery' ? 'text-primary' : 'text-muted-foreground'}`}>
-            Discovery
-          </Link>
-          <Link href="/matches" className={`text-sm font-bold transition-colors hover:text-primary ${pathname === '/matches' ? 'text-primary' : 'text-muted-foreground'}`}>
-            Matches
-          </Link>
-          <Link href="/messages" className={`text-sm font-bold transition-colors hover:text-primary ${pathname.startsWith('/messages') ? 'text-primary' : 'text-muted-foreground'}`}>
-            Messages
-          </Link>
+        <div className="hidden md:flex items-center gap-6">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.href}
+              href={link.href} 
+              className={`text-sm font-bold transition-colors hover:text-primary ${
+                pathname === link.href || pathname.startsWith(link.href + '/') 
+                  ? 'text-primary' 
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Link href="/coach" className="hidden sm:flex">
+            <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-primary hover:bg-secondary/20">
+              <Sparkles className="w-4 h-4 mr-1" />
+              AI Coach
+            </Button>
+          </Link>
           <Link href="/onboarding">
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/20">
               <User className="w-5 h-5 text-foreground" />
             </Button>
           </Link>
-          <Link href="/auth">
+          <Link href="/auth" className="hidden sm:block">
             <Button variant="default" className="rounded-full px-6 font-bold shadow-md shadow-primary/20">
               Get Started
             </Button>
           </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden rounded-full"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </Button>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md">
+          <div className="container mx-auto px-4 py-4 space-y-2">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block py-3 px-4 rounded-xl text-sm font-bold transition-colors ${
+                  pathname === link.href || pathname.startsWith(link.href + '/') 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'text-foreground hover:bg-secondary/20'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full mt-4 rounded-full font-bold">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

@@ -4,18 +4,28 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, X, Info, ShieldCheck, MapPin, Calendar, Loader2 } from "lucide-react";
+import { Heart, X, Info, ShieldCheck, MapPin, Calendar, Loader2, MessageCircle, Sparkles, Coffee } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+
+const MOODS = [
+  { id: "talking", label: "Talking", icon: MessageCircle, description: "Deep conversations from home", color: "bg-blue-500/10 text-blue-600 border-blue-200" },
+  { id: "meeting", label: "Meeting", icon: Coffee, description: "Ready to meet in person", color: "bg-green-500/10 text-green-600 border-green-200" },
+  { id: "vibing", label: "Vibing", icon: Sparkles, description: "Casual energy, see what happens", color: "bg-purple-500/10 text-purple-600 border-purple-200" },
+];
 
 export default function DiscoveryPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [moodMatching, setMoodMatching] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +33,6 @@ export default function DiscoveryPage() {
       if (!user) return;
       setUser(user);
 
-      // Check daily discovery count
       const today = new Date().toISOString().split('T')[0];
       const { count } = await supabase
         .from("discovery_history")
@@ -37,8 +46,9 @@ export default function DiscoveryPage() {
         return;
       }
 
-      // Fetch potential matches
-      const { data: userProfile } = await supabase.from("profiles").select("intent").eq("id", user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setUserProfile(profile);
+      setSelectedMood(profile?.mood || "talking");
       
       const { data: discoveredIds } = await supabase
         .from("discovery_history")
@@ -51,7 +61,7 @@ export default function DiscoveryPage() {
         .from("profiles")
         .select("*")
         .not("id", "in", `(${excludedIds.join(',')})`)
-        .eq("intent", userProfile?.intent)
+        .eq("intent", profile?.intent)
         .limit(5);
 
       if (error) {
@@ -64,6 +74,35 @@ export default function DiscoveryPage() {
 
     fetchData();
   }, []);
+
+  const handleMoodChange = async (mood: string) => {
+    if (!user) return;
+    setSelectedMood(mood);
+    setMoodMatching(true);
+
+    await supabase.from("profiles").update({ mood }).eq("id", user.id);
+
+    const { data: discoveredIds } = await supabase
+      .from("discovery_history")
+      .select("discovered_user_id")
+      .eq("user_id", user.id);
+
+    const excludedIds = [user.id, ...(discoveredIds?.map(d => d.discovered_user_id) || [])];
+
+    const { data: moodMatches } = await supabase
+      .from("profiles")
+      .select("*")
+      .not("id", "in", `(${excludedIds.join(',')})`)
+      .eq("mood", mood)
+      .eq("intent", userProfile?.intent)
+      .limit(5);
+
+    setProfiles(moodMatches || []);
+    setCurrentIndex(0);
+    setDailyLimitReached(false);
+    setMoodMatching(false);
+    toast.success(`Now matching with people who feel like ${mood}!`);
+  };
 
   const handleAction = async (action: 'like' | 'skip') => {
     const targetProfile = profiles[currentIndex];
@@ -121,13 +160,51 @@ export default function DiscoveryPage() {
       
       <main className="container mx-auto px-4 pt-24 pb-12 flex flex-col items-center">
         <div className="max-w-xl w-full">
+          {/* Mood Selector */}
+          <div className="mb-8">
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 text-center">How do you feel today?</h3>
+            <div className="flex justify-center gap-3">
+              {MOODS.map((mood) => (
+                <button
+                  key={mood.id}
+                  onClick={() => handleMoodChange(mood.id)}
+                  disabled={moodMatching}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${
+                    selectedMood === mood.id 
+                      ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" 
+                      : "border-border bg-card hover:border-primary/30"
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${mood.color}`}>
+                    <mood.icon className="w-6 h-6" />
+                  </div>
+                  <span className={`font-bold text-sm ${selectedMood === mood.id ? "text-primary" : "text-foreground"}`}>
+                    {mood.label}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground max-w-[80px] text-center leading-tight">
+                    {mood.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <header className="mb-8 text-center">
             <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">Daily Batch</h1>
             <p className="text-muted-foreground">Focus on quality. You have {5 - (dailyLimitReached ? 5 : currentIndex)} matches left today.</p>
           </header>
 
           <AnimatePresence mode="wait">
-            {dailyLimitReached || profiles.length === 0 ? (
+            {moodMatching ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-20"
+              >
+                <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Finding people in the same mood...</p>
+              </motion.div>
+            ) : dailyLimitReached || profiles.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -136,11 +213,19 @@ export default function DiscoveryPage() {
                 <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Calendar className="w-8 h-8 text-primary" />
                 </div>
-                <h2 className="text-2xl font-bold mb-3 text-foreground">You've reached your limit</h2>
+                <h2 className="text-2xl font-bold mb-3 text-foreground">
+                  {profiles.length === 0 ? "No matches in this mood" : "You've reached your limit"}
+                </h2>
                 <p className="text-muted-foreground max-w-xs mx-auto mb-8">
-                  Taking time to reflect on matches leads to better outcomes. Check back tomorrow for your next batch.
+                  {profiles.length === 0 
+                    ? "Try a different mood or check back later when more people are online."
+                    : "Taking time to reflect on matches leads to better outcomes. Check back tomorrow for your next batch."}
                 </p>
-                <Button variant="outline" className="rounded-full px-8 border-primary text-primary hover:bg-primary/10">View My Matches</Button>
+                <Link href="/matches">
+                  <Button variant="outline" className="rounded-full px-8 border-primary text-primary hover:bg-primary/10">
+                    View My Matches
+                  </Button>
+                </Link>
               </motion.div>
             ) : (
               <motion.div
@@ -157,13 +242,20 @@ export default function DiscoveryPage() {
                       alt={profiles[currentIndex].full_name}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-4 left-4 flex gap-2">
+                    <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
                       <Badge className="bg-background/90 text-foreground backdrop-blur-md border-none px-3 py-1">
                         <ShieldCheck className="w-3 h-3 mr-1 text-primary fill-primary" /> Verified
                       </Badge>
                       <Badge className="bg-primary text-primary-foreground backdrop-blur-md border-none px-3 py-1">
-                        {profiles[currentIndex].intent.replace('_', ' ')}
+                        {profiles[currentIndex].intent?.replace('_', ' ')}
                       </Badge>
+                      {profiles[currentIndex].mood && (
+                        <Badge className={`backdrop-blur-md border-none px-3 py-1 ${
+                          MOODS.find(m => m.id === profiles[currentIndex].mood)?.color || "bg-secondary text-primary"
+                        }`}>
+                          {MOODS.find(m => m.id === profiles[currentIndex].mood)?.label || profiles[currentIndex].mood}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   
@@ -171,7 +263,7 @@ export default function DiscoveryPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <CardTitle className="text-3xl font-bold text-foreground">
-                          {profiles[currentIndex].full_name}, {new Date().getFullYear() - new Date(profiles[currentIndex].birth_date).getFullYear()}
+                          {profiles[currentIndex].full_name}, {profiles[currentIndex].birth_date ? new Date().getFullYear() - new Date(profiles[currentIndex].birth_date).getFullYear() : '?'}
                         </CardTitle>
                         <div className="flex items-center text-muted-foreground mt-1 gap-1">
                           <MapPin className="w-4 h-4 text-primary" />
@@ -188,20 +280,22 @@ export default function DiscoveryPage() {
                     <div>
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">About Me</h4>
                       <p className="text-foreground leading-relaxed">
-                        {profiles[currentIndex].bio}
+                        {profiles[currentIndex].bio || "No bio yet."}
                       </p>
                     </div>
 
-                    <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Core Values</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {profiles[currentIndex].values?.map((val: string) => (
-                          <Badge key={val} variant="secondary" className="bg-secondary/30 text-primary border-none px-3 py-1">
-                            {val}
-                          </Badge>
-                        ))}
+                    {profiles[currentIndex].values && profiles[currentIndex].values.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Core Values</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {profiles[currentIndex].values.map((val: string) => (
+                            <Badge key={val} variant="secondary" className="bg-secondary/30 text-primary border-none px-3 py-1">
+                              {val}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </CardContent>
 
                   <CardFooter className="grid grid-cols-2 gap-4 p-6 pt-0">
