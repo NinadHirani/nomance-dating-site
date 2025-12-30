@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
         <div className="max-w-2xl mx-auto px-4">
             <div className="h-16 flex items-center justify-between">
               {/* Desktop Navigation Tabs */}
-              <div className="hidden md:flex flex-1 items-center gap-6">
+              <div className="hidden md:flex w-full items-center justify-between">
                 {navLinks.map((link) => (
                   <Link 
                     key={link.href}
@@ -74,15 +74,6 @@ import { Button } from "@/components/ui/button";
                     )}
                   </Link>
                 ))}
-              </div>
-
-              <div className="hidden md:flex items-center gap-3">
-                <Link href="/coach">
-                  <Button variant="default" size="sm" className="items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-primary hover:opacity-90 border-none shadow-lg shadow-primary/20 font-black px-4 text-[9px] tracking-widest uppercase h-9">
-                    <Sparkles className="w-3 h-3" />
-                    Ask AI
-                  </Button>
-                </Link>
               </div>
             </div>
         </div>
