@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, User } from "lucide-react";
+import { User } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { supabase } from "@/lib/supabase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,12 +29,14 @@ export function Header() {
     <header className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-xl z-50">
       <div className="max-w-2xl mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-              <Heart className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground fill-primary-foreground" />
-            </div>
-            <span className="text-lg md:text-xl font-black tracking-tighter text-foreground">NOMANCE</span>
-          </Link>
+            <Link href="/" className="flex items-center gap-2 group">
+              <img 
+                src="/logo.svg" 
+                alt="Nomance Logo" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform" 
+              />
+              <span className="text-lg md:text-xl font-black tracking-tighter text-foreground">NOMANCE</span>
+            </Link>
 
             <div className="flex items-center gap-2">
               <ModeToggle />
