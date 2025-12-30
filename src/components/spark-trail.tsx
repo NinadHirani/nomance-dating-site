@@ -36,7 +36,7 @@ export function SparkTrail() {
         this.speedX = (Math.random() - 0.5) * 0.8; // Reduced spread
         this.speedY = (Math.random() - 0.5) * 0.8; // Reduced spread
         this.opacity = 1;
-        this.decay = 0.008; // Approximately 2 seconds at 60fps
+        this.decay = 0.016; // Approximately 1 second at 60fps
         
         // Romantic colors: Reds, Pinks, Purples, White
         const colors = ["#ff4d4d", "#ff7eb9", "#ff007f", "#e0aaff", "#ffffff"];
