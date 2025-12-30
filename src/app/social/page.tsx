@@ -303,7 +303,10 @@ export default function SocialPage() {
                 </CardContent>
 
                   <CardFooter className="p-6 pt-0 flex flex-col gap-6">
-                    <div className="flex items-center justify-center w-full">
+                    <div className="flex flex-col items-center justify-center w-full gap-4">
+                      {/* Interaction Hub Label */}
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Align Frequencies</span>
+                      
                       {/* Extraordinary Interaction Hub */}
                       <div className="flex items-center gap-6 p-2 bg-card/80 rounded-[2.5rem] border border-border backdrop-blur-3xl shadow-2xl">
                         <motion.button
