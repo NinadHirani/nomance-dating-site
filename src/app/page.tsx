@@ -171,7 +171,7 @@ export default function Home() {
         <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <main className="container mx-auto px-4 pt-24 max-w-2xl relative z-10">
+      <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl relative z-10">
         {/* Stories: Extraordinary "Pulse" Design */}
         <div className="flex gap-6 overflow-x-auto pb-8 mb-8 no-scrollbar scroll-smooth">
           <motion.button 

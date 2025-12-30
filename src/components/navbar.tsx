@@ -18,7 +18,7 @@ export function Navbar() {
     ];
 
   return (
-    <nav className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-md z-50">
+    <nav className="fixed bottom-0 w-full border-t border-border bg-background/80 backdrop-blur-md z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
@@ -39,7 +39,7 @@ export function Navbar() {
               }`}
             >
               {link.label}
-              <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full ${
+              <span className={`absolute -top-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full ${
                 pathname === link.href || pathname.startsWith(link.href + '/') ? 'w-full' : ''
               }`} />
             </Link>
@@ -69,9 +69,9 @@ export function Navbar() {
           </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Now expanding upwards */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md">
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md absolute bottom-full left-0 w-full mb-0 shadow-2xl">
           <div className="container mx-auto px-4 py-4 space-y-2">
               {navLinks.map((link) => (
                 <Link 

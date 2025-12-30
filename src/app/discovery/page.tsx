@@ -166,7 +166,7 @@ export default function DiscoveryPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 pt-24 pb-12 flex flex-col items-center">
+      <main className="container mx-auto px-4 pt-12 pb-24 flex flex-col items-center">
         <div className="max-w-xl w-full">
           {/* Mood Selector */}
           <div className="mb-8">

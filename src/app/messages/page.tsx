@@ -103,7 +103,7 @@ export default function MessagesListPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-2xl">
+      <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl">
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Messages</h1>
