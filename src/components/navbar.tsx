@@ -32,11 +32,21 @@ import { Button } from "@/components/ui/button";
                     : 'text-muted-foreground'
                 }`}
               >
-                <link.icon className="w-4 h-4" />
-                {link.label}
-                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full ${
-                  pathname === link.href || pathname.startsWith(link.href + '/') ? 'w-full' : ''
-                }`} />
+                {link.label === "Search" ? (
+                  <div className="p-2 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-lg shadow-pink-500/20 group-hover:scale-110 transition-transform">
+                    <link.icon className="w-5 h-5 text-white" />
+                  </div>
+                ) : (
+                  <>
+                    <link.icon className="w-4 h-4" />
+                    {link.label}
+                  </>
+                )}
+                {link.label !== "Search" && (
+                  <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full ${
+                    pathname === link.href || pathname.startsWith(link.href + '/') ? 'w-full' : ''
+                  }`} />
+                )}
               </Link>
             ))}
           </div>
@@ -47,13 +57,21 @@ import { Button } from "@/components/ui/button";
               <Link 
                 key={link.href}
                 href={link.href} 
-                className={`p-2 transition-all ${
-                  pathname === link.href || pathname.startsWith(link.href + '/') 
-                    ? 'text-primary scale-110' 
-                    : 'text-muted-foreground hover:text-foreground'
+                className={`transition-all ${
+                  link.label === "Search" 
+                    ? "" 
+                    : pathname === link.href || pathname.startsWith(link.href + '/') 
+                      ? "text-primary scale-110" 
+                      : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <link.icon className="w-6 h-6" />
+                {link.label === "Search" ? (
+                  <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-xl shadow-pink-500/30 -translate-y-2 active:scale-95 transition-all">
+                    <link.icon className="w-7 h-7 text-white" />
+                  </div>
+                ) : (
+                  <link.icon className="w-6 h-6" />
+                )}
               </Link>
             ))}
           </div>
