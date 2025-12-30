@@ -169,6 +169,99 @@ export default function SocialPage() {
       </div>
 
       <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl relative z-10">
+        {/* Stories & Quick Emit */}
+        <div className="mb-12 space-y-8">
+          {/* Stories */}
+          <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => toast.info("Coming soon: Shared Moments")}
+              className="flex flex-col items-center gap-2 shrink-0 group"
+            >
+              <div className="w-16 h-16 rounded-3xl bg-secondary/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center p-1 transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
+                <div className="w-full h-full rounded-2xl bg-secondary/10 flex items-center justify-center">
+                  <Plus className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Add Vibe</span>
+            </motion.button>
+
+            {stories.map((group, idx) => (
+              <motion.button 
+                key={idx}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setSelectedStory(group);
+                  setStoryIndex(0);
+                }}
+                className="flex flex-col items-center gap-2 shrink-0 group"
+              >
+                <div className="w-16 h-16 rounded-3xl p-1 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-xl shadow-primary/10">
+                  <div className="w-full h-full rounded-2xl border-4 border-background overflow-hidden">
+                    <Avatar className="w-full h-full rounded-none">
+                      <AvatarImage src={group.user?.avatar_url} className="object-cover" />
+                      <AvatarFallback className="bg-secondary rounded-none">{group.user?.full_name?.[0]}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                <span className="text-[8px] font-black uppercase tracking-widest text-foreground truncate w-16 text-center">
+                  {group.user?.full_name?.split(' ')[0]}
+                </span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Create Post */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="bg-card/50 border-border backdrop-blur-2xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+              <CardContent className="p-6 flex items-center gap-6">
+                <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" className="flex-1 justify-start text-muted-foreground hover:bg-accent rounded-2xl h-12 px-6 font-bold tracking-tight italic">
+                      What&apos;s your current frequency?
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] bg-background border-border text-foreground rounded-[2rem]">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black italic tracking-tighter">SHARE ENERGY</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 py-6">
+                      <Textarea 
+                        placeholder="Manifest your thoughts..." 
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        className="min-h-[150px] bg-accent/50 border-border rounded-2xl focus:ring-primary"
+                      />
+                      <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-2">Visual Aura (URL)</label>
+                        <Input 
+                          placeholder="https://aura.link/..." 
+                          value={newPostImage}
+                          onChange={(e) => setNewPostImage(e.target.value)}
+                          className="bg-accent/50 border-border rounded-xl h-12"
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={createPost} className="w-full rounded-2xl h-14 font-black text-lg bg-gradient-to-r from-primary to-purple-600 border-none shadow-xl shadow-primary/20">EMIT FREQUENCY</Button>
+                  </DialogContent>
+                </Dialog>
+                <Button variant="ghost" size="icon" className="rounded-2xl w-12 h-12 bg-accent/50 hover:bg-primary/20 text-primary transition-all">
+                  <Zap className="w-6 h-6 fill-current" />
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
         {/* Feed: Extraordinary "Asymmetric" Design */}
         <div className="space-y-12">
           {posts.map((post, idx) => (
@@ -268,99 +361,6 @@ export default function SocialPage() {
               </Card>
             </motion.div>
           ))}
-        </div>
-
-        {/* Stories & Create Post Moved to Bottom (Footer Section) */}
-        <div className="mt-16 space-y-12 border-t border-border pt-16">
-          {/* Stories */}
-          <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => toast.info("Coming soon: Shared Moments")}
-              className="flex flex-col items-center gap-2 shrink-0 group"
-            >
-              <div className="w-16 h-16 rounded-3xl bg-secondary/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center p-1 transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
-                <div className="w-full h-full rounded-2xl bg-secondary/10 flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Add Vibe</span>
-            </motion.button>
-
-            {stories.map((group, idx) => (
-              <motion.button 
-                key={idx}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setSelectedStory(group);
-                  setStoryIndex(0);
-                }}
-                className="flex flex-col items-center gap-2 shrink-0 group"
-              >
-                <div className="w-16 h-16 rounded-3xl p-1 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-xl shadow-primary/10">
-                  <div className="w-full h-full rounded-2xl border-4 border-background overflow-hidden">
-                    <Avatar className="w-full h-full rounded-none">
-                      <AvatarImage src={group.user?.avatar_url} className="object-cover" />
-                      <AvatarFallback className="bg-secondary rounded-none">{group.user?.full_name?.[0]}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-foreground truncate w-16 text-center">
-                  {group.user?.full_name?.split(' ')[0]}
-                </span>
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Create Post */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="bg-card/50 border-border backdrop-blur-2xl rounded-[2.5rem] overflow-hidden shadow-2xl">
-              <CardContent className="p-6 flex items-center gap-6">
-                <Avatar className="w-12 h-12 ring-2 ring-primary/20">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" className="flex-1 justify-start text-muted-foreground hover:bg-accent rounded-2xl h-12 px-6 font-bold tracking-tight italic">
-                      What&apos;s your current frequency?
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px] bg-background border-border text-foreground rounded-[2rem]">
-                    <DialogHeader>
-                      <DialogTitle className="text-2xl font-black italic tracking-tighter">SHARE ENERGY</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-6 py-6">
-                      <Textarea 
-                        placeholder="Manifest your thoughts..." 
-                        value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        className="min-h-[150px] bg-accent/50 border-border rounded-2xl focus:ring-primary"
-                      />
-                      <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-2">Visual Aura (URL)</label>
-                        <Input 
-                          placeholder="https://aura.link/..." 
-                          value={newPostImage}
-                          onChange={(e) => setNewPostImage(e.target.value)}
-                          className="bg-accent/50 border-border rounded-xl h-12"
-                        />
-                      </div>
-                    </div>
-                    <Button onClick={createPost} className="w-full rounded-2xl h-14 font-black text-lg bg-gradient-to-r from-primary to-purple-600 border-none shadow-xl shadow-primary/20">EMIT FREQUENCY</Button>
-                  </DialogContent>
-                </Dialog>
-                <Button variant="ghost" size="icon" className="rounded-2xl w-12 h-12 bg-accent/50 hover:bg-primary/20 text-primary transition-all">
-                  <Zap className="w-6 h-6 fill-current" />
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
       </main>
 
