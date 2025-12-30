@@ -13,6 +13,7 @@ export function Navbar() {
     const navLinks = [
       { href: "/discovery", label: "Discovery" },
       { href: "/social", label: "Social" },
+      { href: "/messages", label: "Messages" },
       { href: "/matches", label: "Matches" },
       { href: "/events", label: "Events" },
     ];
