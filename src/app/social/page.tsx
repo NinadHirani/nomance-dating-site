@@ -367,14 +367,18 @@ export default function SocialPage() {
 
       {/* Story Viewer: Extraordinary Immersive Design */}
       <AnimatePresence>
-        {selectedStory && (
+          {selectedStory && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-3xl flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedStory(null)}
+              className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-3xl flex items-center justify-center p-4 cursor-pointer"
             >
-              <div className="relative w-full max-w-lg aspect-[9/16] bg-card/50 rounded-[3rem] overflow-hidden shadow-2xl border border-border">
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-lg aspect-[9/16] bg-card/50 rounded-[3rem] overflow-hidden shadow-2xl border border-border cursor-default"
+              >
                 {/* Progress Bars */}
                 <div className="absolute top-8 left-8 right-8 flex gap-2 z-20">
                   {selectedStory.items.map((_: any, i: number) => (
@@ -406,9 +410,14 @@ export default function SocialPage() {
                       <span className="text-[8px] font-black uppercase tracking-widest text-primary">LIVE FREQUENCY</span>
                     </div>
                   </div>
-                  <button onClick={() => setSelectedStory(null)} className="w-10 h-10 rounded-2xl bg-accent/20 flex items-center justify-center text-foreground backdrop-blur-md">
+                  <motion.button 
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSelectedStory(null)} 
+                    className="w-10 h-10 rounded-2xl bg-foreground/10 flex items-center justify-center text-foreground backdrop-blur-md border border-foreground/10 hover:bg-foreground/20 transition-colors"
+                  >
                     <X className="w-6 h-6" />
-                  </button>
+                  </motion.button>
                 </div>
 
                 {/* Story Image */}
