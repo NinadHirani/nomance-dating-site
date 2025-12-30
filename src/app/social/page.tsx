@@ -368,13 +368,25 @@ export default function SocialPage() {
       {/* Story Viewer: Extraordinary Immersive Design */}
       <AnimatePresence>
         {selectedStory && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedStory(null)}
-              className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-2xl flex items-center justify-center p-4 cursor-pointer"
-            >
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedStory(null)}
+                className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-4 cursor-pointer"
+              >
+                {/* Global Exit Button (Large White Cross) */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setSelectedStory(null)}
+                  className="fixed top-8 right-8 z-[110] w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center text-white transition-all shadow-2xl group"
+                >
+                  <X className="w-8 h-8 transition-transform group-hover:scale-110" />
+                </motion.button>
+
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
