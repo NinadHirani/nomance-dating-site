@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Heart, User, Sparkles, Users, MessageCircle } from "lucide-react";
+import { Heart, Sparkles, Users, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export function Navbar() {
@@ -58,19 +58,14 @@ export function Navbar() {
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link href="/coach">
-              <Button variant="default" size="sm" className="hidden lg:flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-primary hover:opacity-90 border-none shadow-lg shadow-primary/20 font-black px-6 text-[10px] tracking-widest uppercase">
-                <Sparkles className="w-3 h-3" />
-                Ask AI
-              </Button>
-            </Link>
-            <Link href="/profile">
-              <Button variant="ghost" size="icon" className={`rounded-full hover:bg-secondary/20 border border-border ${pathname === '/profile' ? 'text-primary border-primary/50' : 'text-foreground'}`}>
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
+            <div className="flex items-center gap-3">
+              <Link href="/coach">
+                <Button variant="default" size="sm" className="hidden lg:flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-primary hover:opacity-90 border-none shadow-lg shadow-primary/20 font-black px-6 text-[10px] tracking-widest uppercase">
+                  <Sparkles className="w-3 h-3" />
+                  Ask AI
+                </Button>
+              </Link>
+            </div>
         </div>
       </div>
     </nav>
