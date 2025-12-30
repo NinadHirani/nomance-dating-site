@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Navbar } from "@/components/navbar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, MessageCircle, ShieldCheck, ChevronRight } from "lucide-react";
@@ -101,7 +100,7 @@ export default function MessagesListPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      
       
       <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl">
         <header className="mb-8 flex items-center justify-between">

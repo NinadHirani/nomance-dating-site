@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Navbar } from "@/components/navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +67,6 @@ export default function MatchesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
         <header className="mb-10">

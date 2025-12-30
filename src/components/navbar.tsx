@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Heart, User, Sparkles, Users, Menu, X } from "lucide-react";
+import { Heart, User, Sparkles, Users, Menu, X, MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -11,6 +11,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const navLinks = [
+      { href: "/social", label: "Social", icon: MessageCircle },
       { href: "/discovery", label: "Discovery", icon: Sparkles },
       { href: "/messages", label: "Messages", icon: MessageCircle },
       { href: "/matches", label: "Matches", icon: Heart },

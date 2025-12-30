@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -123,7 +122,7 @@ export default function CoachPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      
 
       <main className="container mx-auto px-4 pt-24 pb-12 max-w-4xl">
         <header className="mb-10 text-center">
