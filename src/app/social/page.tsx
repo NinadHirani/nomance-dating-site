@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, subYears } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Slider } from "@/components/ui/slider";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Label } from "@/components/ui/label";
 
 export default function SocialPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -24,52 +28,130 @@ export default function SocialPage() {
   const [selectedStory, setSelectedStory] = useState<any>(null);
   const [storyIndex, setStoryIndex] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001" };
-        setUser(activeUser);
+  // Filter state
+  const [ageRange, setAgeRange] = useState([18, 50]);
+  const [maxDistance, setMaxDistance] = useState(50);
+  const [selectedIntent, setSelectedIntent] = useState<string[]>(["dating", "serious", "casual"]);
 
-        const { data: postsData, error: postsError } = await supabase
-          .from("posts")
-          .select("*, profiles(id, full_name, avatar_url)")
-          .order("created_at", { ascending: false });
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001" };
+      setUser(activeUser);
 
-        if (postsError) throw postsError;
-        setPosts(postsData || []);
+      // Get current user's profile for distance filtering
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("location_lat, location_lng")
+        .eq("id", activeUser.id)
+        .single();
 
-        const { data: storiesData, error: storiesError } = await supabase
-          .from("stories")
-          .select("*, profiles(full_name, avatar_url)")
-          .gt("expires_at", new Date().toISOString())
-          .order("created_at", { ascending: true });
+      // Calculate birth date range for age filter
+      const maxDate = subYears(new Date(), ageRange[0]).toISOString().split('T')[0];
+      const minDate = subYears(new Date(), ageRange[1] + 1).toISOString().split('T')[0];
 
-        if (storiesError) throw storiesError;
-        
-        const groupedStories = (storiesData || []).reduce((acc: any, story: any) => {
-          if (!acc[story.user_id]) {
-            acc[story.user_id] = {
-              user: story.profiles,
-              items: []
-            };
-          }
-          acc[story.user_id].items.push(story);
-          return acc;
-        }, {});
-        
-        setStories(Object.values(groupedStories));
+      // Map UI intents to DB intents
+      const intentMapping: { [key: string]: string[] } = {
+        serious: ['life_partner', 'long_term'],
+        dating: ['short_term_open'],
+        casual: ['still_figuring_it_out', 'friendship']
+      };
 
-      } catch (error: any) {
-        console.error("Fetch social error:", error);
-        toast.error("Failed to load feed");
-      } finally {
-        setLoading(false);
+      const dbIntents = selectedIntent.flatMap(i => intentMapping[i] || []);
+
+      let query = supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles:user_id!inner (
+            id, 
+            full_name, 
+            avatar_url, 
+            birth_date, 
+            intent, 
+            location_lat, 
+            location_lng
+          )
+        `);
+
+      // Filtering on the joined profiles table
+      if (dbIntents.length > 0) {
+        query = query.in("profiles.intent", dbIntents);
       }
-    };
+      
+      query = query
+        .gte("profiles.birth_date", minDate)
+        .lte("profiles.birth_date", maxDate);
 
+      const { data: postsData, error: postsError } = await query
+        .order("created_at", { ascending: false });
+
+      if (postsError) throw postsError;
+
+      // Client-side distance filtering (simplest approach for now)
+      let filteredPosts = postsData || [];
+      if (currentUserProfile?.location_lat && currentUserProfile?.location_lng && maxDistance < 200) {
+        filteredPosts = filteredPosts.filter(post => {
+          const profile = post.profiles;
+          if (!profile?.location_lat || !profile?.location_lng) return true; // Keep if no location data
+          
+          const d = calculateDistance(
+            currentUserProfile.location_lat, 
+            currentUserProfile.location_lng,
+            profile.location_lat,
+            profile.location_lng
+          );
+          return d <= maxDistance;
+        });
+      }
+
+      setPosts(filteredPosts);
+
+      const { data: storiesData, error: storiesError } = await supabase
+        .from("stories")
+        .select("*, profiles(full_name, avatar_url)")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: true });
+
+      if (storiesError) throw storiesError;
+      
+      const groupedStories = (storiesData || []).reduce((acc: any, story: any) => {
+        if (!acc[story.user_id]) {
+          acc[story.user_id] = {
+            user: story.profiles,
+            items: []
+          };
+        }
+        acc[story.user_id].items.push(story);
+        return acc;
+      }, {});
+      
+      setStories(Object.values(groupedStories));
+
+    } catch (error: any) {
+      console.error("Fetch social error details:", error.message || error);
+      toast.error("Failed to load feed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  useEffect(() => {
     fetchData();
-  }, []);
+  }, [ageRange, selectedIntent]); // Re-fetch on filter change
 
   const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass', postId: string) => {
     if (!user || user.id === targetUserId) {
@@ -217,8 +299,9 @@ export default function SocialPage() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="flex gap-4"
           >
-            <Card className="bg-card/50 border-border backdrop-blur-2xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <Card className="flex-1 bg-card/50 border-border backdrop-blur-2xl rounded-[2.5rem] overflow-hidden shadow-2xl">
               <CardContent className="p-6 flex items-center gap-6">
                 <Avatar className="w-12 h-12 ring-2 ring-primary/20">
                   <AvatarImage src={user?.user_metadata?.avatar_url} />
@@ -259,6 +342,85 @@ export default function SocialPage() {
                 </Button>
               </CardContent>
             </Card>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="w-24 h-24 rounded-[2.5rem] bg-card/50 border-border backdrop-blur-2xl shadow-2xl hover:bg-accent group transition-all shrink-0">
+                  <div className="flex flex-col items-center gap-2">
+                    <SlidersHorizontal className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Filters</span>
+                  </div>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-background/95 backdrop-blur-2xl border-border w-full sm:max-w-md rounded-l-[3rem]">
+                <SheetHeader className="pb-8">
+                  <SheetTitle className="text-3xl font-black italic tracking-tighter">REFINE VIBES</SheetTitle>
+                </SheetHeader>
+                
+                <div className="space-y-12 py-6">
+                  {/* Age Filter */}
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-end px-1">
+                      <Label className="text-sm font-black uppercase tracking-widest text-muted-foreground">Age Range</Label>
+                      <span className="text-lg font-black italic tracking-tighter text-primary">{ageRange[0]} - {ageRange[1]}</span>
+                    </div>
+                    <Slider
+                      value={ageRange}
+                      onValueChange={setAgeRange}
+                      min={18}
+                      max={100}
+                      step={1}
+                      className="py-4"
+                    />
+                  </div>
+
+                  {/* Distance Filter */}
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-end px-1">
+                      <Label className="text-sm font-black uppercase tracking-widest text-muted-foreground">Max Distance</Label>
+                      <span className="text-lg font-black italic tracking-tighter text-primary">{maxDistance}km</span>
+                    </div>
+                    <Slider
+                      value={[maxDistance]}
+                      onValueChange={(vals) => setMaxDistance(vals[0])}
+                      max={200}
+                      step={5}
+                      className="py-4"
+                    />
+                  </div>
+
+                  {/* Intent Filter */}
+                  <div className="space-y-6">
+                    <Label className="text-sm font-black uppercase tracking-widest text-muted-foreground px-1">Intent Frequency</Label>
+                    <ToggleGroup 
+                      type="multiple" 
+                      value={selectedIntent} 
+                      onValueChange={(val) => val.length > 0 && setSelectedIntent(val)}
+                      className="flex flex-col gap-3"
+                    >
+                      <ToggleGroupItem value="dating" className="h-16 rounded-2xl border-2 border-border data-[state=on]:border-primary data-[state=on]:bg-primary/10 transition-all justify-between px-6">
+                        <span className="font-black italic tracking-tight">DATING</span>
+                        <Heart className="w-5 h-5 opacity-50" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="serious" className="h-16 rounded-2xl border-2 border-border data-[state=on]:border-primary data-[state=on]:bg-primary/10 transition-all justify-between px-6">
+                        <span className="font-black italic tracking-tight">SERIOUS</span>
+                        <Sparkles className="w-5 h-5 opacity-50" />
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="casual" className="h-16 rounded-2xl border-2 border-border data-[state=on]:border-primary data-[state=on]:bg-primary/10 transition-all justify-between px-6">
+                        <span className="font-black italic tracking-tight">CASUAL</span>
+                        <Flame className="w-5 h-5 opacity-50" />
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-12 left-6 right-6">
+                  <Button onClick={() => fetchData()} className="w-full h-16 rounded-2xl font-black text-lg bg-gradient-to-r from-primary to-purple-600 border-none shadow-xl shadow-primary/20">
+                    ALIGN FREQUENCIES
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </motion.div>
         </div>
 
