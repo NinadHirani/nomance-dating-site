@@ -10,12 +10,12 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { href: "/discovery", label: "Discovery" },
-    { href: "/matches", label: "Matches" },
-    { href: "/events", label: "Events" },
-    { href: "/coach", label: "Coach" },
-  ];
+    const navLinks = [
+      { href: "/discovery", label: "Discovery" },
+      { href: "/social", label: "Social" },
+      { href: "/matches", label: "Matches" },
+      { href: "/events", label: "Events" },
+    ];
 
   return (
     <nav className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-md z-50">
