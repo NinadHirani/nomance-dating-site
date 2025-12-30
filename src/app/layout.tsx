@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { VisualEditsMessenger } from "orchids-visual-edits";
 import { Navbar } from "@/components/navbar";
+import { Header } from "@/components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,14 +28,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar />
-        {children}
-        <Toaster position="top-center" richColors />
-        <VisualEditsMessenger />
-      </body>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <Header />
+          <main className="pt-16 pb-16">
+            {children}
+          </main>
+          <Navbar />
+          <Toaster position="top-center" richColors />
+          <VisualEditsMessenger />
+        </body>
     </html>
   );
 }
