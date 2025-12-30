@@ -12,7 +12,6 @@ export function Navbar() {
 
     const navLinks = [
       { href: "/discovery", label: "Discovery" },
-      { href: "/social", label: "Social" },
       { href: "/messages", label: "Messages" },
       { href: "/matches", label: "Matches" },
       { href: "/events", label: "Events" },
@@ -43,6 +42,12 @@ export function Navbar() {
         </div>
 
             <div className="flex items-center gap-3">
+                <Link href="/coach">
+                  <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-2 rounded-full hover:bg-secondary/20 text-primary font-bold">
+                    <Sparkles className="w-4 h-4" />
+                    AI Coach
+                  </Button>
+                </Link>
                 <Link href="/profile">
                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/20">
                     <User className="w-5 h-5 text-foreground" />
