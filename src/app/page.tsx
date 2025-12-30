@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Heart, MessageCircle, Send, Plus, Camera, Loader2, MoreHorizontal, X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { MessageCircle, Send, Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +32,6 @@ export default function Home() {
         const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001" };
         setUser(activeUser);
 
-        // Fetch posts with profile info
         const { data: postsData, error: postsError } = await supabase
           .from("posts")
           .select("*, profiles(id, full_name, avatar_url)")
@@ -41,7 +40,6 @@ export default function Home() {
         if (postsError) throw postsError;
         setPosts(postsData || []);
 
-        // Fetch active stories (within last 24h)
         const { data: storiesData, error: storiesError } = await supabase
           .from("stories")
           .select("*, profiles(full_name, avatar_url)")
@@ -50,7 +48,6 @@ export default function Home() {
 
         if (storiesError) throw storiesError;
         
-        // Group stories by user
         const groupedStories = (storiesData || []).reduce((acc: any, story: any) => {
           if (!acc[story.user_id]) {
             acc[story.user_id] = {
@@ -75,28 +72,18 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const handleMatchAction = async (targetUserId: string, action: 'like' | 'skip', postId: string) => {
+  const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass', postId: string) => {
     if (!user || user.id === targetUserId) {
-        toast.info("This is your own post!");
+        toast.info("Energy check: This is your own creation!");
         return;
     }
 
-    if (action === 'skip') {
-        // Optimistically remove from feed or just show toast
+    if (action === 'pass') {
         setPosts(prev => prev.filter(p => p.id !== postId));
-        toast.info("Post hidden. We'll show you better content.");
-        
-        // Record discovery history as skip
-        const today = new Date().toISOString().split('T')[0];
-        await supabase.from("discovery_history").insert({
-          user_id: user.id,
-          discovered_user_id: targetUserId,
-          discovered_at: today
-        });
+        toast.info("Vibe check: Moving forward.");
         return;
     }
 
-    // "Interested" logic
     const { error } = await supabase.from("matches").insert({
       user_1: user.id,
       user_2: targetUserId,
@@ -104,7 +91,6 @@ export default function Home() {
     });
     
     if (error) {
-      // Check if it's already a match or if they liked us
       const { data: reverseLike } = await supabase
         .from("matches")
         .select("*")
@@ -114,12 +100,12 @@ export default function Home() {
 
       if (reverseLike) {
         await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
-        toast.success("It's a mutual match! Start chatting now.");
+        toast.success("Connection Sparked! Mutual energy detected.");
       } else {
-        toast.info("You've already expressed interest in this person.");
+        toast.info("Energy already sent. Patiently waiting for the spark.");
       }
     } else {
-      toast.success("Interest sent! High-intent connections are the goal.");
+      toast.success("Spark sent! Intentionality is the new frequency.");
     }
   };
 
@@ -137,13 +123,13 @@ export default function Home() {
       .single();
 
     if (error) {
-      toast.error("Failed to create post");
+      toast.error("Failed to share energy");
     } else {
       setPosts([data, ...posts]);
       setNewPostContent("");
       setNewPostImage("");
       setIsCreatingPost(false);
-      toast.success("Post shared!");
+      toast.success("Frequency shared!");
     }
   };
 
@@ -165,188 +151,254 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-[#050505] text-white pb-20 overflow-x-hidden">
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-24 max-w-xl">
-        {/* Stories Reel */}
-        <div className="flex gap-4 overflow-x-auto pb-6 mb-6 no-scrollbar">
-          <button 
-            onClick={() => toast.info("Story upload coming soon!")}
-            className="flex flex-col items-center gap-1 shrink-0"
+      {/* Extraordinary Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <main className="container mx-auto px-4 pt-24 max-w-2xl relative z-10">
+        {/* Stories: Extraordinary "Pulse" Design */}
+        <div className="flex gap-6 overflow-x-auto pb-8 mb-8 no-scrollbar scroll-smooth">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => toast.info("Coming soon: Shared Moments")}
+            className="flex flex-col items-center gap-2 shrink-0 group"
           >
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center p-0.5">
-              <div className="w-full h-full rounded-full bg-secondary/20 flex items-center justify-center">
-                <Plus className="w-6 h-6 text-primary" />
+            <div className="w-20 h-20 rounded-3xl bg-secondary/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center p-1 transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
+              <div className="w-full h-full rounded-2xl bg-secondary/10 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-primary" />
               </div>
             </div>
-            <span className="text-[10px] font-medium text-muted-foreground">Your Story</span>
-          </button>
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Add Vibe</span>
+          </motion.button>
 
           {stories.map((group, idx) => (
-            <button 
+            <motion.button 
               key={idx}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSelectedStory(group);
                 setStoryIndex(0);
               }}
-              className="flex flex-col items-center gap-1 shrink-0"
+              className="flex flex-col items-center gap-2 shrink-0 group"
             >
-              <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600">
-                <div className="w-full h-full rounded-full border-2 border-background overflow-hidden">
-                  <Avatar className="w-full h-full">
-                    <AvatarImage src={group.user?.avatar_url} />
-                    <AvatarFallback>{group.user?.full_name?.[0]}</AvatarFallback>
+              <div className="w-20 h-20 rounded-3xl p-1 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-xl shadow-primary/10">
+                <div className="w-full h-full rounded-2xl border-4 border-[#050505] overflow-hidden">
+                  <Avatar className="w-full h-full rounded-none">
+                    <AvatarImage src={group.user?.avatar_url} className="object-cover" />
+                    <AvatarFallback className="bg-secondary rounded-none">{group.user?.full_name?.[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               </div>
-              <span className="text-[10px] font-medium text-foreground truncate w-16 text-center">
+              <span className="text-[10px] font-black uppercase tracking-widest text-foreground truncate w-20 text-center">
                 {group.user?.full_name?.split(' ')[0]}
               </span>
-            </button>
+            </motion.button>
           ))}
         </div>
 
-        {/* Create Post Trigger */}
-        <Card className="mb-8 border-border shadow-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <Avatar>
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
-              <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" className="flex-1 justify-start text-muted-foreground hover:bg-secondary/10 rounded-full h-10 px-4">
-                  What&apos;s on your mind?
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Create Post</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <Textarea 
-                    placeholder="Share something with your connections..." 
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    className="min-h-[120px]"
-                  />
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Image URL (Optional)</label>
-                    <Input 
-                      placeholder="https://images.unsplash.com/..." 
-                      value={newPostImage}
-                      onChange={(e) => setNewPostImage(e.target.value)}
+        {/* Create Post: Extraordinary "Glass" Design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12"
+        >
+          <Card className="bg-white/5 border-white/10 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <CardContent className="p-6 flex items-center gap-6">
+              <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback>{user?.email?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" className="flex-1 justify-start text-muted-foreground hover:bg-white/5 rounded-2xl h-12 px-6 font-bold tracking-tight italic">
+                    What&apos;s your current frequency?
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] bg-[#0a0a0a] border-white/10 text-white rounded-[2rem]">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-black italic tracking-tighter">SHARE ENERGY</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6 py-6">
+                    <Textarea 
+                      placeholder="Manifest your thoughts..." 
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      className="min-h-[150px] bg-white/5 border-white/10 rounded-2xl focus:ring-primary"
                     />
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-2">Visual Aura (URL)</label>
+                      <Input 
+                        placeholder="https://aura.link/..." 
+                        value={newPostImage}
+                        onChange={(e) => setNewPostImage(e.target.value)}
+                        className="bg-white/5 border-white/10 rounded-xl h-12"
+                      />
+                    </div>
                   </div>
-                </div>
-                <Button onClick={createPost} className="w-full rounded-full">Share Post</Button>
-              </DialogContent>
-            </Dialog>
-            <Button variant="ghost" size="icon" className="rounded-full text-primary">
-              <Camera className="w-5 h-5" />
-            </Button>
-          </CardContent>
-        </Card>
+                  <Button onClick={createPost} className="w-full rounded-2xl h-14 font-black text-lg bg-gradient-to-r from-primary to-purple-600 border-none shadow-xl shadow-primary/20">EMIT FREQUENCY</Button>
+                </DialogContent>
+              </Dialog>
+              <Button variant="ghost" size="icon" className="rounded-2xl w-12 h-12 bg-white/5 hover:bg-primary/20 text-primary transition-all">
+                <Zap className="w-6 h-6 fill-current" />
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        {/* Feed */}
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <Card key={post.id} className="border-border overflow-hidden shadow-sm">
-              <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={post.profiles?.avatar_url} />
-                    <AvatarFallback>{post.profiles?.full_name?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{post.profiles?.full_name}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(post.created_at))} ago
-                    </p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </CardHeader>
-              
-              {post.image_url && (
-                <div className="aspect-square bg-secondary/20 relative">
-                  <img 
-                    src={post.image_url} 
-                    alt="Post content" 
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              <CardContent className="p-4">
-                <p className="text-sm text-foreground whitespace-pre-wrap">{post.content}</p>
-              </CardContent>
-
-              <CardFooter className="p-4 pt-0 flex flex-col items-start gap-3">
-                <div className="flex items-center justify-between w-full">
+        {/* Feed: Extraordinary "Asymmetric" Design */}
+        <div className="space-y-12">
+          {posts.map((post, idx) => (
+            <motion.div
+              key={post.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className="bg-white/5 border-white/10 backdrop-blur-md rounded-[3rem] overflow-hidden shadow-2xl group hover:border-primary/20 transition-all duration-500">
+                <CardHeader className="p-6 flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1.5 group">
-                      <MessageCircle className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
-                      <span className="text-xs font-bold">{post.comments_count || 0}</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 group">
-                        <Send className="w-5 h-5 text-foreground group-hover:text-primary transition-colors" />
-                    </button>
+                    <div className="relative">
+                      <Avatar className="w-10 h-10 ring-2 ring-primary/30">
+                        <AvatarImage src={post.profiles?.avatar_url} />
+                        <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#050505] flex items-center justify-center">
+                        <Zap className="w-2 h-2 text-white fill-current" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-black italic tracking-tighter text-white">{post.profiles?.full_name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        {formatDistanceToNow(new Date(post.created_at))} AGO
+                      </p>
+                    </div>
                   </div>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/5">
+                    <MoreHorizontal className="w-5 h-5" />
+                  </Button>
+                </CardHeader>
+                
+                {post.image_url && (
+                  <div className="px-4 pb-4">
+                    <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden relative shadow-inner">
+                      <img 
+                        src={post.image_url} 
+                        alt="Aura" 
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    </div>
+                  </div>
+                )}
 
-                  {/* Intentional Connection Icons */}
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="rounded-full border-border h-9 w-9 p-0 hover:bg-secondary/20"
-                      onClick={() => handleMatchAction(post.profiles?.id, 'skip', post.id)}
-                    >
-                      <X className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      className="rounded-full bg-primary h-9 px-4 gap-2 font-bold shadow-lg shadow-primary/20"
-                      onClick={() => handleMatchAction(post.profiles?.id, 'like', post.id)}
-                    >
-                      <Heart className="w-4 h-4 fill-current" />
-                      Interested
-                    </Button>
+                <CardContent className="p-8 pt-2">
+                  <p className="text-lg font-medium leading-relaxed tracking-tight text-white/90 italic">
+                    &quot;{post.content}&quot;
+                  </p>
+                </CardContent>
+
+                <CardFooter className="p-6 pt-0 flex flex-col gap-6">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-6">
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="flex items-center gap-2 group/btn"
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover/btn:bg-primary/20 transition-all">
+                          <MessageCircle className="w-5 h-5 text-white/60 group-hover/btn:text-primary transition-colors" />
+                        </div>
+                        <span className="text-xs font-black italic text-white/40 group-hover/btn:text-white transition-colors">{post.comments_count || 0}</span>
+                      </motion.button>
+                      
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="flex items-center gap-2 group/btn"
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover/btn:bg-purple-500/20 transition-all">
+                          <Send className="w-5 h-5 text-white/60 group-hover/btn:text-purple-400 transition-colors" />
+                        </div>
+                      </motion.button>
+                    </div>
+
+                    {/* Extraordinary Interaction Hub */}
+                    <div className="flex items-center gap-3 p-1.5 bg-white/5 rounded-[2rem] border border-white/10 backdrop-blur-xl">
+                      <motion.button
+                        whileHover={{ scale: 1.05, x: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleMatchAction(post.profiles?.id, 'pass', post.id)}
+                        className="h-11 px-5 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        Vibe Pass
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05, x: 2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleMatchAction(post.profiles?.id, 'spark', post.id)}
+                        className="h-11 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-white text-[#050505] shadow-xl shadow-white/10 flex items-center gap-2"
+                      >
+                        <Flame className="w-4 h-4 fill-current" />
+                        Spark Energy
+                      </motion.button>
+                    </div>
                   </div>
-                </div>
-                <div className="text-xs font-bold text-foreground">
-                    {post.likes_count || 0} likes
-                </div>
-              </CardFooter>
-            </Card>
+                  
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="flex -space-x-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="w-5 h-5 rounded-full border-2 border-[#050505] bg-primary/20 flex items-center justify-center overflow-hidden">
+                           <Avatar className="w-full h-full">
+                             <AvatarImage src={`https://i.pravatar.cc/100?u=${post.id}${i}`} />
+                           </Avatar>
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black italic tracking-tight text-white/40">
+                      {post.likes_count || 0} FREQUENCIES ALIGNED
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </main>
 
-      {/* Story Viewer Overlay */}
+      {/* Story Viewer: Extraordinary Immersive Design */}
       <AnimatePresence>
         {selectedStory && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl flex items-center justify-center"
           >
-            <div className="relative w-full max-w-lg aspect-[9/16] bg-secondary/10 overflow-hidden">
+            <div className="relative w-full max-w-lg aspect-[9/16] bg-secondary/5 rounded-[3rem] overflow-hidden shadow-2xl border border-white/10">
               {/* Progress Bars */}
-              <div className="absolute top-4 left-4 right-4 flex gap-1 z-20">
+              <div className="absolute top-8 left-8 right-8 flex gap-2 z-20">
                 {selectedStory.items.map((_: any, i: number) => (
-                  <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+                  <div key={i} className="h-1 flex-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div 
                       className="h-full bg-white"
                       initial={{ width: 0 }}
@@ -361,17 +413,20 @@ export default function Home() {
               </div>
 
               {/* Header */}
-              <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-20">
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-8 h-8 border border-white/20">
+              <div className="absolute top-14 left-8 right-8 flex items-center justify-between z-20">
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-10 h-10 border-2 border-primary ring-4 ring-primary/20">
                     <AvatarImage src={selectedStory.user?.avatar_url} />
                     <AvatarFallback>{selectedStory.user?.full_name?.[0]}</AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-bold text-white shadow-sm">
-                    {selectedStory.user?.full_name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black italic tracking-tighter text-white">
+                      {selectedStory.user?.full_name}
+                    </span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-primary">LIVE FREQUENCY</span>
+                  </div>
                 </div>
-                <button onClick={() => setSelectedStory(null)} className="text-white p-1">
+                <button onClick={() => setSelectedStory(null)} className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white backdrop-blur-md">
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -382,6 +437,16 @@ export default function Home() {
                 className="w-full h-full object-cover"
                 alt="Story"
               />
+
+              {/* Interaction Overlay */}
+              <div className="absolute bottom-12 left-8 right-8 z-20">
+                 <div className="flex items-center gap-4">
+                    <Input className="flex-1 bg-white/10 border-white/10 rounded-2xl h-14 backdrop-blur-xl text-white placeholder:text-white/40 placeholder:italic font-bold" placeholder="Send a spark..." />
+                    <Button className="w-14 h-14 rounded-2xl bg-white text-[#050505] shadow-xl shadow-white/10">
+                       <Zap className="w-6 h-6 fill-current" />
+                    </Button>
+                 </div>
+              </div>
 
               {/* Navigation Controls */}
               <div className="absolute inset-0 flex z-10">
