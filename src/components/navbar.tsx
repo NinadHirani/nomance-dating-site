@@ -38,14 +38,12 @@ export function Navbar() {
                   }`}
                 >
                     <motion.div
-                      whileHover={{ scale: 1.25, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
-                      animate={link.label === "Search" ? { scale: [1, 1.05, 1] } : {}}
-                      transition={link.label === "Search" ? { duration: 3, repeat: Infinity, ease: "easeInOut" } : {}}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      whileTap={{ scale: 0.95 }}
                       className="relative"
                     >
                       {link.label === "Search" ? (
-                        <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-xl shadow-pink-500/30 group-hover:shadow-pink-500/50 transition-all border-2 border-white/20">
+                        <div className="p-4 rounded-[2rem] bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-[0_15px_30px_rgba(220,39,67,0.4)] group-hover:shadow-pink-500/60 transition-all border-[3px] border-white/30 flex items-center justify-center scale-110">
                           <link.icon className="w-7 h-7 text-white" />
                         </div>
                       ) : (
@@ -101,20 +99,17 @@ export function Navbar() {
                 href={searchNavLink.href}
                 className="relative z-10"
               >
-                  <motion.div 
-                    whileHover={{ scale: 1.2, rotate: [0, -5, 5, 0] }}
-                    whileTap={{ scale: 0.9 }}
-                    animate={{ scale: [1, 1.05, 1], y: [-32, -36, -32] }}
-                    transition={{ 
-                      scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                      y: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                    }}
-                    className="p-7 rounded-[3rem] bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-[0_25px_60px_rgba(var(--primary),0.5)] border-4 border-background active:scale-95 transition-all relative z-20"
-                  >
-                    <searchNavLink.icon className="w-10 h-10 text-white" />
-                    {/* Inner Glow */}
-                    <div className="absolute inset-0 rounded-[3rem] ring-4 ring-white/20 ring-inset pointer-events-none" />
-                  </motion.div>
+                    <motion.div 
+                      whileHover={{ scale: 1.15, rotate: [0, -5, 5, 0] }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ y: -32 }}
+                      animate={{ y: -32 }}
+                      className="p-8 rounded-[3.5rem] bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-[0_30px_70px_rgba(var(--primary),0.6)] border-[5px] border-background active:scale-95 transition-all relative z-20 scale-105"
+                    >
+                      <searchNavLink.icon className="w-11 h-11 text-white" />
+                      {/* Inner Glow */}
+                      <div className="absolute inset-0 rounded-[3.5rem] ring-4 ring-white/30 ring-inset pointer-events-none" />
+                    </motion.div>
               </Link>
               
               {/* Decorative Step/Connector */}
