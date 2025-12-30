@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
     const pathname = usePathname();
   
     const navLinks = [
-      { href: "/discovery", label: "Discovery", icon: Sparkles },
       { href: "/matches", label: "Matches", icon: Heart },
       { href: "/search", label: "Search", icon: Search },
       { href: "/events", label: "Events", icon: Users },
