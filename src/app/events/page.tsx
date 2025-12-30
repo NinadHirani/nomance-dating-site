@@ -88,24 +88,22 @@ export default function EventsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-    useEffect(() => {
-      const fetchUser = async () => {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            router.push("/auth");
-            return;
+      useEffect(() => {
+        const fetchUser = async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const activeUser = user || { id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" };
+            setUser(activeUser);
+          } catch (error) {
+            console.error("Events auth check error:", error);
+            // Fallback to guest for now
+            setUser({ id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" });
+          } finally {
+            setLoading(false);
           }
-          setUser(user);
-        } catch (error) {
-          console.error("Events auth check error:", error);
-          router.push("/auth");
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchUser();
-    }, [router]);
+        };
+        fetchUser();
+      }, [router]);
 
   const handleJoinEvent = (eventId: string) => {
     if (joinedEvents.includes(eventId)) {
@@ -204,11 +202,13 @@ export default function EventsPage() {
               {filteredEvents.filter(e => e.event_type === 'meetup').map((event) => (
                 <Card key={event.id} className="border-border bg-card overflow-hidden hover:shadow-lg transition-all">
                   <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <Badge className={`${EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].bg} ${EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].text} border-none`}>
-                        {EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].label}
-                      </Badge>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between items-start">
+                        {EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES] && (
+                          <Badge className={`${EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].bg} ${EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].text} border-none`}>
+                            {EVENT_TYPE_STYLES[event.event_type as keyof typeof EVENT_TYPE_STYLES].label}
+                          </Badge>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Users className="w-3 h-3" />
                         {event.current_participants}/{event.max_participants}
                       </div>
