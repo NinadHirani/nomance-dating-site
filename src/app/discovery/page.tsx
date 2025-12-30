@@ -61,11 +61,10 @@ export default function DiscoveryPage() {
           const excludedIds = [activeUser.id, ...(discoveredIds?.map(d => d.discovered_user_id) || [])];
 
           const { data: potentialMatches, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .not("id", "in", `(${excludedIds.join(',')})`)
-            .eq("intent", profile?.intent || 'life_partnership')
-            .limit(5);
+            .rpc("get_recommended_profiles", { 
+              p_user_id: activeUser.id,
+              p_limit: 5 
+            });
 
           if (error) {
             console.error(error);

@@ -41,18 +41,12 @@ export function Navbar() {
           ))}
         </div>
 
-          <div className="flex items-center gap-3">
-            <Link href="/coach" className="hidden sm:flex">
-              <Button variant="ghost" size="sm" className="rounded-full text-muted-foreground hover:text-primary hover:bg-secondary/20">
-                <Sparkles className="w-4 h-4 mr-1" />
-                AI Coach
-              </Button>
-            </Link>
-              <Link href="/profile">
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/20">
-                  <User className="w-5 h-5 text-foreground" />
-                </Button>
-              </Link>
+            <div className="flex items-center gap-3">
+                <Link href="/profile">
+                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-secondary/20">
+                    <User className="w-5 h-5 text-foreground" />
+                  </Button>
+                </Link>
             <Button 
               variant="ghost" 
               size="icon" 
