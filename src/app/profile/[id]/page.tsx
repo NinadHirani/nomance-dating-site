@@ -81,197 +81,173 @@ export default function PublicProfilePage() {
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
       </div>
 
-      <main className="container mx-auto px-4 pt-24 max-w-4xl relative z-10">
-        {/* Header Navigation */}
-        <div className="flex items-center justify-between mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => router.back()} 
-            className="rounded-full gap-2 hover:bg-secondary/50 text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" className="rounded-full border-border">Report</Button>
-            <Button variant="outline" className="rounded-full border-border">Share</Button>
+        <main className="container mx-auto px-4 pt-24 max-w-4xl relative z-10">
+          {/* Header Navigation */}
+          <div className="flex items-center justify-between mb-12">
+            <Button 
+              variant="ghost" 
+              onClick={() => router.back()} 
+              className="rounded-full gap-2 hover:bg-secondary/50 text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" className="rounded-full border-border">Report</Button>
+              <Button variant="outline" className="rounded-full border-border">Share</Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Visuals & Core Stats */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="relative group">
-              <div className="aspect-[3/4] rounded-[3rem] overflow-hidden border-4 border-card shadow-2xl">
-                <img 
-                  src={profile.avatar_url || "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=800&q=80"} 
-                  alt={profile.full_name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+          <div className="space-y-12">
+            {/* New Compact Profile Header */}
+            <div className="relative">
+              {/* Profile Banner/Backdrop */}
+              <div className="h-48 w-full rounded-[3rem] bg-gradient-to-r from-primary/20 via-purple-600/10 to-pink-500/20 backdrop-blur-md border border-border overflow-hidden">
+                <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
               </div>
-              <div className="absolute -bottom-4 -right-4 bg-foreground text-background p-4 rounded-3xl shadow-2xl flex items-center gap-2 border-4 border-background">
-                <Zap className="w-6 h-6 fill-current text-primary" />
-                <span className="font-black text-xl italic tracking-tighter">9.8</span>
+              
+              {/* Profile Picture - Small & Normal Size */}
+              <div className="absolute -bottom-12 left-12 flex items-end gap-6">
+                <div className="relative group">
+                  <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card">
+                    <img 
+                      src={profile.avatar_url || "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=800&q=80"} 
+                      alt={profile.full_name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 bg-foreground text-background p-2 rounded-2xl shadow-xl flex items-center justify-center border-4 border-background">
+                    <Zap className="w-4 h-4 fill-current text-primary" />
+                  </div>
+                </div>
+                
+                <div className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-4xl font-black italic tracking-tighter text-foreground">{profile.full_name}</h1>
+                    <UserCheck className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex gap-2 mt-1">
+                    <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
+                      {profile.gender || "Human"}
+                    </Badge>
+                    <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-600/10 text-purple-600 border-none">
+                      {profile.birth_date ? `${new Date().getFullYear() - new Date(profile.birth_date).getFullYear()} Years` : "Ageless"}
+                    </Badge>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Profile Depth Meter */}
-            <Card className="rounded-[2.5rem] bg-card/50 backdrop-blur-xl border-border overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-8">
+              {/* Left Column: Stats & Depth */}
+              <div className="lg:col-span-4 space-y-6">
+                <div className="bg-foreground text-background p-6 rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center gap-2 border-4 border-background relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-primary opacity-0 group-hover:opacity-10 transition-opacity" />
+                  <span className="text-4xl font-black italic tracking-tighter relative z-10">9.8</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60 relative z-10 text-center">Compatibility Frequency</span>
+                  <Zap className="w-8 h-8 fill-current text-primary absolute -bottom-2 -right-2 opacity-20" />
+                </div>
+
+                {/* Profile Depth Meter */}
+                <Card className="rounded-[2.5rem] bg-card/50 backdrop-blur-xl border-border overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-primary" />
+                        <span className="font-black uppercase text-[10px] tracking-widest text-muted-foreground">Depth</span>
+                      </div>
+                      <span className="font-black text-xs text-primary">{strength}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-secondary/30 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${strength}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-primary to-purple-600"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column: Bio & Details */}
+              <div className="lg:col-span-8 space-y-10">
+                {/* Intent Tags */}
+                <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-primary" />
-                    <span className="font-black uppercase text-[10px] tracking-widest text-muted-foreground">Depth Meter</span>
+                    <Target className="w-4 h-4 text-primary" />
+                    <span className="font-black uppercase text-[10px] tracking-widest text-foreground">Intention</span>
                   </div>
-                  <span className="font-black text-primary">Profile strength: {strength}%</span>
+                  <div className="flex flex-wrap gap-3">
+                    {(profile.intents && profile.intents.length > 0 ? profile.intents : ["serious", "casual", "explore", "marriage", "friends"]).map((intent: string) => (
+                      <Badge 
+                        key={intent}
+                        className="px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-card border-2 border-border text-foreground hover:border-primary transition-all cursor-default"
+                      >
+                        {intent}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-                <div className="h-3 w-full bg-secondary/30 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${strength}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-primary to-purple-600"
-                  />
+
+                {/* Bio */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-primary" />
+                    <span className="font-black uppercase text-[10px] tracking-widest text-foreground">Aura</span>
+                  </div>
+                  <p className="text-lg leading-relaxed text-muted-foreground italic font-medium">
+                    &quot;{profile.bio || "This intentional user prefers to let their frequency speak for itself."}&quot;
+                  </p>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-4 italic text-center">
-                  This profile has been verified for high intentionality.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Right Column: Bio & Details */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h1 className="text-5xl font-black italic tracking-tighter text-foreground">{profile.full_name}</h1>
-                <UserCheck className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
-                  {profile.gender || "Human"}
-                </Badge>
-                <Badge variant="secondary" className="px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-600/10 text-purple-600 border-none">
-                  {profile.birth_date ? `${new Date().getFullYear() - new Date(profile.birth_date).getFullYear()} Years` : "Ageless"}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Intent Tags */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                <span className="font-black uppercase text-xs tracking-widest text-foreground">Intentional Frequency</span>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {(profile.intents && profile.intents.length > 0 ? profile.intents : ["serious", "casual", "explore", "marriage", "friends"]).map((intent: string) => (
-                  <Badge 
-                    key={intent}
-                    className="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-card border-2 border-border text-foreground hover:border-primary transition-all cursor-default"
-                  >
-                    {intent}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {/* Bio */}
-            <div className="space-y-4">
-               <div className="flex items-center gap-2">
-                <Info className="w-5 h-5 text-primary" />
-                <span className="font-black uppercase text-xs tracking-widest text-foreground">Aura & Story</span>
-              </div>
-              <p className="text-xl leading-relaxed text-muted-foreground italic font-medium">
-                &quot;{profile.bio || "This intentional user prefers to let their frequency speak for itself. A mystery waiting to be unraveled."}&quot;
-              </p>
-            </div>
-
-            {/* Lifestyle Badges */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <span className="font-black uppercase text-xs tracking-widest text-foreground">Lifestyle Synchronicity</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {lifestyleItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-4 rounded-3xl bg-card/40 border border-border backdrop-blur-md">
-                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                      {item.icon}
+                {/* Lifestyle & Values (Horizontal Grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="font-black uppercase text-[10px] tracking-widest text-foreground">Lifestyle</span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
-                      <p className="text-sm font-bold text-foreground">{item.value}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {lifestyleItems.map((item, idx) => (
+                        <div key={idx} className="flex flex-col gap-1 p-3 rounded-2xl bg-card/40 border border-border">
+                          <div className="text-primary">{item.icon}</div>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
+                          <p className="text-[10px] font-bold text-foreground truncate">{item.value}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Core Values */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-primary" />
-                <span className="font-black uppercase text-xs tracking-widest text-foreground">Foundational Values</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(profile.values || ["Honesty", "Growth", "Adventure"]).map((val: string) => (
-                  <span key={val} className="px-5 py-2 rounded-full bg-secondary/20 text-foreground font-bold text-sm">
-                    {val}
-                  </span>
-                ))}
-              </div>
-            </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-primary" />
+                      <span className="font-black uppercase text-[10px] tracking-widest text-foreground">Values</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(profile.values || ["Honesty", "Growth", "Adventure"]).map((val: string) => (
+                        <span key={val} className="px-4 py-1.5 rounded-full bg-secondary/20 text-foreground font-bold text-xs">
+                          {val}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
-            {/* Action Bar */}
-            <div className="pt-8 relative">
-              {/* Tracing Arrow Animation */}
-              <div className="absolute -top-12 right-12 w-24 h-24 hidden lg:block pointer-events-none">
-                <svg viewBox="0 0 100 100" fill="none" className="w-full h-full rotate-45">
-                  <motion.path
-                    d="M10,10 Q50,10 50,50 Q50,90 90,90"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="text-primary/40"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                  <motion.path
-                    d="M80,80 L90,90 L80,100"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    className="text-primary/40"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1, duration: 0.5, repeat: Infinity }}
-                  />
-                </svg>
-              </div>
-
-              <div className="flex gap-4">
-                 <Button className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
-                   <motion.div
-                     whileHover={{ scale: 1.5, rotate: [0, -20, 20, 0] }}
-                     transition={{ duration: 0.5 }}
-                   >
-                    <Heart className="w-6 h-6 fill-current text-primary" />
-                   </motion.div>
-                   Send Spark
-                 </Button>
-                 <Button variant="outline" className="w-16 h-16 rounded-[2rem] border-2 border-border flex items-center justify-center hover:bg-secondary/20 group">
-                   <motion.div
-                     whileHover={{ y: -5, scale: 1.2 }}
-                   >
-                    <Zap className="w-6 h-6 group-hover:text-primary group-hover:fill-current transition-colors" />
-                   </motion.div>
-                 </Button>
+                {/* Action Bar */}
+                <div className="pt-8 relative flex gap-4">
+                   <Button className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
+                     <Heart className="w-6 h-6 fill-current text-primary" />
+                     Send Spark
+                   </Button>
+                   <Button variant="outline" className="w-16 h-16 rounded-[2rem] border-2 border-border flex items-center justify-center hover:bg-secondary/20">
+                    <Zap className="w-6 h-6" />
+                   </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
     </div>
   );
 }

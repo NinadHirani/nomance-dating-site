@@ -300,55 +300,54 @@ export default function MatchesPage() {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="overflow-hidden border-border shadow-2xl rounded-[3rem] bg-card/50 backdrop-blur-md">
-                        <div className="aspect-[4/5] bg-secondary/30 relative overflow-hidden">
-                          <img 
-                            src={profiles[currentIndex].avatar_url || `https://images.unsplash.com/photo-${profiles[currentIndex].gender === 'woman' ? '1494790108377-be9c29b29330' : '1500648767791-00dcc994a43e'}?q=80&w=800&auto=format&fit=crop`}
-                            alt={profiles[currentIndex].full_name}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute top-6 left-6 flex gap-2 flex-wrap">
-                            <Badge className="bg-background/90 text-foreground backdrop-blur-md border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-                              <ShieldCheck className="w-3 h-3 mr-1 text-primary fill-current" /> Verified
-                            </Badge>
-                            <Badge className="bg-primary text-primary-foreground backdrop-blur-md border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-                              {profiles[currentIndex].intent?.replace(/_/g, ' ')}
-                            </Badge>
+                        <Card className="overflow-hidden border-border shadow-2xl rounded-[3rem] bg-card/50 backdrop-blur-md">
+                          <div className="p-8 pb-0 flex flex-col items-center">
+                            <div className="w-48 h-48 rounded-[2rem] overflow-hidden border-4 border-background shadow-2xl relative group/img">
+                              <img 
+                                src={profiles[currentIndex].avatar_url || `https://images.unsplash.com/photo-${profiles[currentIndex].gender === 'woman' ? '1494790108377-be9c29b29330' : '1500648767791-00dcc994a43e'}?q=80&w=800&auto=format&fit=crop`}
+                                alt={profiles[currentIndex].full_name}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
+                              />
+                              <div className="absolute top-2 left-2 flex gap-1">
+                                <Badge className="bg-background/90 text-foreground backdrop-blur-md border-none px-2 py-0.5 text-[6px] font-black uppercase tracking-widest">
+                                  <ShieldCheck className="w-2 h-2 mr-1 text-primary fill-current" /> Verified
+                                </Badge>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        
-                        <CardHeader className="p-8 pb-4">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          
+                          <CardHeader className="p-8 pb-4 text-center">
+                            <div className="flex flex-col items-center">
                               <CardTitle className="text-3xl font-black italic tracking-tighter text-foreground">
                                 {profiles[currentIndex].full_name}, {profiles[currentIndex].birth_date ? new Date().getFullYear() - new Date(profiles[currentIndex].birth_date).getFullYear() : '?'}
                               </CardTitle>
-                              <div className="flex items-center text-muted-foreground mt-1 gap-1 text-sm font-bold">
-                                <MapPin className="w-4 h-4 text-primary" />
-                                <span>San Francisco, CA</span>
+                              <div className="flex items-center gap-2 mt-2">
+                                <div className="flex items-center text-muted-foreground gap-1 text-xs font-bold">
+                                  <MapPin className="w-4 h-4 text-primary" />
+                                  <span>San Francisco, CA</span>
+                                </div>
+                                <Badge className="bg-primary text-primary-foreground border-none px-3 py-1 text-[8px] font-black uppercase tracking-widest">
+                                  {profiles[currentIndex].intent?.replace(/_/g, ' ')}
+                                </Badge>
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-2xl bg-secondary/20">
-                              <Info className="w-5 h-5 text-primary" />
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        
-                        <CardContent className="px-8 pb-8 space-y-6">
-                          <p className="text-foreground/80 leading-relaxed font-medium">
-                            {profiles[currentIndex].bio || "Sharing energy through presence."}
-                          </p>
+                          </CardHeader>
                           
-                          {profiles[currentIndex].values && profiles[currentIndex].values.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {profiles[currentIndex].values.map((val: string) => (
-                                <Badge key={val} variant="secondary" className="bg-primary/5 text-primary border-none px-3 py-1 text-[8px] font-black uppercase tracking-widest">
-                                  {val}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </CardContent>
+                          <CardContent className="px-8 pb-8 space-y-6 text-center">
+                            <p className="text-foreground/80 leading-relaxed font-medium italic">
+                              &quot;{profiles[currentIndex].bio || "Sharing energy through presence."}&quot;
+                            </p>
+                            
+                            {profiles[currentIndex].values && profiles[currentIndex].values.length > 0 && (
+                              <div className="flex flex-wrap justify-center gap-2">
+                                {profiles[currentIndex].values.map((val: string) => (
+                                  <Badge key={val} variant="secondary" className="bg-primary/5 text-primary border-none px-3 py-1 text-[8px] font-black uppercase tracking-widest">
+                                    {val}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </CardContent>
   
                         <CardFooter className="p-8 pt-0 flex flex-col gap-6">
                           <div className="flex items-center justify-center w-full">
@@ -461,29 +460,35 @@ function MatchCard({ profile, id, isMutual }: { profile: any, id: string, isMutu
       whileHover={{ y: -5 }}
     >
       <Link href={isMutual ? `/messages/${id}` : "#"}>
-        <Card className="overflow-hidden border-border bg-card/50 backdrop-blur-md hover:border-primary/30 transition-all duration-300 rounded-[2.5rem] group shadow-xl">
-          <CardContent className="p-0">
-            <div className="relative aspect-[4/5] overflow-hidden">
-              <img 
-                src={profile.avatar_url || `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop`} 
-                alt={profile.full_name}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              
-              <div className="absolute bottom-6 left-6 right-6">
-                <h3 className="text-xl font-black text-white italic tracking-tighter">{profile.full_name}</h3>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary" className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5 backdrop-blur-md">
-                    {profile.intent?.replace(/_/g, ' ')}
-                  </Badge>
-                  {isMutual && (
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-                      <MessageCircle className="w-4 h-4 fill-current" />
-                    </div>
-                  )}
+        <Card className="overflow-hidden border-border bg-card/50 backdrop-blur-md hover:border-primary/30 transition-all duration-300 rounded-[2rem] group shadow-xl">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="relative shrink-0">
+              <Avatar className="w-20 h-20 rounded-2xl ring-2 ring-primary/10 transition-all group-hover:ring-primary/40">
+                <AvatarImage 
+                  src={profile.avatar_url || `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop`} 
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-secondary font-black">{profile.full_name?.[0]}</AvatarFallback>
+              </Avatar>
+              {isMutual && (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg border-2 border-background">
+                  <MessageCircle className="w-3 h-3 fill-current" />
                 </div>
+              )}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-black text-foreground italic tracking-tighter truncate">{profile.full_name}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="bg-primary/5 text-primary border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5">
+                  {profile.intent?.replace(/_/g, ' ')}
+                </Badge>
               </div>
+              {!isMutual && (
+                <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-2 flex items-center gap-1">
+                  <Zap className="w-2 h-2 fill-current text-primary" /> Energy Sent
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
