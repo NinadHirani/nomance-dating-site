@@ -6,6 +6,7 @@ import { VisualEditsMessenger } from "orchids-visual-edits";
 import { Navbar } from "@/components/navbar";
 import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SparkTrail } from "@/components/spark-trail";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,8 +43,9 @@ export default function RootLayout({
               <main className="pt-16 pb-16">
                 {children}
               </main>
-              <Navbar />
-              <Toaster position="top-center" richColors />
+                <Navbar />
+                <SparkTrail />
+                <Toaster position="top-center" richColors />
               <VisualEditsMessenger />
             </ThemeProvider>
           </body>
