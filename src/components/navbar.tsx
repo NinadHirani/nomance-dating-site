@@ -30,35 +30,34 @@ export function Navbar() {
             {[...leftNavLinks, searchNavLink, ...rightNavLinks].map((link) => {
               const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all hover:text-primary relative group ${
-                    isActive ? 'text-primary' : 'text-muted-foreground'
-                  }`}
-                >
-                    <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="relative"
-                    >
-                      {link.label === "Search" ? (
-                        <div className="p-4 rounded-[2rem] bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-[0_15px_30px_rgba(220,39,67,0.4)] group-hover:shadow-pink-500/60 transition-all border-[3px] border-white/30 flex items-center justify-center scale-110">
-                          <link.icon className="w-7 h-7 text-white" />
-                        </div>
-                      ) : (
-                        <link.icon className={`w-6 h-6 ${isActive ? 'drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]' : ''}`} />
-                      )}
-                    </motion.div>
-                  <span className="hidden lg:inline">{link.label}</span>
-                  
-                  {isActive && link.label !== "Search" && (
-                    <motion.span
-                      layoutId="nav-underline"
-                      className="absolute -bottom-1 left-0 w-full h-0.5 bg-primary"
-                    />
-                  )}
-                </Link>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all hover:text-primary relative group ${
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                  >
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative"
+                      >
+                        {link.label === "Search" ? (
+                          <div className="p-4 rounded-[1.5rem] bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#cc2366] shadow-[0_10px_20px_rgba(220,39,67,0.3)] group-hover:shadow-pink-500/40 transition-all border-2 border-white/20 flex items-center justify-center scale-110">
+                            <link.icon className="w-6 h-6 text-white" />
+                          </div>
+                        ) : (
+                          <link.icon className={`w-6 h-6 ${isActive ? 'drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]' : ''}`} />
+                        )}
+                      </motion.div>
+                    
+                    {isActive && link.label !== "Search" && (
+                      <motion.span
+                        layoutId="nav-underline"
+                        className="absolute -bottom-2 left-0 w-full h-0.5 bg-primary"
+                      />
+                    )}
+                  </Link>
               );
             })}
           </div>
