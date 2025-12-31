@@ -47,7 +47,15 @@ export default function SocialPage() {
       const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001" };
       setUser(activeUser);
 
-      const { data: postsData, error: postsError } = await supabase
+      // Get skipped posts for the current user
+      const { data: skippedPosts } = await supabase
+        .from("post_skips")
+        .select("post_id")
+        .eq("user_id", activeUser.id);
+      
+      const skippedIds = skippedPosts?.map(s => s.post_id) || [];
+
+      let query = supabase
         .from("posts")
         .select(`
           *,
@@ -62,6 +70,12 @@ export default function SocialPage() {
           )
         `)
         .order("created_at", { ascending: false });
+
+      if (skippedIds.length > 0) {
+        query = query.not("id", "in", `(${skippedIds.join(',')})`);
+      }
+
+      const { data: postsData, error: postsError } = await query;
 
       if (postsError) throw postsError;
       setPosts(postsData || []);
@@ -119,6 +133,15 @@ export default function SocialPage() {
 
       if (action === 'pass') {
           setPosts(prev => prev.filter(p => p.id !== postId));
+          
+          // Persist the skip in database
+          if (user?.id && user.id !== "00000000-0000-0000-0000-000000000001") {
+            await supabase.from("post_skips").insert({
+              user_id: user.id,
+              post_id: postId
+            });
+          }
+          
           toast.info("Moving forward.");
           return;
       }
@@ -470,14 +493,26 @@ export default function SocialPage() {
 
         {/* Feed: Extraordinary "Asymmetric" Design */}
         <div className="space-y-12">
-          {posts.map((post, idx) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-            >
+          <AnimatePresence mode="popLayout">
+            {posts.map((post, idx) => (
+              <motion.div
+                key={post.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ 
+                  opacity: 0, 
+                  scale: 0.95, 
+                  x: -20,
+                  transition: { duration: 0.2 } 
+                }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  delay: idx * 0.05 
+                }}
+              >
               <Card className="bg-card/50 border-border backdrop-blur-md rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
                 <CardHeader className="p-6 flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-4">
@@ -583,6 +618,7 @@ export default function SocialPage() {
               </Card>
             </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       </main>
 
