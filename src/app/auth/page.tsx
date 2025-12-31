@@ -117,7 +117,7 @@ function AuthContent() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFF5F5]">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -128,53 +128,54 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#050505] relative overflow-hidden px-4 py-12 perspective-[1500px]">
+    <div className="min-h-screen flex items-center justify-center bg-[#FFF5F5] relative overflow-hidden px-4 py-12 perspective-[1500px]">
       <SparkTrail />
       <FallingHearts />
       
-      {/* Aura Blobs (The "Buddy" Background) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-primary/20 blur-[150px] rounded-full animate-pulse" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-600/20 blur-[150px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-pink-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+      {/* Big Rotating Hearts in Corners */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-32 -left-32 w-[600px] h-[600px] opacity-[0.03] text-primary"
+        >
+          <Heart className="w-full h-full fill-current" />
+        </motion.div>
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-32 -right-32 w-[700px] h-[700px] opacity-[0.03] text-primary"
+        >
+          <Heart className="w-full h-full fill-current" />
+        </motion.div>
       </div>
 
-      {/* 3D Perspective Grid Floor */}
-      <div 
-        className="absolute inset-0 z-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to bottom, transparent 0%, #050505 100%),
-            linear-gradient(90deg, var(--primary) 1px, transparent 1px),
-            linear-gradient(var(--primary) 1px, transparent 1px)
-          `,
-          backgroundSize: '100% 100%, 50px 50px, 50px 50px',
-          transform: 'rotateX(60deg) translateY(100px) scale(3)',
-          transformOrigin: 'top center'
-        }}
-      />
+      {/* Aura Blobs adjusted for light background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[10%] -left-[5%] w-[60%] h-[60%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute -bottom-[10%] -right-[5%] w-[60%] h-[60%] bg-pink-400/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
 
       {/* Ambient 3D Particles */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
             initial={{ 
               x: Math.random() * 100 + "%", 
               y: Math.random() * 100 + "%", 
-              z: Math.random() * -1000,
               opacity: 0 
             }}
             animate={{ 
               y: ["0%", "100%"],
-              opacity: [0, 1, 0]
+              opacity: [0, 0.4, 0]
             }}
             transition={{ 
               duration: Math.random() * 10 + 10, 
               repeat: Infinity, 
               delay: Math.random() * 10 
             }}
-            className="absolute w-1 h-1 bg-primary/20 rounded-full blur-[1px]"
+            className="absolute w-1 h-1 bg-primary/30 rounded-full blur-[1px]"
           />
         ))}
       </div>
@@ -322,28 +323,6 @@ function AuthContent() {
           </div>
         </div>
       </motion.div>
-
-      {/* Floating 3D Geometric Objects in background */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div
-          animate={{ 
-            rotate: 360,
-            y: [0, -40, 0],
-            x: [0, 20, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-20 -left-20 w-64 h-64 border border-white/5 rounded-[4rem] rotate-12"
-        />
-        <motion.div
-          animate={{ 
-            rotate: -360,
-            y: [0, 60, 0],
-            x: [0, -30, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-40 -right-40 w-96 h-96 border border-white/5 rounded-full"
-        />
-      </div>
     </div>
   );
 }
@@ -351,7 +330,7 @@ function AuthContent() {
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFF5F5]">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
