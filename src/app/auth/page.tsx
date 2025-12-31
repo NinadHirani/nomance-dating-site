@@ -10,6 +10,7 @@ import { Loader2, Zap, ShieldCheck, Sparkles, Heart } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { SparkTrail } from "@/components/spark-trail";
 
 function FallingHearts() {
   const hearts = [...Array(30)];
@@ -116,7 +117,7 @@ function AuthContent() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -127,14 +128,23 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden px-4 py-12 perspective-[1500px]">
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] relative overflow-hidden px-4 py-12 perspective-[1500px]">
+      <SparkTrail />
       <FallingHearts />
+      
+      {/* Aura Blobs (The "Buddy" Background) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-primary/20 blur-[150px] rounded-full animate-pulse" />
+        <div className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-600/20 blur-[150px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[30%] left-[40%] w-[40%] h-[40%] bg-pink-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* 3D Perspective Grid Floor */}
       <div 
-        className="absolute inset-0 z-0 opacity-10 pointer-events-none"
+        className="absolute inset-0 z-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(to bottom, transparent 0%, var(--background) 100%),
+            linear-gradient(to bottom, transparent 0%, #050505 100%),
             linear-gradient(90deg, var(--primary) 1px, transparent 1px),
             linear-gradient(var(--primary) 1px, transparent 1px)
           `,
