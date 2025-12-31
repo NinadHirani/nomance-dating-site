@@ -11,7 +11,7 @@ import { LoadingScreen } from "@/components/loading-screen";
 import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal, Upload, Flag, Ban, HeartOff } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -25,6 +25,206 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+
+function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, handleBlock, setIsReporting, setReportingPostId, setReportingUserId }: any) {
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 200], [-25, 25]);
+  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
+  const likeOpacity = useTransform(x, [50, 150], [0, 1]);
+  const nopeOpacity = useTransform(x, [-150, -50], [1, 0]);
+
+  return (
+    <motion.div
+      layout
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      style={{ x, rotate, opacity }}
+      onDragEnd={(e, { offset, velocity }) => {
+        if (offset.x > 150) {
+          handleMatchAction(post.profiles?.id, 'spark', post.id);
+        } else if (offset.x < -150) {
+          handleMatchAction(post.profiles?.id, 'pass', post.id);
+        }
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ 
+        opacity: 0, 
+        scale: 0.95, 
+        x: x.get() > 0 ? 500 : -500,
+        transition: { duration: 0.3 } 
+      }}
+      transition={{ 
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        delay: idx * 0.05 
+      }}
+      className="relative"
+    >
+      {/* Swipe Indicators */}
+      <motion.div 
+        style={{ opacity: likeOpacity }}
+        className="absolute top-10 right-10 z-50 pointer-events-none"
+      >
+        <div className="border-4 border-green-500 rounded-xl px-4 py-2 rotate-12">
+          <span className="text-4xl font-black text-green-500 uppercase">INTERESTED</span>
+        </div>
+      </motion.div>
+
+      <motion.div 
+        style={{ opacity: nopeOpacity }}
+        className="absolute top-10 left-10 z-50 pointer-events-none"
+      >
+        <div className="border-4 border-red-500 rounded-xl px-4 py-2 -rotate-12">
+          <span className="text-4xl font-black text-red-500 uppercase">NOPE</span>
+        </div>
+      </motion.div>
+
+      <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
+        <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
+            <div className="flex items-center gap-4">
+            <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
+              <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
+                <AvatarImage src={post.profiles?.avatar_url} />
+                <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-background flex items-center justify-center">
+                <Zap className="w-2 h-2 text-white fill-current" />
+              </div>
+            </Link>
+            <div>
+              <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter hover:text-primary transition-colors">
+                {post.profiles?.full_name}
+              </Link>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                {formatDistanceToNow(new Date(post.created_at))} AGO
+              </p>
+            </div>
+          </div>
+        
+        {post.profiles?.id !== user?.id && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
+              <MoreHorizontal className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
+            <DropdownMenuItem 
+              onClick={() => {
+                setReportingPostId(post.id);
+                setReportingUserId(post.profiles?.id);
+                setIsReporting(true);
+              }}
+              className="rounded-xl gap-3 cursor-pointer py-3"
+            >
+              <Flag className="w-4 h-4 text-orange-500" />
+              <span className="font-bold">Report Post</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => handleUnmatch(post.profiles?.id)}
+              className="rounded-xl gap-3 cursor-pointer py-3"
+            >
+              <HeartOff className="w-4 h-4 text-pink-500" />
+              <span className="font-bold">Unmatch</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 bg-border/50" />
+            <DropdownMenuItem 
+              onClick={() => handleBlock(post.profiles?.id)}
+              variant="destructive"
+              className="rounded-xl gap-3 cursor-pointer py-3"
+            >
+              <Ban className="w-4 h-4" />
+              <span className="font-bold">Block User</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        )}
+      </CardHeader>
+      
+      {post.image_url && (
+        <div className="px-4 pb-4">
+          <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden relative bg-secondary/5">
+            {post.media_type === 'video' ? (
+              <video 
+                src={post.image_url} 
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img 
+                src={post.image_url} 
+                alt="Aura" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      <CardContent className="p-8 pt-2">
+        <p className="text-lg font-medium leading-relaxed tracking-tight text-foreground/90 italic">
+          &quot;{post.content}&quot;
+        </p>
+      </CardContent>
+
+        <CardFooter className="p-6 pt-0 flex flex-col gap-6">
+          {post.profiles?.id !== user?.id && (
+          <div className="flex flex-col items-center justify-center w-full gap-4">
+            {/* Interaction Hub Label */}
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Intentional Connection</span>
+            
+            {/* Extraordinary Interaction Hub */}
+            <div className="flex items-center gap-6 p-2 bg-card/80 rounded-[2.5rem] border border-border backdrop-blur-3xl shadow-2xl">
+              <motion.button
+                whileHover={{ scale: 1.05, x: -5, backgroundColor: "hsl(var(--accent))" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleMatchAction(post.profiles?.id, 'pass', post.id)}
+                className="h-14 px-8 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all flex items-center gap-3 border border-transparent hover:border-border"
+              >
+                <X className="w-4 h-4" />
+                Not Interested
+              </motion.button>
+              
+              <div className="w-px h-8 bg-border" />
+
+              <motion.button
+                whileHover={{ scale: 1.05, x: 5, boxShadow: "0 0 40px rgba(var(--primary), 0.2)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleMatchAction(post.profiles?.id, 'spark', post.id)}
+                className="h-14 px-10 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] bg-foreground text-background flex items-center gap-3 group/interest"
+              >
+                <Heart className="w-5 h-5 fill-current transition-transform group-hover/interest:scale-125" />
+                Interested
+              </motion.button>
+            </div>
+          </div>
+          )}
+          
+          <div className="flex items-center justify-center gap-3 px-2">
+          <div className="flex -space-x-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="w-5 h-5 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center overflow-hidden">
+                 <Avatar className="w-full h-full">
+                   <AvatarImage src={`https://i.pravatar.cc/100?u=${post.id}${i}`} />
+                 </Avatar>
+              </div>
+            ))}
+          </div>
+          <span className="text-[10px] font-black italic tracking-tight text-muted-foreground">
+            {post.likes_count || 0} INTERESTED
+          </span>
+        </div>
+      </CardFooter>
+
+    </Card>
+  </motion.div>
+  );
+}
 
 export default function SocialPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -417,14 +617,15 @@ export default function SocialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20 overflow-x-hidden">
-      {/* Extraordinary Background Elements */}
+    <div className="h-screen bg-background text-foreground overflow-hidden relative">
+      {/* Extraordinary Background Elements - TRULY STUCK */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/20 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-600/20 blur-[120px] rounded-full" />
+        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/20 blur-[150px] rounded-full" />
+        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-600/20 blur-[150px] rounded-full" />
       </div>
 
-      <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl relative z-10">
+      <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+        <div className="container mx-auto px-4 pt-12 pb-32 max-w-2xl">
         {/* Stories & Quick Emit */}
         <div className="mb-12 space-y-8">
           {/* Stories */}
@@ -630,168 +831,21 @@ export default function SocialPage() {
         <div className="space-y-12">
           <AnimatePresence mode="popLayout">
             {posts.map((post, idx) => (
-              <motion.div
+              <SwipeableCard 
                 key={post.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ 
-                  opacity: 0, 
-                  scale: 0.95, 
-                  x: -20,
-                  transition: { duration: 0.2 } 
-                }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  delay: idx * 0.05 
-                }}
-              >
-                <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
-                  <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
-                      <div className="flex items-center gap-4">
-                      <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
-                        <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
-                          <AvatarImage src={post.profiles?.avatar_url} />
-                          <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-background flex items-center justify-center">
-                          <Zap className="w-2 h-2 text-white fill-current" />
-                        </div>
-                      </Link>
-                      <div>
-                        <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter hover:text-primary transition-colors">
-                          {post.profiles?.full_name}
-                        </Link>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                          {formatDistanceToNow(new Date(post.created_at))} AGO
-                        </p>
-                      </div>
-                    </div>
-                  
-                  {post.profiles?.id !== user?.id && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
-                        <MoreHorizontal className="w-5 h-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          setReportingPostId(post.id);
-                          setReportingUserId(post.profiles?.id);
-                          setIsReporting(true);
-                        }}
-                        className="rounded-xl gap-3 cursor-pointer py-3"
-                      >
-                        <Flag className="w-4 h-4 text-orange-500" />
-                        <span className="font-bold">Report Post</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleUnmatch(post.profiles?.id)}
-                        className="rounded-xl gap-3 cursor-pointer py-3"
-                      >
-                        <HeartOff className="w-4 h-4 text-pink-500" />
-                        <span className="font-bold">Unmatch</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator className="my-1 bg-border/50" />
-                      <DropdownMenuItem 
-                        onClick={() => handleBlock(post.profiles?.id)}
-                        variant="destructive"
-                        className="rounded-xl gap-3 cursor-pointer py-3"
-                      >
-                        <Ban className="w-4 h-4" />
-                        <span className="font-bold">Block User</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  )}
-                </CardHeader>
-                
-                {post.image_url && (
-                  <div className="px-4 pb-4">
-                    <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden relative bg-secondary/5">
-                      {post.media_type === 'video' ? (
-                        <video 
-                          src={post.image_url} 
-                          className="absolute inset-0 w-full h-full object-cover"
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                        />
-                      ) : (
-                        <img 
-                          src={post.image_url} 
-                          alt="Aura" 
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <CardContent className="p-8 pt-2">
-                  <p className="text-lg font-medium leading-relaxed tracking-tight text-foreground/90 italic">
-                    &quot;{post.content}&quot;
-                  </p>
-                </CardContent>
-
-                  <CardFooter className="p-6 pt-0 flex flex-col gap-6">
-                    {post.profiles?.id !== user?.id && (
-                    <div className="flex flex-col items-center justify-center w-full gap-4">
-                      {/* Interaction Hub Label */}
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Intentional Connection</span>
-                      
-                      {/* Extraordinary Interaction Hub */}
-                      <div className="flex items-center gap-6 p-2 bg-card/80 rounded-[2.5rem] border border-border backdrop-blur-3xl shadow-2xl">
-                        <motion.button
-                          whileHover={{ scale: 1.05, x: -5, backgroundColor: "hsl(var(--accent))" }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleMatchAction(post.profiles?.id, 'pass', post.id)}
-                          className="h-14 px-8 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all flex items-center gap-3 border border-transparent hover:border-border"
-                        >
-                          <X className="w-4 h-4" />
-                          Not Interested
-                        </motion.button>
-                        
-                        <div className="w-px h-8 bg-border" />
-
-                        <motion.button
-                          whileHover={{ scale: 1.05, x: 5, boxShadow: "0 0 40px rgba(var(--primary), 0.2)" }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleMatchAction(post.profiles?.id, 'spark', post.id)}
-                          className="h-14 px-10 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] bg-foreground text-background flex items-center gap-3 group/interest"
-                        >
-                          <Heart className="w-5 h-5 fill-current transition-transform group-hover/interest:scale-125" />
-                          Interested
-                        </motion.button>
-                      </div>
-                    </div>
-                    )}
-                    
-                    <div className="flex items-center justify-center gap-3 px-2">
-                    <div className="flex -space-x-2">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="w-5 h-5 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center overflow-hidden">
-                           <Avatar className="w-full h-full">
-                             <AvatarImage src={`https://i.pravatar.cc/100?u=${post.id}${i}`} />
-                           </Avatar>
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-[10px] font-black italic tracking-tight text-muted-foreground">
-                      {post.likes_count || 0} INTERESTED
-                    </span>
-                  </div>
-                </CardFooter>
-
-              </Card>
-            </motion.div>
-          ))}
+                post={post}
+                idx={idx}
+                user={user}
+                handleMatchAction={handleMatchAction}
+                handleUnmatch={handleUnmatch}
+                handleBlock={handleBlock}
+                setIsReporting={setIsReporting}
+                setReportingPostId={setReportingPostId}
+                setReportingUserId={setReportingUserId}
+              />
+            ))}
           </AnimatePresence>
+        </div>
         </div>
       </main>
 
