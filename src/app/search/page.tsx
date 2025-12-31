@@ -119,14 +119,15 @@ export default function SearchPage() {
   }, [searchQuery, ageRange, selectedIntent]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 overflow-x-hidden">
+    <div className="h-screen bg-background text-foreground overflow-hidden relative">
       {/* Extraordinary Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-purple-600/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/20 blur-[150px] rounded-full" />
+        <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-accent/20 blur-[150px] rounded-full" />
       </div>
 
-      <main className="container mx-auto px-4 pt-12 relative z-10 max-w-2xl">
+      <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+        <div className="container mx-auto px-4 pt-12 pb-32 relative z-10 max-w-2xl">
         <div className="space-y-8">
           {/* Header & Energy Section */}
           <div className="flex flex-col gap-6">

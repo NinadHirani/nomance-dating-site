@@ -99,12 +99,12 @@ return (
 <div className="h-screen bg-background text-foreground overflow-hidden relative">
 {/* Extraordinary Background Elements */}
 <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-<div className="absolute -top-[30%] -left-[20%] w-[80%] h-[80%] bg-primary/10 blur-[250px] rounded-full" />
-<div className="absolute -bottom-[30%] -right-[20%] w-[80%] h-[80%] bg-accent/10 blur-[250px] rounded-full" />
+<div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-primary/20 blur-[150px] rounded-full" />
+<div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-accent/20 blur-[150px] rounded-full" />
 </div>
 
 <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
-<div className="container mx-auto px-4 pt-24 pb-32 max-w-2xl">
+<div className="container mx-auto px-4 pt-12 pb-32 max-w-2xl">
 <header className="mb-12 flex items-center justify-between">
 <div>
 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-4">
