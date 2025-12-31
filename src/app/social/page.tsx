@@ -8,16 +8,23 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal, Upload } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal, Upload, Flag, Ban, HeartOff } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export default function SocialPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -34,6 +41,13 @@ export default function SocialPage() {
     const [isUploadingPostImage, setIsUploadingPostImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const postFileInputRef = useRef<HTMLInputElement>(null);
+
+    // Reporting state
+    const [isReporting, setIsReporting] = useState(false);
+    const [reportingPostId, setReportingPostId] = useState<string | null>(null);
+    const [reportingUserId, setReportingUserId] = useState<string | null>(null);
+    const [reportReason, setReportReason] = useState("");
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
     const getMediaType = (file: File) => {
       if (file.type.startsWith('video/')) return 'video';
@@ -55,6 +69,14 @@ export default function SocialPage() {
       
       const skippedIds = skippedPosts?.map(s => s.post_id) || [];
 
+      // Get blocked users
+      const { data: blocks } = await supabase
+        .from("user_blocks")
+        .select("blocked_id, blocker_id")
+        .or(`blocker_id.eq.${activeUser.id},blocked_id.eq.${activeUser.id}`);
+      
+      const blockedUserIds = blocks?.map(b => b.blocker_id === activeUser.id ? b.blocked_id : b.blocker_id) || [];
+
       let query = supabase
         .from("posts")
         .select(`
@@ -73,6 +95,10 @@ export default function SocialPage() {
 
       if (skippedIds.length > 0) {
         query = query.not("id", "in", `(${skippedIds.join(',')})`);
+      }
+
+      if (blockedUserIds.length > 0) {
+        query = query.not("user_id", "in", `(${blockedUserIds.join(',')})`);
       }
 
       const { data: postsData, error: postsError } = await query;
@@ -313,6 +339,79 @@ export default function SocialPage() {
     }
   };
 
+  const handleBlock = async (targetUserId: string) => {
+    if (!user || user.id === targetUserId) return;
+    
+    try {
+      const { error } = await supabase.from("user_blocks").insert({
+        blocker_id: user.id,
+        blocked_id: targetUserId
+      });
+      
+      if (error) throw error;
+      
+      setPosts(prev => prev.filter(p => p.profiles.id !== targetUserId));
+      toast.success("User blocked. You won't see their content anymore.");
+    } catch (error: any) {
+      console.error("Block error:", error);
+      toast.error("Failed to block user");
+    }
+  };
+
+  const handleUnmatch = async (targetUserId: string) => {
+    if (!user || user.id === targetUserId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("matches")
+        .delete()
+        .or(`and(user_1.eq.${user.id},user_2.eq.${targetUserId}),and(user_1.eq.${targetUserId},user_2.eq.${user.id})`);
+      
+      if (error) throw error;
+      
+      // Optionally remove their posts from feed too
+      setPosts(prev => prev.filter(p => p.profiles.id !== targetUserId));
+      toast.success("Unmatched successfully.");
+    } catch (error: any) {
+      console.error("Unmatch error:", error);
+      toast.error("Failed to unmatch");
+    }
+  };
+
+  const submitReport = async () => {
+    if (!reportReason.trim() || !reportingUserId) {
+      toast.error("Please provide a reason");
+      return;
+    }
+
+    try {
+      setIsSubmittingReport(true);
+      const { error } = await supabase.from("reports").insert({
+        reporter_id: user.id,
+        reported_user_id: reportingUserId,
+        reported_post_id: reportingPostId,
+        reason: reportReason
+      });
+
+      if (error) throw error;
+
+      if (reportingPostId) {
+        setPosts(prev => prev.filter(p => p.id !== reportingPostId));
+      }
+      
+      setIsReporting(false);
+      setReportReason("");
+      setReportingPostId(null);
+      setReportingUserId(null);
+      toast.success("Report submitted. Thank you for keeping Aura safe.");
+    } catch (error: any) {
+      console.error("Report error:", error);
+      toast.error("Failed to submit report");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -534,9 +633,43 @@ export default function SocialPage() {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
-                    <MoreHorizontal className="w-5 h-5" />
-                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
+                        <MoreHorizontal className="w-5 h-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setReportingPostId(post.id);
+                          setReportingUserId(post.profiles?.id);
+                          setIsReporting(true);
+                        }}
+                        className="rounded-xl gap-3 cursor-pointer py-3"
+                      >
+                        <Flag className="w-4 h-4 text-orange-500" />
+                        <span className="font-bold">Report Post</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleUnmatch(post.profiles?.id)}
+                        className="rounded-xl gap-3 cursor-pointer py-3"
+                      >
+                        <HeartOff className="w-4 h-4 text-pink-500" />
+                        <span className="font-bold">Unmatch</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="my-1 bg-border/50" />
+                      <DropdownMenuItem 
+                        onClick={() => handleBlock(post.profiles?.id)}
+                        variant="destructive"
+                        className="rounded-xl gap-3 cursor-pointer py-3"
+                      >
+                        <Ban className="w-4 h-4" />
+                        <span className="font-bold">Block User</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </CardHeader>
                 
                 {post.image_url && (
@@ -732,6 +865,45 @@ export default function SocialPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Report Dialog */}
+      <Dialog open={isReporting} onOpenChange={setIsReporting}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
+          <DialogHeader className="p-8 pb-4">
+            <DialogTitle className="text-2xl font-black italic tracking-tighter flex items-center gap-3">
+              <ShieldAlert className="w-6 h-6 text-orange-500" />
+              Report Aura
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-8 pt-4 space-y-6">
+            <p className="text-sm text-muted-foreground font-medium italic">
+              Help us understand what's wrong with this content. Your report is anonymous.
+            </p>
+            <Textarea 
+              placeholder="Reason for reporting (e.g., inappropriate content, harassment...)"
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="min-h-[120px] bg-secondary/20 border-none rounded-2xl p-6 text-lg font-medium italic placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
+            />
+            <DialogFooter className="flex-row gap-3 pt-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsReporting(false)}
+                className="flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={submitReport}
+                disabled={isSubmittingReport || !reportReason.trim()}
+                className="flex-[2] h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm uppercase tracking-widest transition-all"
+              >
+                {isSubmittingReport ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit Report"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
