@@ -197,6 +197,9 @@ export default function SocialPage() {
       </div>
 
       <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl relative z-10">
+        <div className="text-center mb-8 opacity-40">
+          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-foreground italic">&quot;Real people. Real intentions.&quot;</p>
+        </div>
         {/* Stories & Quick Emit */}
         <div className="mb-12 space-y-8">
           {/* Stories */}

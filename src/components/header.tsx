@@ -29,14 +29,17 @@ export function Header() {
     <header className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-xl z-50">
       <div className="max-w-2xl mx-auto px-4">
         <div className="h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-                <img 
-                  src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/document-uploads/logo-1767110846410.png?width=8000&height=8000&resize=contain" 
-                  alt="Nomance Logo" 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform object-contain" 
-                />
-              <span className="text-lg md:text-xl font-black tracking-tighter text-foreground">NOMANCE</span>
-            </Link>
+              <Link href="/" className="flex items-center gap-2 group">
+                  <img 
+                    src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/document-uploads/logo-1767110846410.png?width=8000&height=8000&resize=contain" 
+                    alt="Nomance Logo" 
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform object-contain" 
+                  />
+                <div className="flex flex-col">
+                  <span className="text-lg md:text-xl font-black tracking-tighter text-foreground leading-none">NOMANCE</span>
+                  <span className="text-[6px] font-black uppercase tracking-[0.2em] text-primary/60 leading-none mt-1 whitespace-nowrap">Real people. Real intentions.</span>
+                </div>
+              </Link>
 
               <div className="flex items-center gap-2">
                 <Link href="/coach">
