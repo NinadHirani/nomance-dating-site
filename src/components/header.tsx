@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { User, Sparkles } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 export function Header() {
   const [user, setUser] = useState<any>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     const getUser = async () => {
@@ -24,6 +26,9 @@ export function Header() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const isHidden = ["/auth"].includes(pathname);
+  if (isHidden) return null;
 
   return (
     <header className="fixed top-0 w-full border-b border-border bg-background/80 backdrop-blur-xl z-50">
