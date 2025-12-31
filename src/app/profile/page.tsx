@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useRouter } from "next/navigation";
 import { Loader2, Heart, User, Users, UserPlus, LogOut, Edit3, MapPin, Sparkles, LayoutGrid, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -88,196 +89,219 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <Navbar />
-      
-      <main className="container mx-auto px-4 pt-24 max-w-2xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-foreground">My Account</h1>
-          <Button 
-            onClick={() => router.push("/profile/edit")}
-            className="rounded-full bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold"
-          >
-            <Edit3 className="w-4 h-4 mr-2" />
-            Edit Profile
-          </Button>
-        </div>
+    <div className="h-screen bg-background text-foreground overflow-hidden relative">
+      {/* Extraordinary Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-[30%] -left-[20%] w-[80%] h-[80%] bg-primary/10 blur-[250px] rounded-full" />
+        <div className="absolute -bottom-[30%] -right-[20%] w-[80%] h-[80%] bg-accent/10 blur-[250px] rounded-full" />
+      </div>
 
-        <div className="space-y-6">
-          {/* Account Management Card First */}
-          <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
-            <CardHeader className="bg-secondary/10 border-b border-border/50">
-              <CardTitle className="text-xl">Account Settings</CardTitle>
-              <CardDescription>Manage your authentication and active sessions.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                    {user?.email?.[0].toUpperCase()}
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="font-bold text-foreground truncate max-w-[200px]">{user?.email}</p>
-                    <p className="text-xs text-muted-foreground">Active Session</p>
-                  </div>
-                </div>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 shrink-0">Signed In</Badge>
+      <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+        <div className="container mx-auto px-4 pt-24 pb-32 max-w-2xl">
+          <header className="mb-12 flex items-center justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                <User className="w-3 h-3 fill-current" />
+                Identity Management
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
-                  onClick={handleSwitchAccount}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Switch Account
-                </Button>
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
-                  onClick={handleAddAccount}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Account
-                </Button>
-              </div>
-              
-              <Button 
-                type="button"
-                variant="ghost" 
-                className="w-full h-12 rounded-xl font-bold text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout Current Account
-              </Button>
-            </CardContent>
-          </Card>
+              <h1 className="text-5xl font-black italic tracking-tighter text-foreground">Account</h1>
+            </div>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/profile/edit")}
+              className="h-14 px-8 rounded-2xl bg-foreground text-background font-black text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3"
+            >
+              <Edit3 className="w-4 h-4" />
+              Refine Profile
+            </motion.button>
+          </header>
 
-          {/* Profile Overview Card */}
-          <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
-            <CardHeader className="bg-secondary/10 border-b border-border/50">
-              <CardTitle className="text-xl">Profile Preview</CardTitle>
-              <CardDescription>How others see you on Nomance.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-secondary overflow-hidden border-2 border-border">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-muted-foreground" />
+          <div className="space-y-8">
+            {/* Account Management Card */}
+            <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+              <CardHeader className="p-10 pb-4">
+                <CardTitle className="text-2xl font-black italic tracking-tighter">Settings</CardTitle>
+                <CardDescription className="text-muted-foreground font-medium italic">Manage your authentication and active sessions.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 pt-4 space-y-6">
+                <div className="flex items-center justify-between p-6 bg-secondary/5 rounded-[2rem] border border-border/50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-[1.5rem] bg-foreground text-background flex items-center justify-center font-black italic text-2xl shadow-lg">
+                      {user?.email?.[0].toUpperCase()}
                     </div>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">{profile?.full_name || "Nomance Member"}</h2>
-                  <div className="flex items-center text-sm text-muted-foreground mt-1">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    <span>Global Community</span>
+                    <div>
+                      <p className="font-black italic tracking-tight text-foreground text-lg truncate max-w-[200px]">{user?.email}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Active Session</p>
+                    </div>
+                  </div>
+                  <div className="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest border border-primary/20">
+                    Verified
                   </div>
                 </div>
-              </div>
-
-              {profile?.bio && (
-                <div className="bg-secondary/20 p-4 rounded-2xl">
-                  <p className="text-sm text-muted-foreground italic leading-relaxed">
-                    "{profile.bio}"
-                  </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="h-14 rounded-2xl border-border bg-transparent font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground transition-all"
+                    onClick={handleSwitchAccount}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Switch
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="h-14 rounded-2xl border-border bg-transparent font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground transition-all"
+                    onClick={handleAddAccount}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add
+                  </Button>
                 </div>
-              )}
+                
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  className="w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout Current Account
+                </Button>
+              </CardContent>
+            </Card>
 
-              {profile?.values && profile.values.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Core Values</p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.values.map((val: string) => (
-                      <Badge key={val} variant="secondary" className="rounded-full px-3 py-1 font-medium bg-primary/5 text-primary border-primary/10">
-                        {val}
-                      </Badge>
-                    ))}
+            {/* Profile Overview Card */}
+            <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+              <CardHeader className="p-10 pb-4">
+                <CardTitle className="text-2xl font-black italic tracking-tighter">Profile Preview</CardTitle>
+                <CardDescription className="text-muted-foreground font-medium italic">How others see you on Nomance.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 pt-4 space-y-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-24 h-24 rounded-[2rem] p-0.5 bg-gradient-to-tr from-primary to-accent shadow-xl overflow-hidden">
+                    <div className="w-full h-full rounded-[1.8rem] border-2 border-background overflow-hidden relative">
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-secondary">
+                          <User className="w-10 h-10 text-muted-foreground/30" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black italic tracking-tighter text-foreground">{profile?.full_name || "Nomance Member"}</h2>
+                    <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1">
+                      <MapPin className="w-3 h-3 mr-1 text-primary" />
+                      <span>Global Community</span>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              <Button 
-                onClick={() => router.push("/profile/edit")}
-                variant="outline"
-                className="w-full h-12 rounded-xl border-2 border-primary/20 text-primary font-bold hover:bg-primary/5"
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit Full Profile
-              </Button>
-            </CardContent>
-          </Card>
+                {profile?.bio && (
+                  <div className="bg-secondary/5 p-8 rounded-[2rem] border border-border/50 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Sparkles className="w-16 h-16 text-primary" />
+                    </div>
+                    <p className="text-lg text-foreground italic font-medium leading-relaxed relative z-10">
+                      &quot;{profile.bio}&quot;
+                    </p>
+                  </div>
+                )}
 
-            <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-6 h-6 text-primary" />
+                {profile?.values && profile.values.length > 0 && (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 ml-4">Core Values</p>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.values.map((val: string) => (
+                        <Badge key={val} variant="secondary" className="rounded-full px-5 py-2 text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-all cursor-default">
+                          {val}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="bg-primary/5 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-primary/10 flex items-start gap-6 shadow-xl relative overflow-hidden group">
+              <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full -top-1/2 -left-1/4 w-1/2 h-full" />
+              <div className="w-16 h-16 rounded-[1.5rem] bg-primary/10 flex items-center justify-center flex-shrink-0 relative z-10">
+                <Sparkles className="w-8 h-8 text-primary fill-current" />
               </div>
-              <div>
-                <h3 className="font-bold text-foreground">Verified Status</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+              <div className="relative z-10">
+                <h3 className="text-xl font-black italic tracking-tighter text-foreground">Verified Status</h3>
+                <p className="text-muted-foreground font-medium italic mt-1 leading-relaxed">
                   Complete your profile to unlock the verification badge and gain priority in match discovery.
                 </p>
               </div>
             </div>
 
             {/* My Aura Section */}
-            <div className="space-y-6 pt-4">
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <LayoutGrid className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-black italic tracking-tighter">My Aura Feed</h2>
+            <div className="space-y-8 pt-8">
+              <div className="flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
+                    <LayoutGrid className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-3xl font-black italic tracking-tighter">My Aura Feed</h2>
                 </div>
-                <Badge variant="outline" className="rounded-full border-primary/20 text-primary font-bold">
-                  {posts.length} Posts
-                </Badge>
+                <div className="px-4 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/20">
+                  {posts.length} CREATIONS
+                </div>
               </div>
 
               {posts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   {posts.map((post) => (
-                    <Card key={post.id} className="rounded-3xl border-border overflow-hidden group hover:border-primary/50 transition-all">
-                      <div className="aspect-square relative bg-secondary/20">
-                        {post.image_url ? (
-                          post.media_type === 'video' ? (
-                            <video src={post.image_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                    <motion.div
+                      key={post.id}
+                      whileHover={{ y: -5 }}
+                      className="group"
+                    >
+                      <Card className="bg-card/50 backdrop-blur-3xl border-border rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:border-primary/30 transition-all duration-500">
+                        <div className="aspect-square relative bg-secondary/5">
+                          {post.image_url ? (
+                            post.media_type === 'video' ? (
+                              <video src={post.image_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
+                            ) : (
+                              <img src={post.image_url} alt="Aura" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            )
                           ) : (
-                            <img src={post.image_url} alt="Aura" className="w-full h-full object-cover" />
-                          )
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center p-6">
-                            <p className="text-xs font-medium italic text-center text-muted-foreground line-clamp-3">
-                              "{post.content}"
-                            </p>
+                            <div className="w-full h-full flex items-center justify-center p-8">
+                              <p className="text-sm font-medium italic text-center text-muted-foreground/60 line-clamp-4">
+                                &quot;{post.content}&quot;
+                              </p>
+                            </div>
+                          )}
+                          <div className="absolute top-4 right-4 z-10">
+                            <div className="px-3 py-1 bg-background/80 backdrop-blur-xl rounded-full text-foreground border border-border/50 text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg">
+                              {post.likes_count || 0} <Heart className="w-2.5 h-2.5 fill-primary text-primary" />
+                            </div>
                           </div>
-                        )}
-                        <div className="absolute top-2 right-2">
-                          <Badge className="bg-background/80 backdrop-blur-md text-foreground border-none text-[8px] font-black uppercase tracking-widest px-2 py-0.5">
-                            {post.likes_count || 0} <Heart className="w-2 h-2 ml-1 fill-primary text-primary" />
-                          </Badge>
                         </div>
-                      </div>
-                      <CardContent className="p-4">
-                        <p className="text-[10px] font-medium italic line-clamp-2 text-muted-foreground">
-                          {post.content}
-                        </p>
-                      </CardContent>
-                    </Card>
+                        <CardContent className="p-6">
+                          <p className="text-xs font-medium italic line-clamp-2 text-muted-foreground leading-relaxed">
+                            {post.content}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-secondary/10 rounded-3xl border border-dashed border-border">
-                  <p className="text-muted-foreground italic">You haven't shared your aura yet.</p>
+                <div className="text-center py-20 bg-card/30 backdrop-blur-xl rounded-[3rem] border border-dashed border-muted-foreground/20 shadow-inner">
+                  <div className="w-16 h-16 bg-muted/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6">
+                    <Zap className="w-8 h-8 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-muted-foreground font-medium italic text-lg">You haven't shared your aura yet.</p>
                   <Button 
                     variant="link" 
                     onClick={() => router.push("/social")}
-                    className="text-primary font-bold mt-2"
+                    className="text-primary font-black uppercase tracking-widest text-[10px] mt-4 hover:text-primary/80"
                   >
                     Go to Feed
                   </Button>
@@ -285,6 +309,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+        </div>
       </main>
     </div>
   );

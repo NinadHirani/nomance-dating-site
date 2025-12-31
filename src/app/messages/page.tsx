@@ -95,84 +95,102 @@ export default function MessagesListPage() {
     return <LoadingScreen />;
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      
-      
-      <main className="container mx-auto px-4 pt-12 pb-24 max-w-2xl">
-        <header className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Messages</h1>
-            <p className="text-muted-foreground">High-intent conversations with your matches.</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <MessageCircle className="w-6 h-6 text-primary" />
-          </div>
-        </header>
+return (
+<div className="h-screen bg-background text-foreground overflow-hidden relative">
+{/* Extraordinary Background Elements */}
+<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+<div className="absolute -top-[30%] -left-[20%] w-[80%] h-[80%] bg-primary/10 blur-[250px] rounded-full" />
+<div className="absolute -bottom-[30%] -right-[20%] w-[80%] h-[80%] bg-accent/10 blur-[250px] rounded-full" />
+</div>
 
-        <div className="space-y-3">
-          {chats.length === 0 ? (
-            <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border">
-              <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MessageCircle className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-xl font-bold mb-2 text-foreground">No conversations yet</h2>
-              <p className="text-muted-foreground max-w-xs mx-auto mb-8">
-                Go to Discovery to find intentional connections and start chatting!
-              </p>
-              <Link href="/discovery">
-                <Badge className="px-4 py-2 bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90">
-                  Find Matches
-                </Badge>
-              </Link>
-            </div>
-          ) : (
-            chats.map((chat) => (
-              <motion.div
-                key={chat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.01 }}
-                className="group"
-              >
-                <Link href={`/messages/${chat.id}`}>
-                  <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group-hover:border-primary/20">
-                    <div className="relative">
-                      <Avatar className="w-14 h-14 border-2 border-background shadow-sm">
-                        <AvatarImage src={chat.otherProfile?.avatar_url || `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop`} />
-                        <AvatarFallback className="bg-secondary text-primary">{chat.otherProfile?.full_name?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-background rounded-full flex items-center justify-center shadow-sm">
-                        <ShieldCheck className="w-3 h-3 text-primary fill-primary" />
-                      </div>
-                    </div>
+<main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+<div className="container mx-auto px-4 pt-24 pb-32 max-w-2xl">
+<header className="mb-12 flex items-center justify-between">
+<div>
+<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+<ShieldCheck className="w-3 h-3 fill-current" />
+Secure Connection
+</div>
+<h1 className="text-5xl font-black italic tracking-tighter text-foreground">Messages</h1>
+<p className="text-muted-foreground font-medium italic mt-2">High-intent conversations with your matches.</p>
+</div>
+<div className="w-16 h-16 rounded-[2rem] bg-card/50 backdrop-blur-3xl border border-border flex items-center justify-center shadow-2xl">
+<MessageCircle className="w-8 h-8 text-primary" />
+</div>
+</header>
 
-                    <div className="flex-grow min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                          {chat.otherProfile?.full_name}
-                        </h3>
-                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                          {chat.lastMessage 
-                            ? new Date(chat.lastMessage.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
-                            : "New match"}
-                        </span>
-                      </div>
-                      <p className={`text-sm truncate ${!chat.lastMessage || (chat.lastMessage.sender_id !== user?.id && !chat.lastMessage.read_at) ? "text-foreground font-bold" : "text-muted-foreground"}`}>
-                        {chat.lastMessage 
-                          ? (chat.lastMessage.sender_id === user?.id ? `You: ${chat.lastMessage.content}` : chat.lastMessage.content)
-                          : "Say something meaningful..."}
-                      </p>
-                    </div>
+<div className="space-y-4">
+{chats.length === 0 ? (
+<div className="text-center py-24 bg-card/40 backdrop-blur-3xl rounded-[3rem] border border-dashed border-muted-foreground/30 shadow-2xl">
+<div className="w-20 h-20 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl">
+<MessageCircle className="w-10 h-10 text-muted-foreground/50" />
+</div>
+<h2 className="text-3xl font-black italic tracking-tighter mb-4 text-foreground">No connections yet</h2>
+<p className="text-muted-foreground font-medium italic max-w-xs mx-auto mb-10 leading-relaxed">
+Explore the feed to find intentional connections and start your journey.
+</p>
+<Link href="/social">
+<button className="h-14 px-10 rounded-2xl bg-foreground text-background font-black text-sm uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/20">
+Discovery Feed
+</button>
+</Link>
+</div>
+) : (
+chats.map((chat) => (
+<motion.div
+key={chat.id}
+initial={{ opacity: 0, y: 20 }}
+animate={{ opacity: 1, y: 0 }}
+whileHover={{ scale: 1.02, backgroundColor: "hsl(var(--card)/0.8)" }}
+whileTap={{ scale: 0.98 }}
+className="group"
+>
+<Link href={`/messages/${chat.id}`}>
+<div className="bg-card/50 backdrop-blur-3xl border border-border rounded-[2.5rem] p-6 flex items-center gap-6 hover:shadow-2xl transition-all duration-500 group-hover:border-primary/30">
+<div className="relative shrink-0">
+<div className="w-20 h-20 rounded-[2rem] p-0.5 bg-gradient-to-tr from-primary via-primary/50 to-accent shadow-xl overflow-hidden">
+<div className="w-full h-full rounded-[1.8rem] border-2 border-background overflow-hidden">
+<Avatar className="w-full h-full rounded-none">
+<AvatarImage src={chat.otherProfile?.avatar_url || `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop`} className="object-cover" />
+<AvatarFallback className="bg-secondary text-primary font-black italic">{chat.otherProfile?.full_name?.[0]}</AvatarFallback>
+</Avatar>
+</div>
+</div>
+<div className="absolute -bottom-1 -right-1 w-6 h-6 bg-background rounded-full flex items-center justify-center shadow-lg border border-border">
+<ShieldCheck className="w-3.5 h-3.5 text-primary fill-primary" />
+</div>
+</div>
 
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))
-          )}
-        </div>
-      </main>
-    </div>
-  );
+<div className="flex-grow min-w-0">
+<div className="flex items-center justify-between mb-1.5">
+<h3 className="text-xl font-black italic tracking-tighter text-foreground group-hover:text-primary transition-colors">
+{chat.otherProfile?.full_name}
+</h3>
+<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">
+{chat.lastMessage 
+? new Date(chat.lastMessage.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
+: "AUTHENTIC MATCH"}
+</span>
+</div>
+<p className={`text-sm italic font-medium truncate ${!chat.lastMessage || (chat.lastMessage.sender_id !== user?.id && !chat.lastMessage.read_at) ? "text-foreground font-bold" : "text-muted-foreground/70"}`}>
+{chat.lastMessage 
+? (chat.lastMessage.sender_id === user?.id ? `You: ${chat.lastMessage.content}` : chat.lastMessage.content)
+: "Begin a meaningful conversation..."}
+</p>
+</div>
+
+<div className="w-12 h-12 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/50 transition-all shadow-inner">
+<ChevronRight className="w-5 h-5" />
+</div>
+</div>
+</Link>
+</motion.div>
+))
+)}
+</div>
+</div>
+</main>
+</div>
+);
 }
+

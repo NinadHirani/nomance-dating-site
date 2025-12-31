@@ -117,235 +117,282 @@ export default function CoachPage() {
     return <LoadingScreen />;
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      
+return (
+<div className="h-screen bg-background text-foreground overflow-hidden relative">
+{/* Extraordinary Background Elements */}
+<div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+<div className="absolute -top-[30%] -left-[20%] w-[80%] h-[80%] bg-primary/10 blur-[250px] rounded-full" />
+<div className="absolute -bottom-[30%] -right-[20%] w-[80%] h-[80%] bg-accent/10 blur-[250px] rounded-full" />
+</div>
 
-      <main className="container mx-auto px-4 pt-24 pb-12 max-w-4xl">
-        <header className="mb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-primary text-sm font-semibold mb-4">
-            <Sparkles className="w-4 h-4" />
-            AI-Powered Insights
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground mb-3">Profile Coach</h1>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Get personalized suggestions to make your profile more authentic and attractive.
-          </p>
-        </header>
+<main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+<div className="container mx-auto px-4 pt-24 pb-32 max-w-4xl">
+<header className="mb-12 text-center">
+<div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+<Sparkles className="w-3 h-3 fill-current" />
+Intentional Growth
+</div>
+<h1 className="text-6xl font-black italic tracking-tighter text-foreground mb-4">Profile Coach</h1>
+<p className="text-muted-foreground/80 max-w-lg mx-auto font-medium italic text-lg leading-relaxed">
+Refine your digital presence with AI-powered insights designed for meaningful connection.
+</p>
+</header>
 
-        {/* Tab Navigation */}
-        <div className="flex justify-center gap-2 mb-8">
-          {[
-            { id: "photos", label: "Photos", icon: Camera },
-            { id: "bio", label: "Bio", icon: FileText },
-            { id: "tone", label: "Tone", icon: MessageSquare },
-          ].map((tab) => (
-            <Button
-              key={tab.id}
-              variant={activeTab === tab.id ? "default" : "outline"}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`rounded-full px-6 ${activeTab === tab.id ? "bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"}`}
-            >
-              <tab.icon className="w-4 h-4 mr-2" />
-              {tab.label}
-            </Button>
-          ))}
-        </div>
+{/* Tab Navigation */}
+<div className="flex justify-center p-2 bg-card/50 backdrop-blur-3xl border border-border rounded-[2.5rem] max-w-md mx-auto mb-12 shadow-2xl">
+{[
+{ id: "photos", label: "Photos", icon: Camera },
+{ id: "bio", label: "Bio", icon: FileText },
+{ id: "tone", label: "Tone", icon: MessageSquare },
+].map((tab) => (
+<button
+key={tab.id}
+onClick={() => setActiveTab(tab.id as any)}
+className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+activeTab === tab.id 
+? "bg-foreground text-background shadow-xl" 
+: "text-muted-foreground hover:text-foreground"
+}`}
+>
+<tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "fill-current" : ""}`} />
+{tab.label}
+</button>
+))}
+</div>
 
-        {/* Photos Tab */}
-        {activeTab === "photos" && (
-          <div className="space-y-6">
-            <Card className="border-border bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-primary" />
-                  Photo Suggestions
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  A diverse photo set tells your story better than any bio.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {PHOTO_TIPS.map((tip, index) => (
-                  <div 
-                    key={tip.id}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-secondary/10 border border-border hover:border-primary/30 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-bold">{index + 1}</span>
-                    </div>
-                    <div className="flex-grow">
-                      <p className="text-foreground font-medium">{tip.tip}</p>
-                      <Badge variant="secondary" className="mt-2 bg-secondary/30 text-primary text-xs">
-                        {tip.category}
-                      </Badge>
-                    </div>
-                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-primary">
-                      <ChevronRight className="w-5 h-5" />
-                    </Button>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+{/* Photos Tab */}
+{activeTab === "photos" && (
+<div className="space-y-8">
+<Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+<CardHeader className="p-10 pb-4">
+<div className="flex items-center gap-4 mb-2">
+<div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+<Camera className="w-6 h-6" />
+</div>
+<div>
+<CardTitle className="text-3xl font-black italic tracking-tighter">Photo Strategy</CardTitle>
+<CardDescription className="text-muted-foreground font-medium italic">
+A diverse photo set tells your story better than any bio.
+</CardDescription>
+</div>
+</div>
+</CardHeader>
+<CardContent className="p-10 pt-4 space-y-4">
+{PHOTO_TIPS.map((tip, index) => (
+<div 
+key={tip.id}
+className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border border-border/50 hover:border-primary/30 transition-all group"
+>
+<div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 font-black italic text-lg shadow-lg">
+{index + 1}
+</div>
+<div className="flex-grow">
+<p className="text-foreground font-bold text-lg tracking-tight italic">"{tip.tip}"</p>
+<div className="mt-2 inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">
+{tip.category}
+</div>
+</div>
+<div className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/50 transition-all">
+<ChevronRight className="w-5 h-5" />
+</div>
+</div>
+))}
+</CardContent>
+</Card>
 
-            <Card className="border-border bg-card border-dashed">
-              <CardContent className="py-12 text-center">
-                <div className="w-16 h-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Camera className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="font-bold text-lg mb-2 text-foreground">Upload Photos for Analysis</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Get AI-powered feedback on lighting, composition, and appeal.
-                </p>
-                <Button variant="outline" className="rounded-full border-primary text-primary hover:bg-primary/10">
-                  Coming Soon
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+<Card className="bg-card/30 backdrop-blur-xl border-dashed border-muted-foreground/30 rounded-[3rem] overflow-hidden">
+<CardContent className="p-16 text-center">
+<div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl">
+<Camera className="w-10 h-10 text-primary" />
+</div>
+<h3 className="text-2xl font-black italic tracking-tighter mb-2">Visual Aura Analysis</h3>
+<p className="text-muted-foreground font-medium italic mb-8 max-w-sm mx-auto">
+Get AI-powered feedback on lighting, composition, and intentional appeal.
+</p>
+<Button disabled className="h-14 px-10 rounded-2xl bg-foreground/10 text-foreground font-black text-xs uppercase tracking-widest border border-border">
+Calibrating AI...
+</Button>
+</CardContent>
+</Card>
+</div>
+)}
 
-        {/* Bio Tab */}
-        {activeTab === "bio" && (
-          <div className="space-y-6">
-            <Card className="border-border bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  Bio Optimizer
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Transform generic descriptions into magnetic storytelling.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Your Current Bio</label>
-                  <Textarea
-                    value={currentBio}
-                    onChange={(e) => setCurrentBio(e.target.value)}
-                    placeholder="Enter your bio here..."
-                    className="min-h-[120px] bg-background border-border"
-                  />
-                </div>
+{/* Bio Tab */}
+{activeTab === "bio" && (
+<div className="space-y-8">
+<Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+<CardHeader className="p-10 pb-4">
+<div className="flex items-center gap-4 mb-2">
+<div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+<FileText className="w-6 h-6" />
+</div>
+<div>
+<CardTitle className="text-3xl font-black italic tracking-tighter">Bio Optimizer</CardTitle>
+<CardDescription className="text-muted-foreground font-medium italic">
+Transform generic descriptions into magnetic storytelling.
+</CardDescription>
+</div>
+</div>
+</CardHeader>
+<CardContent className="p-10 pt-4 space-y-8">
+<div className="space-y-4">
+<label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-4">Current Narrative</label>
+<Textarea
+value={currentBio}
+onChange={(e) => setCurrentBio(e.target.value)}
+placeholder="Describe your essence..."
+className="min-h-[160px] bg-secondary/5 border-border rounded-[2rem] p-8 text-lg font-medium italic placeholder:text-muted-foreground/30 focus-visible:ring-primary/20"
+/>
+</div>
 
-                <Button 
-                  onClick={analyzeBio} 
-                  disabled={analyzing}
-                  className="w-full rounded-full font-bold"
-                >
-                  {analyzing ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Analyze & Improve
-                    </>
-                  )}
-                </Button>
+<Button 
+onClick={analyzeBio} 
+disabled={analyzing}
+className="w-full h-16 rounded-[2rem] bg-foreground text-background font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-black/20 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+>
+{analyzing ? (
+<>
+<Loader2 className="w-5 h-5 mr-3 animate-spin" />
+Distilling Essence...
+</>
+) : (
+<>
+<Sparkles className="w-5 h-5 mr-3 fill-current group-hover:scale-125 transition-transform" />
+Analyze & Improve
+</>
+)}
+</Button>
 
-                {improvedBio && (
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Lightbulb className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-bold text-primary">Suggested Improvement</span>
-                    </div>
-                    <p className="text-foreground mb-4">{improvedBio}</p>
-                    <Button 
-                      onClick={applyImprovement}
-                      variant="secondary" 
-                      className="rounded-full"
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      Apply This Bio
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+{improvedBio && (
+<div className="p-10 rounded-[2.5rem] bg-primary/5 border border-primary/20 shadow-inner relative overflow-hidden group">
+<div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<Sparkles className="w-24 h-24 text-primary" />
+</div>
+<div className="relative z-10">
+<div className="flex items-center gap-3 mb-6">
+<div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<Lightbulb className="w-4 h-4 text-primary fill-current" />
+</div>
+<span className="text-[10px] font-black uppercase tracking-widest text-primary">Evolutionary Suggestion</span>
+</div>
+<p className="text-2xl font-medium italic leading-relaxed text-foreground mb-8">
+&quot;{improvedBio}&quot;
+</p>
+<Button 
+onClick={applyImprovement}
+className="h-12 px-8 rounded-full bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-all"
+>
+<Check className="w-4 h-4 mr-2" />
+Adopt this Aura
+</Button>
+</div>
+</div>
+)}
+</CardContent>
+</Card>
 
-            <Card className="border-border bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground text-lg">Before & After Examples</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {BIO_SUGGESTIONS.map((example, index) => (
-                  <div key={index} className="p-4 rounded-xl bg-secondary/10 border border-border">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Before</span>
-                        <p className="text-foreground/60 mt-1 line-through">{example.original}</p>
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-primary uppercase tracking-wider">After</span>
-                        <p className="text-foreground mt-1">{example.improved}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="mt-3 text-xs border-primary/30 text-primary">
-                      {example.reason}
-                    </Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+<Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+<CardHeader className="p-10 pb-4">
+<CardTitle className="text-2xl font-black italic tracking-tighter">Evolutionary Examples</CardTitle>
+</CardHeader>
+<CardContent className="p-10 pt-4 space-y-6">
+{BIO_SUGGESTIONS.map((example, index) => (
+<div key={index} className="p-8 rounded-[2rem] bg-secondary/5 border border-border/50">
+<div className="grid md:grid-cols-2 gap-8 relative">
+<div className="space-y-2">
+<span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-[0.3em]">Ordinary</span>
+<p className="text-muted-foreground/60 italic font-medium line-through decoration-muted-foreground/30">{example.original}</p>
+</div>
+<div className="space-y-2">
+<span className="text-[8px] font-black text-primary uppercase tracking-[0.3em]">Extraordinary</span>
+<p className="text-foreground italic font-bold leading-tight">&quot;{example.improved}&quot;</p>
+</div>
+<div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
+<Zap className="w-3 h-3 text-primary fill-current" />
+</div>
+</div>
+<div className="mt-6 pt-6 border-t border-border/50">
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-[8px] font-black uppercase tracking-widest">
+<Sparkles className="w-2 h-2" />
+{example.reason}
+</div>
+</div>
+</div>
+))}
+</CardContent>
+</Card>
+</div>
+)}
 
-        {/* Tone Tab */}
-        {activeTab === "tone" && (
-          <div className="space-y-6">
-            <Card className="border-border bg-card">
-              <CardHeader>
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  Tone Analysis
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  How your profile comes across to potential matches.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {TONE_ANALYSIS.map((item) => (
-                  <div key={item.aspect} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-foreground">{item.aspect}</span>
-                      <span className="text-sm font-bold text-primary">{item.score}%</span>
-                    </div>
-                    <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary rounded-full transition-all duration-500"
-                        style={{ width: `${item.score}%` }}
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground">{item.suggestion}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+{/* Tone Tab */}
+{activeTab === "tone" && (
+<div className="space-y-8">
+<Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+<CardHeader className="p-10 pb-4">
+<div className="flex items-center gap-4 mb-2">
+<div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+<MessageSquare className="w-6 h-6" />
+</div>
+<div>
+<CardTitle className="text-3xl font-black italic tracking-tighter">Tone Spectrum</CardTitle>
+<CardDescription className="text-muted-foreground font-medium italic">
+How your profile resonates with potential matches.
+</CardDescription>
+</div>
+</div>
+</CardHeader>
+<CardContent className="p-10 pt-4 space-y-10">
+{TONE_ANALYSIS.map((item) => (
+<div key={item.aspect} className="space-y-4">
+<div className="flex justify-between items-end">
+<div className="space-y-1">
+<span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Metric</span>
+<h4 className="text-2xl font-black italic tracking-tighter text-foreground">{item.aspect}</h4>
+</div>
+<span className="text-3xl font-black italic tracking-tighter text-primary">{item.score}%</span>
+</div>
+<div className="h-4 bg-secondary/10 rounded-full overflow-hidden shadow-inner border border-border/50">
+<motion.div 
+initial={{ width: 0 }}
+animate={{ width: `${item.score}%` }}
+transition={{ duration: 1.5, ease: "easeOut" }}
+className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full relative"
+>
+<div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[shimmer_2s_linear_infinite]" />
+</motion.div>
+</div>
+<div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+<Zap className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+<p className="text-sm font-medium italic text-muted-foreground leading-relaxed">{item.suggestion}</p>
+</div>
+</div>
+))}
+</CardContent>
+</Card>
 
-            <Card className="border-border bg-card">
-              <CardContent className="py-8">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-xl flex items-center justify-center shrink-0">
-                    <Sparkles className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-foreground mb-1">Overall Assessment</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Your profile radiates authenticity. Focus on adding more specific stories and 
-                      conversation hooks to increase engagement. Consider starting your bio with a 
-                      surprising fact or question.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
-    </div>
-  );
+<Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
+<CardContent className="p-12">
+<div className="flex flex-col md:flex-row items-center gap-8">
+<div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center shrink-0 shadow-2xl relative group">
+<div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-75 group-hover:scale-100 transition-transform" />
+<Sparkles className="w-10 h-10 text-primary relative z-10 fill-current" />
+</div>
+<div className="text-center md:text-left">
+<h3 className="text-2xl font-black italic tracking-tighter mb-3">Holistic Essence</h3>
+<p className="text-muted-foreground font-medium italic text-lg leading-relaxed">
+Your profile radiates authenticity. Focus on adding more specific stories and 
+intentional conversation hooks to increase engagement. Consider starting your bio with a 
+surprising fact or question.
+</p>
+</div>
+</div>
+</CardContent>
+</Card>
+</div>
+)}
+</div>
+</main>
+</div>
+);
 }
+
