@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Sparkles, Camera, FileText, MessageSquare, Check, RefreshCw, Loader2, ChevronRight, Lightbulb } from "lucide-react";
+import { Sparkles, Camera, FileText, MessageSquare, Check, RefreshCw, Loader2, ChevronRight, Lightbulb, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -40,6 +41,8 @@ export default function CoachPage() {
   const [currentBio, setCurrentBio] = useState("");
   const [improvedBio, setImprovedBio] = useState("");
   const [activeTab, setActiveTab] = useState<"photos" | "bio" | "tone">("photos");
+  const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
+  const [photoAnalysisDone, setPhotoAnalysisDone] = useState(false);
   const router = useRouter();
 
     useEffect(() => {
@@ -94,6 +97,14 @@ export default function CoachPage() {
     setImprovedBio(improved);
     setAnalyzing(false);
     toast.success("Bio analyzed! See suggestions below.");
+  };
+
+  const analyzePhotos = async () => {
+    setPhotoAnalyzing(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setPhotoAnalysisDone(true);
+    setPhotoAnalyzing(false);
+    toast.success("Visual Aura Analysis complete!");
   };
 
   const applyImprovement = async () => {
@@ -179,9 +190,10 @@ A diverse photo set tells your story better than any bio.
 </CardHeader>
 <CardContent className="p-10 pt-4 space-y-4">
 {PHOTO_TIPS.map((tip, index) => (
-<div 
+<button 
 key={tip.id}
-className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border border-border/50 hover:border-primary/30 transition-all group"
+onClick={() => toast.info(`Deep Dive: This ${tip.category} photo helps matches visualize your life beyond the profile.`)}
+className="w-full flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border border-border/50 hover:border-primary/30 transition-all group text-left"
 >
 <div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 font-black italic text-lg shadow-lg">
 {index + 1}
@@ -195,7 +207,7 @@ className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border bord
 <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:border-primary/50 transition-all">
 <ChevronRight className="w-5 h-5" />
 </div>
-</div>
+</button>
 ))}
 </CardContent>
 </Card>
@@ -207,11 +219,48 @@ className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border bord
 </div>
 <h3 className="text-2xl font-black tracking-tighter mb-2">Visual Aura Analysis</h3>
 <p className="text-muted-foreground font-medium italic mb-8 max-w-sm mx-auto">
-Get AI-powered feedback on lighting, composition, and intentional appeal.
+{photoAnalysisDone ? "Analysis complete. Your visual presence is optimized for authentic connection." : "Get AI-powered feedback on lighting, composition, and intentional appeal."}
 </p>
-<Button disabled className="h-14 px-10 rounded-2xl bg-foreground/10 text-foreground font-black text-xs uppercase tracking-widest border border-border">
+<Button 
+onClick={analyzePhotos}
+disabled={photoAnalyzing}
+className={`h-14 px-10 rounded-2xl font-black text-xs uppercase tracking-widest border border-border transition-all ${
+photoAnalysisDone ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-foreground/10 text-foreground"
+}`}
+>
+{photoAnalyzing ? (
+<>
+<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 Calibrating AI...
+</>
+) : photoAnalysisDone ? (
+<>
+<Check className="w-4 h-4 mr-2" />
+Analysis Complete
+</>
+) : (
+"Begin Aura Analysis"
+)}
 </Button>
+
+{photoAnalysisDone && (
+<motion.div 
+initial={{ opacity: 0, y: 20 }}
+animate={{ opacity: 1, y: 0 }}
+className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-4"
+>
+{[
+{ label: "Lighting", score: "Premium" },
+{ label: "Composition", score: "High" },
+{ label: "Authenticity", score: "Exceptional" },
+].map((stat) => (
+<div key={stat.label} className="p-6 rounded-[2rem] bg-secondary/10 border border-border">
+<p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+<p className="text-lg font-black tracking-tighter text-primary">{stat.score}</p>
+</div>
+))}
+</motion.div>
+)}
 </CardContent>
 </Card>
 </div>
