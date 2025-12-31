@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingScreen } from "@/components/loading-screen";
 import { 
   MessageCircle, 
   Heart, 
@@ -207,16 +208,7 @@ export default function MatchesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        >
-          <Loader2 className="w-8 h-8 text-primary" />
-        </motion.div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadingScreen } from "@/components/loading-screen";
 import { Search, SlidersHorizontal, X, Heart, Sparkles, Flame, Zap, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { subYears, differenceInYears } from "date-fns";
@@ -227,18 +228,12 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Profile List */}
-          <div className="space-y-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 gap-4">
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
-                />
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground animate-pulse">Syncing Vibrations...</p>
-              </div>
-            ) : profiles.length > 0 ? (
+            {/* Profile List */}
+            <div className="space-y-4">
+              {loading ? (
+                <LoadingScreen />
+              ) : profiles.length > 0 ? (
+
               <AnimatePresence mode="popLayout">
                 {profiles.map((profile, idx) => (
                   <motion.div

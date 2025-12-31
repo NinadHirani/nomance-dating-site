@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { LoadingScreen } from "@/components/loading-screen";
 import { Calendar, MapPin, Users, Zap, Video, Coffee, Palette, BookOpen, Heart, Clock, ChevronRight, Plus, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -135,11 +136,7 @@ export default function EventsPage() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

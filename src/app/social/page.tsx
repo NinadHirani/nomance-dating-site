@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { LoadingScreen } from "@/components/loading-screen";
 import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, subYears } from "date-fns";
@@ -184,15 +185,7 @@ export default function SocialPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full"
-        />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

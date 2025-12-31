@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { LoadingScreen } from "@/components/loading-screen";
 import { Sparkles, Camera, FileText, MessageSquare, Check, RefreshCw, Loader2, ChevronRight, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -113,11 +114,7 @@ export default function CoachPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { LoadingScreen } from "@/components/loading-screen";
 import { Heart, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -64,6 +65,10 @@ export default function OnboardingPage() {
 
   const handleNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const handleBack = () => setStep((s) => Math.max(s - 1, 0));
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   const toggleValue = (val: string) => {
     setFormData(prev => ({
