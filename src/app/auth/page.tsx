@@ -11,6 +11,58 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
+function FallingHearts() {
+  const hearts = [...Array(30)];
+  const colors = ["#ff4d4d", "#e63946", "#d62828", "#9b2226", "#b91c1c"];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+      {hearts.map((_, i) => {
+        const size = Math.random() * 20 + 10;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const delay = Math.random() * 20;
+        const duration = Math.random() * 10 + 10;
+        const startX = Math.random() * 100;
+
+        return (
+          <motion.div
+            key={i}
+            initial={{ 
+              top: "-10%", 
+              left: `${startX}%`, 
+              opacity: 0, 
+              scale: 0,
+              rotate: Math.random() * 360 
+            }}
+            animate={{ 
+              top: "110%", 
+              opacity: [0, 0.6, 0.6, 0],
+              scale: [1, 1.1, 1],
+              rotate: Math.random() * 360 + 360
+            }}
+            transition={{ 
+              duration: duration, 
+              repeat: Infinity, 
+              delay: delay,
+              ease: "linear"
+            }}
+            className="absolute"
+            style={{ width: size, height: size }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill={color}
+              className="w-full h-full drop-shadow-[0_0_8px_rgba(230,57,70,0.4)]"
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AuthContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -76,6 +128,7 @@ function AuthContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050505] relative overflow-hidden px-4 py-12 perspective-[1500px]">
+      <FallingHearts />
       {/* 3D Perspective Grid Floor */}
       <div 
         className="absolute inset-0 z-0 opacity-20 pointer-events-none"
