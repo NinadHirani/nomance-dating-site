@@ -437,57 +437,93 @@ export default function SocialPage() {
               onChange={handleStoryUpload}
             />
             <motion.button 
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -5 }}
               whileTap={{ scale: 0.95 }}
               disabled={isUploadingStory}
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center gap-2 shrink-0 group"
+              className="relative w-32 h-48 rounded-[2rem] overflow-hidden shrink-0 group border border-dashed border-muted-foreground/30 bg-card/30 backdrop-blur-md flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 hover:bg-card/50"
             >
-              <div className="w-16 h-16 rounded-3xl bg-secondary/20 border-2 border-dashed border-muted-foreground/30 flex items-center justify-center p-1 transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
-                <div className="w-full h-full rounded-2xl bg-secondary/10 flex items-center justify-center">
-                    {isUploadingStory ? (
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    ) : (
-                      <Plus className="w-6 h-6 text-primary" />
-                    )}
-                  </div>
+              <div className="relative">
+                <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background text-primary-foreground">
+                  <Plus className="w-3 h-3" />
                 </div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">
-                  {isUploadingStory ? "Sharing..." : "Add Story"}
+              </div>
+              <div className="text-center px-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground block">
+                  Add Story
                 </span>
-              </motion.button>
+                <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter">
+                  Share Aura
+                </span>
+              </div>
+              {isUploadingStory && (
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              )}
+            </motion.button>
 
 
             {stories.map((group, idx) => (
               <motion.button 
                 key={idx}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 transition={{ 
                   type: "spring",
                   stiffness: 260,
                   damping: 20,
                   delay: 0.1 + idx * 0.1 
                 }}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setSelectedStory(group);
                   setStoryIndex(0);
                 }}
-                className="flex flex-col items-center gap-2 shrink-0 group"
+                className="relative w-32 h-48 rounded-[2rem] overflow-hidden shrink-0 group border border-border bg-card/50 backdrop-blur-md shadow-xl transition-all hover:border-primary/30"
               >
-                <div className="w-16 h-16 rounded-3xl p-1 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-xl shadow-primary/10">
-                  <div className="w-full h-full rounded-2xl border-4 border-background overflow-hidden">
-                    <Avatar className="w-full h-full rounded-none">
-                      <AvatarImage src={group.user?.avatar_url} className="object-cover" />
-                      <AvatarFallback className="bg-secondary rounded-none">{group.user?.full_name?.[0]}</AvatarFallback>
-                    </Avatar>
+                {/* Story Preview Background */}
+                <div className="absolute inset-0">
+                  {group.items[group.items.length - 1].media_type === 'video' ? (
+                    <video 
+                      src={group.items[group.items.length - 1].image_url} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img 
+                      src={group.items[group.items.length - 1].image_url} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      alt="Story"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                </div>
+
+                {/* Avatar Overlay */}
+                <div className="absolute top-3 left-3">
+                  <div className="w-10 h-10 rounded-2xl p-0.5 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-lg">
+                    <div className="w-full h-full rounded-xl border-2 border-background overflow-hidden">
+                      <Avatar className="w-full h-full rounded-none">
+                        <AvatarImage src={group.user?.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-secondary text-[10px]">{group.user?.full_name?.[0]}</AvatarFallback>
+                      </Avatar>
+                    </div>
                   </div>
                 </div>
-                <span className="text-[8px] font-black uppercase tracking-widest text-foreground truncate w-16 text-center">
-                  {group.user?.full_name?.split(' ')[0]}
-                </span>
+
+                {/* Name Overlay */}
+                <div className="absolute bottom-3 left-3 right-3 text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white truncate block drop-shadow-md">
+                    {group.user?.full_name?.split(' ')[0]}
+                  </span>
+                </div>
               </motion.button>
             ))}
             </div>
