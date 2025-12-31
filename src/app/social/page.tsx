@@ -8,16 +8,12 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, SlidersHorizontal, Upload, Flag, Ban, HeartOff } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -226,26 +222,8 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
   );
 }
 
-const INTENT_OPTIONS = [
-  { value: "all", label: "All Intents" },
-  { value: "casual", label: "Casual" },
-  { value: "serious", label: "Serious" },
-  { value: "friendship", label: "Friendship" },
-  { value: "networking", label: "Networking" },
-];
-
-const VIBE_OPTIONS = [
-  { value: "all", label: "All Vibes" },
-  { value: "creative", label: "Creative" },
-  { value: "adventurous", label: "Adventurous" },
-  { value: "intellectual", label: "Intellectual" },
-  { value: "social", label: "Social" },
-  { value: "calm", label: "Calm" },
-];
-
 export default function SocialPage() {
   const [posts, setPosts] = useState<any[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -260,12 +238,6 @@ export default function SocialPage() {
   const [isUploadingPostImage, setIsUploadingPostImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const postFileInputRef = useRef<HTMLInputElement>(null);
-
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [distanceFilter, setDistanceFilter] = useState<number>(100);
-  const [intentFilter, setIntentFilter] = useState<string>("all");
-  const [vibeFilter, setVibeFilter] = useState<string>("all");
-  const [activeFiltersCount, setActiveFiltersCount] = useState(0);
 
   const [isReporting, setIsReporting] = useState(false);
   const [reportingPostId, setReportingPostId] = useState<string | null>(null);
@@ -336,7 +308,6 @@ export default function SocialPage() {
 
       if (postsError) throw postsError;
       setPosts(postsData || []);
-      setFilteredPosts(postsData || []);
 
       const { data: storiesData, error: storiesError } = await supabase
         .from("stories")
@@ -367,69 +338,9 @@ export default function SocialPage() {
     }
   };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
   useEffect(() => {
     fetchData();
   }, []); 
-
-  useEffect(() => {
-    applyFilters();
-  }, [distanceFilter, intentFilter, vibeFilter, posts, userProfile]);
-
-  const applyFilters = () => {
-    let filtered = [...posts];
-    let count = 0;
-
-    if (intentFilter !== "all") {
-      filtered = filtered.filter(post => 
-        post.profiles?.intent?.toLowerCase() === intentFilter.toLowerCase()
-      );
-      count++;
-    }
-
-    if (vibeFilter !== "all") {
-      filtered = filtered.filter(post => {
-        const values = post.profiles?.values || [];
-        return values.some((v: string) => v.toLowerCase().includes(vibeFilter.toLowerCase()));
-      });
-      count++;
-    }
-
-    if (distanceFilter < 100 && userProfile?.location_lat && userProfile?.location_lng) {
-      filtered = filtered.filter(post => {
-        const profile = post.profiles;
-        if (!profile?.location_lat || !profile?.location_lng) return true;
-        const distance = calculateDistance(
-          userProfile.location_lat,
-          userProfile.location_lng,
-          profile.location_lat,
-          profile.location_lng
-        );
-        return distance <= distanceFilter;
-      });
-      count++;
-    }
-
-    setActiveFiltersCount(count);
-    setFilteredPosts(filtered);
-  };
-
-  const resetFilters = () => {
-    setDistanceFilter(100);
-    setIntentFilter("all");
-    setVibeFilter("all");
-  }; 
 
     const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass', postId: string) => {
       if (!user || user.id === targetUserId) {
@@ -439,7 +350,6 @@ export default function SocialPage() {
 
       if (action === 'pass') {
           setPosts(prev => prev.filter(p => p.id !== postId));
-          setFilteredPosts(prev => prev.filter(p => p.id !== postId));
           
           if (user?.id && user.id !== "00000000-0000-0000-0000-000000000001") {
             await supabase.from("post_skips").insert({
@@ -453,7 +363,6 @@ export default function SocialPage() {
       }
 
       setPosts(prev => prev.filter(p => p.id !== postId));
-      setFilteredPosts(prev => prev.filter(p => p.id !== postId));
 
       const { error } = await supabase.from("matches").insert({
         user_1: user.id,
@@ -707,107 +616,6 @@ export default function SocialPage() {
 <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
           <div className="container mx-auto px-4 pt-12 pb-32 max-w-2xl">
           
-          {/* Filter Button */}
-          <div className="mb-6 flex justify-end">
-            <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="rounded-full border-border bg-card/50 backdrop-blur-xl hover:bg-card/80 h-12 px-6 gap-2 relative"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Filters</span>
-                  {activeFiltersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full text-[10px] font-black flex items-center justify-center">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-[2.5rem] bg-background/95 backdrop-blur-2xl border-t border-border max-h-[80vh] overflow-y-auto">
-                <SheetHeader className="pb-6">
-                  <SheetTitle className="text-2xl font-black tracking-tighter text-center text-primary">Discovery Filters</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-8 pb-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-black uppercase tracking-widest">Distance</Label>
-                      <span className="text-sm font-bold text-primary">{distanceFilter === 100 ? "Anywhere" : `${distanceFilter} km`}</span>
-                    </div>
-                    <Slider
-                      value={[distanceFilter]}
-                      onValueChange={(value) => setDistanceFilter(value[0])}
-                      max={100}
-                      min={5}
-                      step={5}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-bold">
-                      <span>5 km</span>
-                      <span>Anywhere</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <Label className="text-sm font-black uppercase tracking-widest">Intent</Label>
-                    <ToggleGroup 
-                      type="single" 
-                      value={intentFilter}
-                      onValueChange={(value) => value && setIntentFilter(value)}
-                      className="flex flex-wrap gap-2"
-                    >
-                      {INTENT_OPTIONS.map((option) => (
-                        <ToggleGroupItem
-                          key={option.value}
-                          value={option.value}
-                          className="rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest data-[state=on]:bg-foreground data-[state=on]:text-background border border-border"
-                        >
-                          {option.label}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
-                  </div>
-
-                  <div className="space-y-4">
-                    <Label className="text-sm font-black uppercase tracking-widest">Vibe</Label>
-                    <ToggleGroup 
-                      type="single" 
-                      value={vibeFilter}
-                      onValueChange={(value) => value && setVibeFilter(value)}
-                      className="flex flex-wrap gap-2"
-                    >
-                      {VIBE_OPTIONS.map((option) => (
-                        <ToggleGroupItem
-                          key={option.value}
-                          value={option.value}
-                          className="rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest data-[state=on]:bg-foreground data-[state=on]:text-background border border-border"
-                        >
-                          {option.label}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={resetFilters}
-                      className="flex-1 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest"
-                    >
-                      Reset
-                    </Button>
-                    <Button 
-                      onClick={() => setIsFiltersOpen(false)}
-                      className="flex-[2] h-14 rounded-2xl bg-foreground text-background font-black text-[10px] uppercase tracking-widest"
-                    >
-                      Apply Filters ({filteredPosts.length} results)
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-
           {/* Stories & Quick Emit */}
           <div className="mb-12 space-y-8">
             {/* Stories */}
@@ -1012,7 +820,7 @@ export default function SocialPage() {
         {/* Feed: Extraordinary "Asymmetric" Design */}
         <div className="space-y-12">
           <AnimatePresence mode="popLayout">
-            {filteredPosts.map((post, idx) => (
+            {posts.map((post, idx) => (
               <SwipeableCard 
                 key={post.id}
                 post={post}
