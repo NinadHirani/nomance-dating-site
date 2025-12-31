@@ -398,13 +398,12 @@ export default function MatchesPage() {
                               {mood.label}
                             </span>
                           </button>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </TabsContent>
+                </TabsContent>
   
             {/* Mutual Sparks Tab */}
             <TabsContent value="mutual">
@@ -439,7 +438,8 @@ export default function MatchesPage() {
                 </div>
               )}
             </TabsContent>
-          </Tabs>
+            </Tabs>
+          </div>
         </main>
       </div>
     );
