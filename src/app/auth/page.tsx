@@ -117,7 +117,7 @@ function AuthContent() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFE1E6]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFD1DC]">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -128,7 +128,7 @@ function AuthContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFE1E6] relative overflow-hidden px-4 py-12 perspective-[1500px]">
+    <div className="min-h-screen flex items-center justify-center bg-[#FFD1DC] relative overflow-hidden px-4 py-12 perspective-[1500px]">
       <SparkTrail />
       <FallingHearts />
       
@@ -137,14 +137,14 @@ function AuthContent() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-32 -left-32 w-[600px] h-[600px] opacity-[0.05] text-[#ff4d4d]"
+          className="absolute -top-32 -left-32 w-[600px] h-[600px] opacity-[0.12] text-[#ff4d4d]"
         >
           <Heart className="w-full h-full fill-current" />
         </motion.div>
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-32 -right-32 w-[700px] h-[700px] opacity-[0.05] text-[#ff4d4d]"
+          className="absolute -bottom-32 -right-32 w-[700px] h-[700px] opacity-[0.12] text-[#ff4d4d]"
         >
           <Heart className="w-full h-full fill-current" />
         </motion.div>
@@ -330,7 +330,7 @@ function AuthContent() {
 export default function AuthPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF5F5]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FFD1DC]">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], rotate: [0, 180, 360] }}
           transition={{ duration: 2, repeat: Infinity }}
