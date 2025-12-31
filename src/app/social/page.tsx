@@ -649,7 +649,7 @@ export default function SocialPage() {
                 }}
               >
                 <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
-                  <CardHeader className="p-6 flex flex-row items-center justify-between space-y-0 bg-blue-500/5 rounded-t-[3rem] border-b border-border/30">
+                  <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
                       <div className="flex items-center gap-4">
                       <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
                         <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
@@ -661,7 +661,7 @@ export default function SocialPage() {
                         </div>
                       </Link>
                       <div>
-                        <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter bg-gradient-to-r from-blue-100 to-indigo-200 bg-clip-text text-transparent hover:from-blue-300 hover:to-indigo-400 transition-all duration-300 drop-shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+                        <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter hover:text-primary transition-colors">
                           {post.profiles?.full_name}
                         </Link>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -849,7 +849,7 @@ export default function SocialPage() {
                       <AvatarFallback>{selectedStory.user?.full_name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                        <span className="text-sm font-black italic tracking-tighter bg-gradient-to-r from-blue-100 to-indigo-200 bg-clip-text text-transparent">
+                        <span className="text-sm font-black italic tracking-tighter text-white">
                           {selectedStory.user?.full_name}
                         </span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">LIVE STORY</span>
