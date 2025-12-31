@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Sparkles, Camera, FileText, MessageSquare, Check, RefreshCw, Loader2, ChevronRight, Lightbulb, Zap } from "lucide-react";
+import { Sparkles, Camera, FileText, MessageSquare, Check, RefreshCw, Loader2, ChevronRight, Lightbulb, Zap, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -136,8 +136,20 @@ return (
   <div className="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-accent/20 blur-[150px] rounded-full" />
   </div>
 
-  <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
-  <div className="container mx-auto px-4 pt-12 pb-32 max-w-4xl">
+    <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
+    <div className="container mx-auto px-4 pt-12 pb-32 max-w-4xl">
+      <div className="mb-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => router.push("/social")}
+          className="group flex items-center gap-2 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all rounded-full px-6 py-6"
+        >
+          <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <ArrowLeft className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Feed</span>
+        </Button>
+      </div>
 <header className="mb-12 text-center">
 <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-primary/10 backdrop-blur-xl border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-6">
 <Sparkles className="w-3 h-3 fill-current" />

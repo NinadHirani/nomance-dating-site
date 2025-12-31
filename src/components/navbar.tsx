@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function Navbar() {
   const pathname = usePathname();
 
-  const isHidden = ["/auth", "/onboarding"].includes(pathname);
+    const isHidden = ["/auth", "/onboarding", "/coach", "/profile"].includes(pathname);
   if (isHidden) return null;
 
   const navLinks = [
