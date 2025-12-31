@@ -30,7 +30,9 @@ export default function SocialPage() {
   const [selectedStory, setSelectedStory] = useState<any>(null);
   const [storyIndex, setStoryIndex] = useState(0);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
+  const [isUploadingPostImage, setIsUploadingPostImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const postFileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchData = async () => {
     try {
@@ -146,27 +148,77 @@ export default function SocialPage() {
       }
     };
 
+    const handlePostImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !user) return;
+
+      try {
+        setIsUploadingPostImage(true);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+        const filePath = `posts/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('posts')
+          .getPublicUrl(filePath);
+
+        setNewPostImage(publicUrl);
+        toast.success("Aura image ready!");
+      } catch (error: any) {
+        console.error("Post image upload error:", error);
+        toast.error("Failed to upload image");
+      } finally {
+        setIsUploadingPostImage(false);
+      }
+    };
+
     const createPost = async () => {
-      if (!newPostContent.trim() && !newPostImage.trim()) return;
+      if (!newPostContent.trim()) {
+        toast.error("What's the vibe?");
+        return;
+      }
 
-      const { data, error } = await supabase
-        .from("posts")
-        .insert({
-          user_id: user.id,
-          content: newPostContent,
-          image_url: newPostImage || "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=800&q=80",
-        })
-        .select("*, profiles(full_name, avatar_url)")
-        .single();
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("posts")
+          .insert({
+            user_id: user.id,
+            content: newPostContent,
+            image_url: newPostImage || null,
+          })
+          .select(`
+            *,
+            profiles:user_id!inner (
+              id, 
+              full_name, 
+              avatar_url, 
+              birth_date, 
+              intent, 
+              location_lat, 
+              location_lng
+            )
+          `)
+          .single();
 
-      if (error) {
-        toast.error("Failed to post");
-      } else {
+        if (error) throw error;
+
         setPosts([data, ...posts]);
         setNewPostContent("");
         setNewPostImage("");
         setIsCreatingPost(false);
-        toast.success("Shared!");
+        toast.success("Your aura has been shared!");
+      } catch (error: any) {
+        console.error("Create post error:", error);
+        toast.error("Failed to share your post");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -306,6 +358,89 @@ export default function SocialPage() {
             ))}
             </div>
           </div>
+
+        {/* Create Post Prompt */}
+        <div className="mb-12">
+          <Card className="bg-card/30 border-dashed border-muted-foreground/30 rounded-[2.5rem] p-6 hover:bg-card/50 transition-all cursor-pointer group" onClick={() => setIsCreatingPost(true)}>
+            <div className="flex items-center gap-4">
+              <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 bg-secondary/20 rounded-2xl h-12 flex items-center px-6 text-muted-foreground/60 italic font-medium">
+                Share your aura...
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <Plus className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Create Post Dialog */}
+        <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
+          <DialogContent className="sm:max-w-lg rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
+            <DialogHeader className="p-8 pb-4">
+              <DialogTitle className="text-2xl font-black italic tracking-tighter">Share Your Aura</DialogTitle>
+            </DialogHeader>
+            <div className="p-8 pt-4 space-y-6">
+              <div className="space-y-4">
+                <Textarea 
+                  placeholder="What's the energy today?"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  className="min-h-[120px] bg-secondary/20 border-none rounded-2xl p-6 text-lg font-medium italic placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
+                />
+                
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={postFileInputRef}
+                  onChange={handlePostImageUpload}
+                />
+
+                {newPostImage ? (
+                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-border">
+                    <img src={newPostImage} className="w-full h-full object-cover" alt="Post preview" />
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-2 right-2 rounded-full h-8 w-8"
+                      onClick={() => setNewPostImage("")}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-32 rounded-2xl border-dashed border-2 bg-secondary/10 hover:bg-secondary/20 hover:border-primary/50 transition-all flex flex-col gap-2"
+                    onClick={() => postFileInputRef.current?.click()}
+                    disabled={isUploadingPostImage}
+                  >
+                    {isUploadingPostImage ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-muted-foreground" />
+                        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Upload Visual</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+
+              <Button 
+                onClick={createPost}
+                disabled={loading || isUploadingPostImage || !newPostContent.trim()}
+                className="w-full h-14 rounded-2xl bg-foreground text-background font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Post to Aura Feed"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
 
         {/* Feed: Extraordinary "Asymmetric" Design */}
