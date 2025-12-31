@@ -313,7 +313,7 @@ function AuthContent() {
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="w-full text-xs font-black text-zinc-400 hover:text-primary transition-colors flex items-center justify-center gap-2 uppercase tracking-widest"
               >
-                {isSignUp ? "Existing Frequency? Sign In" : "New Signal? Initialize Aura"}
+                {isSignUp ? "Existing Frequency? Sign In" : "New Signal? Fresh Login"}
               </button>
             </CardFooter>
           </Card>
