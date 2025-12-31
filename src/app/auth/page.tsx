@@ -253,7 +253,7 @@ function AuthContent() {
                 </div>
                 
                 <div className="space-y-3">
-                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-primary/70 ml-1">Encryption Core</Label>
+                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-primary/70 ml-1">Password</Label>
                   <Input
                     id="password"
                     type="password"
