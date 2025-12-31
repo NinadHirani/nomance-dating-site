@@ -412,6 +412,7 @@ export default function EventsPage() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </main>
     </div>
   );
