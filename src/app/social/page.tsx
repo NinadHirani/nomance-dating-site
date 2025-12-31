@@ -446,14 +446,14 @@ export default function SocialPage() {
               whileTap={{ scale: 0.95 }}
               disabled={isUploadingStory}
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-32 h-48 rounded-[2rem] overflow-hidden shrink-0 group border border-dashed border-muted-foreground/30 bg-card/30 backdrop-blur-md flex flex-col items-center justify-center gap-3 transition-all hover:border-primary/50 hover:bg-card/50"
+              className="relative w-32 h-48 rounded-[2rem] overflow-hidden shrink-0 group border border-dashed border-muted-foreground/30 bg-card/30 backdrop-blur-md flex flex-col items-center justify-center gap-3 transition-all hover:border-blue-500/50 hover:bg-card/50"
             >
               <div className="relative">
-                <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
                   <AvatarImage src={user?.user_metadata?.avatar_url} />
                   <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background text-primary-foreground">
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background text-white">
                   <Plus className="w-3 h-3" />
                 </div>
               </div>
@@ -513,7 +513,7 @@ export default function SocialPage() {
 
                 {/* Avatar Overlay */}
                 <div className="absolute top-3 left-3">
-                  <div className="w-10 h-10 rounded-2xl p-0.5 bg-gradient-to-tr from-primary via-purple-600 to-pink-500 shadow-lg">
+                  <div className="w-10 h-10 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-lg">
                     <div className="w-full h-full rounded-xl border-2 border-background overflow-hidden">
                       <Avatar className="w-full h-full rounded-none">
                         <AvatarImage src={group.user?.avatar_url} className="object-cover" />
@@ -538,14 +538,14 @@ export default function SocialPage() {
         <div className="mb-12">
           <Card className="bg-card/40 backdrop-blur-xl border-dashed border-muted-foreground/30 rounded-[2.5rem] p-6 hover:shadow-lg transition-all cursor-pointer group" onClick={() => setIsCreatingPost(true)}>
             <div className="flex items-center gap-4">
-              <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+              <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
                 <AvatarImage src={user?.user_metadata?.avatar_url} />
                 <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 bg-secondary/20 rounded-2xl h-12 flex items-center px-6 text-muted-foreground/60 italic font-medium">
                 Share your aura...
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all">
                 <Plus className="w-6 h-6" />
               </div>
             </div>
@@ -659,18 +659,18 @@ export default function SocialPage() {
               >
               <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
                 <CardHeader className="p-6 flex flex-row items-center justify-between space-y-0">
-                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4">
                     <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
-                      <Avatar className="w-10 h-10 ring-2 ring-primary/30 transition-all group-hover/avatar:ring-primary">
+                      <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
                         <AvatarImage src={post.profiles?.avatar_url} />
                         <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
                       </Avatar>
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-background flex items-center justify-center">
-                        <Zap className="w-2 h-2 text-primary-foreground fill-current" />
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-background flex items-center justify-center">
+                        <Zap className="w-2 h-2 text-white fill-current" />
                       </div>
                     </Link>
                     <div>
-                      <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter text-foreground hover:text-primary transition-colors">
+                      <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter text-foreground hover:text-blue-400 transition-colors">
                         {post.profiles?.full_name}
                       </Link>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -853,7 +853,7 @@ export default function SocialPage() {
                 {/* Header */}
                 <div className="absolute top-14 left-8 right-8 flex items-center justify-between z-20">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10 border-2 border-primary ring-4 ring-primary/20">
+                    <Avatar className="w-10 h-10 border-2 border-blue-500 ring-4 ring-blue-500/20">
                       <AvatarImage src={selectedStory.user?.avatar_url} />
                       <AvatarFallback>{selectedStory.user?.full_name?.[0]}</AvatarFallback>
                     </Avatar>
@@ -861,7 +861,7 @@ export default function SocialPage() {
                         <span className="text-sm font-black italic tracking-tighter text-white">
                           {selectedStory.user?.full_name}
                         </span>
-                        <span className="text-[8px] font-black uppercase tracking-widest text-primary">LIVE STORY</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">LIVE STORY</span>
                       </div>
                     </div>
                     <motion.button 
