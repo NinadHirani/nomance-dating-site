@@ -94,7 +94,7 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
               </div>
             </Link>
             <div>
-              <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black italic tracking-tighter hover:text-primary transition-colors">
+              <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black tracking-tighter hover:text-primary transition-colors">
                 {post.profiles?.full_name}
               </Link>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -752,7 +752,7 @@ export default function SocialPage() {
         <Dialog open={isCreatingPost} onOpenChange={setIsCreatingPost}>
           <DialogContent className="sm:max-w-lg rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
             <DialogHeader className="p-8 pb-4">
-              <DialogTitle className="text-2xl font-black italic tracking-tighter">Share Your Aura</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tighter">Share Your Aura</DialogTitle>
             </DialogHeader>
             <div className="p-8 pt-4 space-y-6">
               <div className="space-y-4">
@@ -903,7 +903,7 @@ export default function SocialPage() {
                       <AvatarFallback>{selectedStory.user?.full_name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                        <span className="text-sm font-black italic tracking-tighter text-white">
+                        <span className="text-sm font-black tracking-tighter text-white">
                           {selectedStory.user?.full_name}
                         </span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-blue-400">LIVE STORY</span>
@@ -964,7 +964,7 @@ export default function SocialPage() {
       <Dialog open={isReporting} onOpenChange={setIsReporting}>
         <DialogContent className="sm:max-w-md rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
           <DialogHeader className="p-8 pb-4">
-            <DialogTitle className="text-2xl font-black italic tracking-tighter flex items-center gap-3">
+            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-3">
               <ShieldAlert className="w-6 h-6 text-orange-500" />
               Report Aura
             </DialogTitle>

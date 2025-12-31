@@ -111,7 +111,7 @@ return (
 <ShieldCheck className="w-3 h-3 fill-current" />
 Secure Connection
 </div>
-<h1 className="text-5xl font-black italic tracking-tighter text-foreground">Messages</h1>
+<h1 className="text-5xl font-black tracking-tighter text-foreground">Messages</h1>
 <p className="text-muted-foreground font-medium italic mt-2">High-intent conversations with your matches.</p>
 </div>
 <div className="w-16 h-16 rounded-[2rem] bg-card/50 backdrop-blur-3xl border border-border flex items-center justify-center shadow-2xl">
@@ -163,7 +163,7 @@ className="group"
 
 <div className="flex-grow min-w-0">
 <div className="flex items-center justify-between mb-1.5">
-<h3 className="text-xl font-black italic tracking-tighter text-foreground group-hover:text-primary transition-colors">
+<h3 className="text-xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">
 {chat.otherProfile?.full_name}
 </h3>
 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">

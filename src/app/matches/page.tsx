@@ -312,7 +312,7 @@ export default function MatchesPage() {
                           
                           <CardHeader className="p-8 pb-4 text-center">
                             <div className="flex flex-col items-center">
-                              <CardTitle className="text-3xl font-black italic tracking-tighter text-foreground">
+                              <CardTitle className="text-3xl font-black tracking-tighter text-foreground">
                                 {profiles[currentIndex].full_name}, {profiles[currentIndex].birth_date ? new Date().getFullYear() - new Date(profiles[currentIndex].birth_date).getFullYear() : '?'}
                               </CardTitle>
                               <div className="flex items-center gap-2 mt-2">

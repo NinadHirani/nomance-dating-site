@@ -104,7 +104,7 @@ export default function ProfilePage() {
                 <User className="w-3 h-3 fill-current" />
                 Identity Management
               </div>
-              <h1 className="text-5xl font-black italic tracking-tighter text-foreground">Account</h1>
+              <h1 className="text-5xl font-black tracking-tighter text-foreground">Account</h1>
             </div>
             <motion.button 
               whileHover={{ scale: 1.05 }}
@@ -121,7 +121,7 @@ export default function ProfilePage() {
             {/* Account Management Card */}
             <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
               <CardHeader className="p-10 pb-4">
-                <CardTitle className="text-2xl font-black italic tracking-tighter">Settings</CardTitle>
+                <CardTitle className="text-2xl font-black tracking-tighter">Settings</CardTitle>
                 <CardDescription className="text-muted-foreground font-medium italic">Manage your authentication and active sessions.</CardDescription>
               </CardHeader>
               <CardContent className="p-10 pt-4 space-y-6">
@@ -131,7 +131,7 @@ export default function ProfilePage() {
                       {user?.email?.[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-black italic tracking-tight text-foreground text-lg truncate max-w-[200px]">{user?.email}</p>
+                      <p className="font-black tracking-tight text-foreground text-lg truncate max-w-[200px]">{user?.email}</p>
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Active Session</p>
                     </div>
                   </div>
@@ -176,7 +176,7 @@ export default function ProfilePage() {
             {/* Profile Overview Card */}
             <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
               <CardHeader className="p-10 pb-4">
-                <CardTitle className="text-2xl font-black italic tracking-tighter">Profile Preview</CardTitle>
+                <CardTitle className="text-2xl font-black tracking-tighter">Profile Preview</CardTitle>
                 <CardDescription className="text-muted-foreground font-medium italic">How others see you on Nomance.</CardDescription>
               </CardHeader>
               <CardContent className="p-10 pt-4 space-y-8">
@@ -193,7 +193,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-3xl font-black italic tracking-tighter text-foreground">{profile?.full_name || "Nomance Member"}</h2>
+                    <h2 className="text-3xl font-black tracking-tighter text-foreground">{profile?.full_name || "Nomance Member"}</h2>
                     <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1">
                       <MapPin className="w-3 h-3 mr-1 text-primary" />
                       <span>Global Community</span>
@@ -233,7 +233,7 @@ export default function ProfilePage() {
                 <Sparkles className="w-8 h-8 text-primary fill-current" />
               </div>
               <div className="relative z-10">
-                <h3 className="text-xl font-black italic tracking-tighter text-foreground">Verified Status</h3>
+                <h3 className="text-xl font-black tracking-tighter text-foreground">Verified Status</h3>
                 <p className="text-muted-foreground font-medium italic mt-1 leading-relaxed">
                   Complete your profile to unlock the verification badge and gain priority in match discovery.
                 </p>
@@ -247,7 +247,7 @@ export default function ProfilePage() {
                   <div className="w-10 h-10 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
                     <LayoutGrid className="w-5 h-5" />
                   </div>
-                  <h2 className="text-3xl font-black italic tracking-tighter">My Aura Feed</h2>
+                  <h2 className="text-3xl font-black tracking-tighter">My Aura Feed</h2>
                 </div>
                 <div className="px-4 py-1 rounded-full bg-accent/10 text-accent text-[10px] font-black uppercase tracking-widest border border-accent/20">
                   {posts.length} CREATIONS

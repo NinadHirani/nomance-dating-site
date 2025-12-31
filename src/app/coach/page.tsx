@@ -132,7 +132,7 @@ return (
 <Sparkles className="w-3 h-3 fill-current" />
 Intentional Growth
 </div>
-<h1 className="text-6xl font-black italic tracking-tighter text-foreground mb-4">Profile Coach</h1>
+<h1 className="text-6xl font-black tracking-tighter text-foreground mb-4">Profile Coach</h1>
 <p className="text-muted-foreground/80 max-w-lg mx-auto font-medium italic text-lg leading-relaxed">
 Refine your digital presence with AI-powered insights designed for meaningful connection.
 </p>
@@ -170,7 +170,7 @@ activeTab === tab.id
 <Camera className="w-6 h-6" />
 </div>
 <div>
-<CardTitle className="text-3xl font-black italic tracking-tighter">Photo Strategy</CardTitle>
+<CardTitle className="text-3xl font-black tracking-tighter">Photo Strategy</CardTitle>
 <CardDescription className="text-muted-foreground font-medium italic">
 A diverse photo set tells your story better than any bio.
 </CardDescription>
@@ -205,7 +205,7 @@ className="flex items-center gap-6 p-6 rounded-[2rem] bg-secondary/5 border bord
 <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl">
 <Camera className="w-10 h-10 text-primary" />
 </div>
-<h3 className="text-2xl font-black italic tracking-tighter mb-2">Visual Aura Analysis</h3>
+<h3 className="text-2xl font-black tracking-tighter mb-2">Visual Aura Analysis</h3>
 <p className="text-muted-foreground font-medium italic mb-8 max-w-sm mx-auto">
 Get AI-powered feedback on lighting, composition, and intentional appeal.
 </p>
@@ -227,7 +227,7 @@ Calibrating AI...
 <FileText className="w-6 h-6" />
 </div>
 <div>
-<CardTitle className="text-3xl font-black italic tracking-tighter">Bio Optimizer</CardTitle>
+<CardTitle className="text-3xl font-black tracking-tighter">Bio Optimizer</CardTitle>
 <CardDescription className="text-muted-foreground font-medium italic">
 Transform generic descriptions into magnetic storytelling.
 </CardDescription>
@@ -293,7 +293,7 @@ Adopt this Aura
 
 <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl rounded-[3rem] overflow-hidden">
 <CardHeader className="p-10 pb-4">
-<CardTitle className="text-2xl font-black italic tracking-tighter">Evolutionary Examples</CardTitle>
+<CardTitle className="text-2xl font-black tracking-tighter">Evolutionary Examples</CardTitle>
 </CardHeader>
 <CardContent className="p-10 pt-4 space-y-6">
 {BIO_SUGGESTIONS.map((example, index) => (
@@ -334,7 +334,7 @@ Adopt this Aura
 <MessageSquare className="w-6 h-6" />
 </div>
 <div>
-<CardTitle className="text-3xl font-black italic tracking-tighter">Tone Spectrum</CardTitle>
+<CardTitle className="text-3xl font-black tracking-tighter">Tone Spectrum</CardTitle>
 <CardDescription className="text-muted-foreground font-medium italic">
 How your profile resonates with potential matches.
 </CardDescription>
@@ -347,9 +347,9 @@ How your profile resonates with potential matches.
 <div className="flex justify-between items-end">
 <div className="space-y-1">
 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Metric</span>
-<h4 className="text-2xl font-black italic tracking-tighter text-foreground">{item.aspect}</h4>
+<h4 className="text-2xl font-black tracking-tighter text-foreground">{item.aspect}</h4>
 </div>
-<span className="text-3xl font-black italic tracking-tighter text-primary">{item.score}%</span>
+<span className="text-3xl font-black tracking-tighter text-primary">{item.score}%</span>
 </div>
 <div className="h-4 bg-secondary/10 rounded-full overflow-hidden shadow-inner border border-border/50">
 <motion.div 
@@ -378,7 +378,7 @@ className="h-full bg-gradient-to-r from-primary/80 to-primary rounded-full relat
 <Sparkles className="w-10 h-10 text-primary relative z-10 fill-current" />
 </div>
 <div className="text-center md:text-left">
-<h3 className="text-2xl font-black italic tracking-tighter mb-3">Holistic Essence</h3>
+<h3 className="text-2xl font-black tracking-tighter mb-3">Holistic Essence</h3>
 <p className="text-muted-foreground font-medium italic text-lg leading-relaxed">
 Your profile radiates authenticity. Focus on adding more specific stories and 
 intentional conversation hooks to increase engagement. Consider starting your bio with a 

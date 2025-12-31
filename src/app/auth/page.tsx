@@ -208,7 +208,7 @@ function AuthContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h1 className="text-5xl font-black italic tracking-tighter text-white mb-2 drop-shadow-2xl">NOMANCE</h1>
+            <h1 className="text-5xl font-black tracking-tighter text-white mb-2 drop-shadow-2xl">NOMANCE</h1>
             <p className="text-primary font-black tracking-tight uppercase text-[10px] tracking-[0.4em] opacity-80">Frequency Integration</p>
           </motion.div>
         </div>
