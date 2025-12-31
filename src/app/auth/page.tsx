@@ -63,6 +63,60 @@ function FallingHearts() {
   );
 }
 
+function BigRotatingHearts() {
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* Top Left Heart */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ 
+          rotate: 360,
+          scale: [0.9, 1, 0.9],
+          opacity: 0.1
+        }}
+        transition={{ 
+          rotate: { duration: 25, repeat: Infinity, ease: "linear" },
+          scale: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+          opacity: { duration: 2 }
+        }}
+        className="absolute -top-32 -left-32"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="#fb7185"
+          className="w-[500px] h-[500px] blur-[1px] drop-shadow-[0_0_50px_rgba(251,113,133,0.3)]"
+        >
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      </motion.div>
+
+      {/* Bottom Right Heart */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ 
+          rotate: -360,
+          scale: [0.9, 1.05, 0.9],
+          opacity: 0.1
+        }}
+        transition={{ 
+          rotate: { duration: 30, repeat: Infinity, ease: "linear" },
+          scale: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+          opacity: { duration: 2 }
+        }}
+        className="absolute -bottom-48 -right-48"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="#f43f5e"
+          className="w-[600px] h-[600px] blur-[1px] drop-shadow-[0_0_50px_rgba(244,63,94,0.3)]"
+        >
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+      </motion.div>
+    </div>
+  );
+}
+
 function AuthContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -126,8 +180,9 @@ function AuthContent() {
     );
   }
 
-  return (
+    return (
     <div className="min-h-screen flex items-center justify-center bg-[#FFE4E6] relative overflow-hidden px-4 py-12 perspective-[1500px]">
+      <BigRotatingHearts />
       <FallingHearts />
       {/* 3D Perspective Grid Floor */}
       <div 
