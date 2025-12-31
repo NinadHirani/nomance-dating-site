@@ -248,7 +248,7 @@ function AuthContent() {
                 <Box className="w-24 h-24 rotate-12" />
               </div>
               <CardTitle className="text-3xl font-black tracking-tighter italic text-white">
-                {isSignUp ? "Initialize" : "Connect"}
+                {isSignUp ? "Fresh" : "Connect"}
               </CardTitle>
               <CardDescription className="font-bold text-zinc-500 mt-2">
                 {isSignUp ? "Sync your aura with the network" : "Re-establish your neural frequency"}
@@ -292,7 +292,7 @@ function AuthContent() {
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
                     <span className="flex items-center justify-center gap-3 relative z-10">
-                      {isSignUp ? "Start Initialization" : "Enter Network"}
+                      {isSignUp ? "Start Fresh" : "Enter Network"}
                       <Zap className="w-5 h-5 fill-current" />
                     </span>
                   )}
