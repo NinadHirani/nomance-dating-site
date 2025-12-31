@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useDebounce } from "../../hooks/use-debounce";
 
 export default function SearchPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
