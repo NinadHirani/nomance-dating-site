@@ -4,43 +4,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { Loader2, Camera, MapPin, ShieldCheck, Heart, Sparkles, User, Info, Image as ImageIcon, Users, UserPlus, LogOut, Plus } from "lucide-react";
+import { Loader2, Heart, User, Users, UserPlus, LogOut, Edit3, MapPin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { PhotoUpload } from "@/components/profile-photos";
-
-const INTENTS = [
-  { value: "life_partnership", label: "Life Partnership" },
-  { value: "dating", label: "Dating" },
-  { value: "friendship", label: "Friendship" },
-];
-
-const AVAILABLE_VALUES = [
-  "Kindness", "Ambition", "Family", "Adventure", "Creativity", 
-  "Honesty", "Growth", "Freedom", "Stability", "Humor"
-];
 
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>({
-    full_name: "",
-    bio: "",
-    intent: "life_partnership",
-    gender: "other",
-    birth_date: "",
-    values: [],
-    avatar_url: "",
-    photos: []
-  });
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -63,54 +37,12 @@ export default function ProfilePage() {
         throw error;
       }
 
-      if (data) {
-        setProfile({
-          full_name: data.full_name || "",
-          bio: data.bio || "",
-          intent: data.intent || "life_partnership",
-          gender: data.gender || "other",
-          birth_date: data.birth_date || "",
-          values: data.values || [],
-          avatar_url: data.avatar_url || "",
-          photos: data.photos || []
-        });
-      }
+      setProfile(data);
     } catch (error: any) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load profile");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    try {
-      setSaving(true);
-      
-      // Update avatar_url to the first photo if available
-      const avatar_url = profile.photos && profile.photos.length > 0 
-        ? profile.photos[0] 
-        : profile.avatar_url;
-
-      const { error } = await supabase
-        .from("profiles")
-        .upsert({
-          id: user.id,
-          ...profile,
-          avatar_url,
-          last_active: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      toast.success("Profile updated successfully!");
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -141,15 +73,6 @@ export default function ProfilePage() {
     }, 1000);
   };
 
-  const toggleValue = (value: string) => {
-    setProfile((prev: any) => ({
-      ...prev,
-      values: prev.values.includes(value)
-        ? prev.values.filter((v: string) => v !== value)
-        : [...prev.values, value].slice(0, 5) // Limit to 5 values
-    }));
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -158,230 +81,146 @@ export default function ProfilePage() {
     );
   }
 
-  const isGuest = user?.id === "00000000-0000-0000-0000-000000000001";
-
   return (
     <div className="min-h-screen bg-background pb-20">
       <Navbar />
       
-      <main className="container mx-auto px-4 pt-24 max-w-3xl">
-        <header className="mb-12">
-          <h1 className="text-3xl font-bold text-foreground mb-6">Edit Your Profile</h1>
-          
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <ImageIcon className="w-4 h-4" />
-              Profile Photos
-            </div>
-            
-            <PhotoUpload 
-              userId={user.id} 
-              initialPhotos={profile.photos} 
-              onPhotosChange={(photos) => setProfile({ ...profile, photos })} 
-            />
-            
-            <div className="flex items-center gap-2 text-muted-foreground text-xs bg-secondary/20 p-3 rounded-xl">
-              <Info className="w-4 h-4 text-primary" />
-              <span>Drag to reorder. The first photo is your main profile image.</span>
-            </div>
-          </div>
-        </header>
+      <main className="container mx-auto px-4 pt-24 max-w-2xl">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-foreground">My Account</h1>
+          <Button 
+            onClick={() => router.push("/profile/edit")}
+            className="rounded-full bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold"
+          >
+            <Edit3 className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </div>
 
-        <form onSubmit={handleUpdateProfile} className="space-y-6">
+        <div className="space-y-6">
+          {/* Account Management Card First */}
           <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
             <CardHeader className="bg-secondary/10 border-b border-border/50">
-              <CardTitle className="text-xl">Basic Information</CardTitle>
-              <CardDescription>Tell us about yourself to help find better matches.</CardDescription>
+              <CardTitle className="text-xl">Account Settings</CardTitle>
+              <CardDescription>Manage your authentication and active sessions.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Full Name</label>
-                  <Input 
-                    placeholder="Enter your name" 
-                    value={profile.full_name}
-                    onChange={(e) => setProfile({...profile, full_name: e.target.value})}
-                    className="rounded-xl border-border focus:ring-primary h-11"
-                  />
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                    {user?.email?.[0].toUpperCase()}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="font-bold text-foreground truncate max-w-[200px]">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground">Active Session</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Birth Date</label>
-                  <Input 
-                    type="date"
-                    value={profile.birth_date}
-                    onChange={(e) => setProfile({...profile, birth_date: e.target.value})}
-                    className="rounded-xl border-border focus:ring-primary h-11"
-                  />
-                </div>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 shrink-0">Signed In</Badge>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Gender</label>
-                  <Select 
-                    value={profile.gender} 
-                    onValueChange={(value) => setProfile({...profile, gender: value})}
-                  >
-                    <SelectTrigger className="rounded-xl h-11 border-border">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border">
-                      <SelectItem value="man">Man</SelectItem>
-                      <SelectItem value="woman">Woman</SelectItem>
-                      <SelectItem value="non-binary">Non-binary</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Intent</label>
-                  <Select 
-                    value={profile.intent} 
-                    onValueChange={(value) => setProfile({...profile, intent: value})}
-                  >
-                    <SelectTrigger className="rounded-xl h-11 border-border">
-                      <SelectValue placeholder="What are you looking for?" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border">
-                      {INTENTS.map((intent) => (
-                        <SelectItem key={intent.value} value={intent.value}>
-                          {intent.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
+                  onClick={handleSwitchAccount}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Switch Account
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
+                  onClick={handleAddAccount}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Account
+                </Button>
               </div>
-
-              <div className="space-y-2 pt-2">
-                <label className="text-sm font-semibold text-muted-foreground flex justify-between">
-                  Bio <span>{profile.bio.length}/500</span>
-                </label>
-                <Textarea 
-                  placeholder="Share your story, interests, and what makes you unique..." 
-                  className="rounded-xl border-border min-h-[120px] resize-none"
-                  maxLength={500}
-                  value={profile.bio}
-                  onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                />
-              </div>
+              
+              <Button 
+                type="button"
+                variant="ghost" 
+                className="w-full h-12 rounded-xl font-bold text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout Current Account
+              </Button>
             </CardContent>
           </Card>
 
-            <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
-              <CardHeader className="bg-secondary/10 border-b border-border/50">
-                <CardTitle className="text-xl">Values & Beliefs</CardTitle>
-                <CardDescription>Select up to 5 core values that define you.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_VALUES.map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => toggleValue(val)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all border-2 ${
-                        profile.values.includes(val)
-                          ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20"
-                          : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                      }`}
-                    >
-                      {val}
-                    </button>
-                  ))}
+          {/* Profile Overview Card */}
+          <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
+            <CardHeader className="bg-secondary/10 border-b border-border/50">
+              <CardTitle className="text-xl">Profile Preview</CardTitle>
+              <CardDescription>How others see you on Nomance.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-secondary overflow-hidden border-2 border-border">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-4 italic">
-                  Values help our AI Coach find deeper compatibility matches for you.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
-              <CardHeader className="bg-secondary/10 border-b border-border/50">
-                <CardTitle className="text-xl">Accounts Management</CardTitle>
-                <CardDescription>Manage your connected accounts and switch between them.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-2xl border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                      {user?.email?.[0].toUpperCase()}
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="font-bold text-foreground truncate max-w-[200px]">{user?.email}</p>
-                      <p className="text-xs text-muted-foreground">Currently logged in</p>
-                    </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">{profile?.full_name || "Nomance Member"}</h2>
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <MapPin className="w-3 h-3 mr-1" />
+                    <span>Global Community</span>
                   </div>
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 shrink-0">Active</Badge>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
-                    onClick={handleSwitchAccount}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Switch Account
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    className="h-12 rounded-xl border-2 border-border font-bold text-muted-foreground hover:text-foreground"
-                    onClick={handleAddAccount}
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Add Account
-                  </Button>
+              </div>
+
+              {profile?.bio && (
+                <div className="bg-secondary/20 p-4 rounded-2xl">
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">
+                    "{profile.bio}"
+                  </p>
                 </div>
-                
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  className="w-full h-12 rounded-xl font-bold text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout Current Account
-                </Button>
-              </CardContent>
-            </Card>
+              )}
 
+              {profile?.values && profile.values.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Core Values</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.values.map((val: string) => (
+                      <Badge key={val} variant="secondary" className="rounded-full px-3 py-1 font-medium bg-primary/5 text-primary border-primary/10">
+                        {val}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div className="flex gap-4 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
-              disabled={saving}
-            >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Sparkles className="w-5 h-5 mr-2" />}
-              Save My Profile
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-14 px-8 rounded-2xl border-2 border-border font-bold text-muted-foreground"
-              onClick={() => window.history.back()}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+              <Button 
+                onClick={() => router.push("/profile/edit")}
+                variant="outline"
+                className="w-full h-12 rounded-xl border-2 border-primary/20 text-primary font-bold hover:bg-primary/5"
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Edit Full Profile
+              </Button>
+            </CardContent>
+          </Card>
 
-        <section className="mt-12 pt-8 border-t border-border">
-          <div className="bg-secondary/20 rounded-3xl p-6 flex items-start gap-4">
+          <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Heart className="w-6 h-6 text-primary" />
+              <Sparkles className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-bold text-foreground">Intentional Dating Tip</h3>
+              <h3 className="font-bold text-foreground">Verified Status</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Completed profiles receive 4x more quality matches. High-intent members value detail and transparency.
+                Complete your profile to unlock the verification badge and gain priority in match discovery.
               </p>
             </div>
           </div>
-        </section>
+        </div>
       </main>
     </div>
   );
