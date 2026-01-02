@@ -45,7 +45,7 @@ npm run dev
 # bun dev (if you use bun)
 ```
 
-Open http://localhost:3000 to view the app in development.
+Open [Nomance-platform-lpb.vercel.app](https://orchids-nomance-platform-desig-git-a99c5a-ninadhiranis-projects.vercel.app) to view the app in development.
 
 Build for production
 
