@@ -67,6 +67,8 @@ function AuthContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminError, setAdminError] = useState(false);
   const searchParams = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
   const [checkingSession, setCheckingSession] = useState(true);
@@ -111,6 +113,18 @@ function AuthContent() {
       toast.error(error.message || "Authentication failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === "1234") {
+      setAdminError(false);
+      localStorage.setItem("adminBypass", "true");
+      toast.success("Admin access granted!");
+      router.push("/social");
+    } else {
+      setAdminError(true);
+      toast.error("Invalid admin password");
     }
   };
 
@@ -315,6 +329,30 @@ function AuthContent() {
               >
                 {isSignUp ? "Existing Frequency? Sign In" : "New Signal? Fresh Login"}
               </button>
+
+              {/* Temporary Admin Login */}
+              <div className="w-full mt-4 pt-6 border-t border-white/5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-yellow-500/70 mb-3 text-center">⚡ Admin Quick Access</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Admin password"
+                    value={adminPassword}
+                    onChange={(e) => { setAdminPassword(e.target.value); setAdminError(false); }}
+                    onKeyDown={(e) => e.key === "Enter" && handleAdminLogin()}
+                    className={`bg-white/5 border-white/10 rounded-xl h-12 px-4 font-bold text-white focus:border-yellow-500/50 focus:ring-yellow-500/20 transition-all text-sm flex-1 ${
+                      adminError ? "border-red-500/50" : ""
+                    }`}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleAdminLogin}
+                    className="h-12 px-6 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-[11px] uppercase tracking-wider shadow-[0_10px_20px_-5px_rgba(234,179,8,0.3)] transition-all"
+                  >
+                    Admin
+                  </Button>
+                </div>
+              </div>
             </CardFooter>
           </Card>
         </div>
