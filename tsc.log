@@ -1,0 +1,2 @@
+src/app/messages/page.tsx(63,65): error TS2339: Property 'created_at' does not exist on type '{ otherProfile: any[]; lastMessage: any; id: any; user_1: any; user_2: any; status: any; profiles_user_1: any[]; profiles_user_2: any[]; }'.
+src/app/messages/page.tsx(64,65): error TS2339: Property 'created_at' does not exist on type '{ otherProfile: any[]; lastMessage: any; id: any; user_1: any; user_2: any; status: any; profiles_user_1: any[]; profiles_user_2: any[]; }'.

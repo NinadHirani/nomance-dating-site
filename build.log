@@ -1,0 +1,49 @@
+
+> nextjs-new@0.1.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.14
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 17.9s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/15) ...
+   Generating static pages (3/15) 
+   Generating static pages (7/15) 
+   Generating static pages (11/15) 
+ ✓ Generating static pages (15/15)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      123 B         102 kB
+├ ○ /_not-found                            995 B         103 kB
+├ ○ /auth                                 6.3 kB         226 kB
+├ ○ /coach                               9.68 kB         229 kB
+├ ○ /events                              8.29 kB         236 kB
+├ ○ /matches                             10.5 kB         241 kB
+├ ○ /messages                            5.46 kB         219 kB
+├ ƒ /messages/[id]                       10.5 kB         233 kB
+├ ○ /onboarding                          6.07 kB         255 kB
+├ ○ /profile                             7.33 kB         227 kB
+├ ƒ /profile/[id]                        6.72 kB         230 kB
+├ ○ /profile/edit                        46.2 kB         298 kB
+├ ○ /search                              11.5 kB         251 kB
+└ ○ /social                              14.4 kB         273 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/493-e61740f684b4ba13.js         46 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
+  └ other shared chunks (total)          2.01 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
