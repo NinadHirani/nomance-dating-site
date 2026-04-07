@@ -50,12 +50,15 @@ export default function OnboardingPage() {
       const getUser = async () => {
         try {
           const { data: { user: authUser } } = await supabase.auth.getUser();
-          const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" };
-          setUser(activeUser);
+          if (!authUser) {
+            console.warn("No authenticated user found, redirecting to auth");
+            router.push("/auth");
+            return;
+          }
+          setUser(authUser);
         } catch (error) {
           console.error("Onboarding auth check error:", error);
-          const activeUser = { id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" };
-          setUser(activeUser);
+          router.push("/auth");
         } finally {
           setLoading(false);
         }
@@ -80,10 +83,15 @@ export default function OnboardingPage() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
     setLoading(true);
 
     try {
+      console.log("Saving profile for user:", user.id);
+
       const { error } = await supabase
         .from("profiles")
         .upsert({
@@ -97,11 +105,17 @@ export default function OnboardingPage() {
           quality_score: 100,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Profile error details:", error);
+        throw error;
+      }
+
+      console.log("Profile saved successfully");
       toast.success("Profile created successfully!");
-      router.push("/discovery");
+      router.push("/social");
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Full error object:", error);
+      toast.error(error.message || "Database error saving new user");
     } finally {
       setLoading(false);
     }
