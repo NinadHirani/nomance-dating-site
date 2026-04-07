@@ -26,6 +26,7 @@ export default function MessagesListPage() {
           .from("matches")
           .select(`
             id,
+            created_at,
             user_1,
             user_2,
             status,
