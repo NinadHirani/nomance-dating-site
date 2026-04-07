@@ -1,0 +1,17 @@
+Table Column Type Notes
+matches id uuid Primary key
+user_a_id uuid FK → users
+user_b_id uuid FK → users
+matched_at timestamp
+status enum active | unmatched | archived
+conversations id uuid Primary key
+match_id uuid FK → matches
+created_at timestamp
+messages id uuid Primary key
+conversation_id uuid FK → conversations — index this
+sender_id uuid FK → users
+content text Sanitize before insert (XSS)
+media_url text nullable — Supabase Storage
+sent_at timestamp Index this column
+delivered_at timestamp nullable
+seen_at timestamp nullable
