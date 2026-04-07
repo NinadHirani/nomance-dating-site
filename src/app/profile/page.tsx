@@ -42,9 +42,30 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      const activeUserId = authUser?.id || "00000000-0000-0000-0000-000000000001";
-      setUser(authUser || { id: activeUserId, email: "guest@example.com" });
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Check for admin bypass or real session
+      const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
+
+      if (!session?.user && !isAdminBypass) {
+        router.push("/auth");
+        return;
+      }
+
+      const authUser = session?.user;
+
+      if (authUser) {
+        const activeUserId = authUser.id;
+        setUser(authUser);
+      } else if (isAdminBypass) {
+        // Set admin user for bypass
+        setUser({ id: "admin", email: "admin@nomance.com" });
+      } else {
+        router.push("/auth");
+        return;
+      }
+
+      const activeUserId = authUser?.id || "admin";
 
       const { data, error } = await supabase
         .from("profiles")

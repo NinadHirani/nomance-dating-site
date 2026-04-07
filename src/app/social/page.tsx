@@ -254,7 +254,11 @@ export default function SocialPage() {
     try {
       setLoading(true);
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001" };
+
+      // Check for admin bypass
+      const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
+
+      const activeUser = authUser || (isAdminBypass ? { id: "admin" } : { id: "00000000-0000-0000-0000-000000000001" });
       setUser(activeUser);
 
       const { data: profileData } = await supabase
@@ -262,7 +266,7 @@ export default function SocialPage() {
         .select("*")
         .eq("id", activeUser.id)
         .single();
-      
+
       setUserProfile(profileData);
 
       const { data: skippedPosts } = await supabase
@@ -432,30 +436,37 @@ export default function SocialPage() {
 
       try {
         setLoading(true);
+
+        console.log("Creating post with user.id:", user.id);
+
         const { data, error } = await supabase
           .from("posts")
           .insert({
             user_id: user.id,
             content: newPostContent,
             image_url: newPostImage || null,
-            media_type: newPostMediaType,
+            media_type: newPostImage ? newPostMediaType : null,
           })
           .select(`
             *,
-            profiles:user_id!inner (
-              id, 
-              full_name, 
-              avatar_url, 
-              birth_date, 
-              intent, 
-              location_lat, 
+            profiles:user_id (
+              id,
+              full_name,
+              avatar_url,
+              birth_date,
+              intent,
+              location_lat,
               location_lng
             )
           `)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
 
+        console.log("Post created successfully:", data);
         setPosts([data, ...posts]);
         setNewPostContent("");
         setNewPostImage("");
@@ -463,8 +474,8 @@ export default function SocialPage() {
         setIsCreatingPost(false);
         toast.success("Your aura has been shared!");
       } catch (error: any) {
-        console.error("Create post error:", error);
-        toast.error("Failed to share your post");
+        console.error("Create post error details:", error);
+        toast.error(error.message || "Failed to share your post");
       } finally {
         setLoading(false);
       }
@@ -491,6 +502,8 @@ export default function SocialPage() {
         .from('stories')
         .getPublicUrl(filePath);
 
+      console.log("Inserting story with user.id:", user.id);
+
       const { error: storyError } = await supabase
         .from("stories")
         .insert({
@@ -500,13 +513,16 @@ export default function SocialPage() {
           expires_at: addDays(new Date(), 1).toISOString()
         });
 
-      if (storyError) throw storyError;
+      if (storyError) {
+        console.error("Story insert error:", storyError);
+        throw storyError;
+      }
 
       toast.success("Moment shared!");
       fetchData(); // Refresh stories
     } catch (error: any) {
-      console.error("Story upload error:", error);
-      toast.error("Failed to share moment");
+      console.error("Story upload error details:", error);
+      toast.error(error.message || "Failed to share moment");
     } finally {
       setIsUploadingStory(false);
     }
