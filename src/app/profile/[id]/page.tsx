@@ -115,7 +115,7 @@ export default function PublicProfilePage() {
               <div className="h-48 w-full rounded-[3rem] bg-gradient-to-r from-primary/20 via-purple-600/10 to-pink-500/20 backdrop-blur-md border border-border overflow-hidden">
                 <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
               </div>
-              
+
               {/* Profile Picture - Small & Normal Size */}
               <div className="absolute -bottom-12 left-12 flex items-end gap-6">
                 <div className="relative group">
@@ -138,7 +138,7 @@ export default function PublicProfilePage() {
                     <Zap className="w-4 h-4 fill-current text-primary" />
                   </div>
                 </div>
-                
+
                 <div className="pb-4">
                   <div className="flex items-center gap-3">
                     <h1 className="text-4xl font-black italic tracking-tighter text-foreground">{profile.full_name}</h1>
@@ -147,13 +147,18 @@ export default function PublicProfilePage() {
                   {profile.username && (
                     <p className="text-sm text-muted-foreground font-semibold mt-1 mb-2">@{profile.username}</p>
                   )}
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex gap-2 mt-1 flex-wrap">
                     <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
                       {profile.gender || "Human"}
                     </Badge>
                     <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-600/10 text-purple-600 border-none">
                       {profile.birth_date ? `${new Date().getFullYear() - new Date(profile.birth_date).getFullYear()} Years` : "Ageless"}
                     </Badge>
+                    {profile.intent && (
+                      <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/10 text-accent border-none">
+                        {profile.intent.replace('_', ' ')}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>

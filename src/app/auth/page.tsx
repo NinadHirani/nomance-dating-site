@@ -141,7 +141,7 @@ function AuthContent() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,oklch(0.18_0.06_25)_0%,oklch(0.1_0.02_25)_100%)] relative overflow-y-auto px-4 py-12 perspective-[1500px]">
+    <div className="h-screen overflow-y-auto bg-[radial-gradient(circle_at_center,oklch(0.18_0.06_25)_0%,oklch(0.1_0.02_25)_100%)] relative px-4 py-12 perspective-[1500px] flex flex-col items-center justify-center">
       <FallingHearts />
       
       {/* Big Rotating Hearts in Corners */}
