@@ -31,15 +31,16 @@ export default function EditProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [profile, setProfile] = useState<any>({
     full_name: "",
+    username: "",
     bio: "",
     intent: "life_partner",
     gender: "other",
     birth_date: "",
     values: [],
-    avatar_url: "",
-    photos: []
+    avatar_url: ""
   });
 
   useEffect(() => {
@@ -66,13 +67,13 @@ export default function EditProfilePage() {
       if (data) {
         setProfile({
           full_name: data.full_name || "",
+          username: data.username || "",
           bio: data.bio || "",
           intent: data.intent || "life_partnership",
           gender: data.gender || "other",
           birth_date: data.birth_date || "",
           values: data.values || [],
-          avatar_url: data.avatar_url || "",
-          photos: data.photos || []
+          avatar_url: data.avatar_url || ""
         });
       }
     } catch (error: any) {
@@ -85,44 +86,54 @@ export default function EditProfilePage() {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
 
     try {
       setSaving(true);
-      
-      const avatar_url = profile.photos && profile.photos.length > 0 
-        ? profile.photos[0] 
-        : profile.avatar_url;
+
+      // Photos are handled separately by PhotoUpload component
+      // We only save avatar_url which is set from the first photo
 
       // Clean up the profile data before saving
       const profileData = {
         id: user.id,
         full_name: profile.full_name || null,
+        username: profile.username || null,
         bio: profile.bio || null,
         intent: profile.intent || null,
         gender: profile.gender || null,
         birth_date: profile.birth_date || null,
         values: profile.values || [],
-        photos: profile.photos || [],
-        avatar_url: avatar_url || null,
-        last_active: new Date().toISOString()
+        avatar_url: profile.avatar_url || null,
+        updated_at: new Date().toISOString()
       };
 
-      console.log("Saving profile data:", profileData);
+      console.log("🔵 Saving profile data:", profileData);
+      console.log("🔵 Username value:", profileData.username);
+      console.log("🔵 Bio value:", profileData.bio);
 
-      const { error } = await supabase
+      const { data: upsertData, error } = await supabase
         .from("profiles")
         .upsert(profileData, { onConflict: 'id' });
 
       if (error) {
-        console.error("Supabase upsert error details:", error);
+        console.error("❌ Supabase upsert error details:", error);
         throw error;
       }
 
+      console.log("✅ Profile saved successfully");
       toast.success("Profile updated successfully!");
-      router.push("/profile");
+
+      // Refresh the page to show updated data
+      await fetchProfile();
+      setTimeout(() => {
+        router.push("/profile");
+      }, 500);
     } catch (error: any) {
-      console.error("Detailed error updating profile:", error);
+      console.error("❌ Detailed error updating profile:", error);
       const errorMessage = error.message || "Failed to update profile";
       toast.error(errorMessage);
     } finally {
@@ -148,21 +159,25 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="h-screen bg-background text-foreground overflow-hidden relative">
       <Navbar />
-      
-      <main className="container mx-auto px-4 pt-24 max-w-3xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            onClick={() => router.push("/profile")}
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-          <h1 className="text-3xl font-bold text-foreground">Edit Profile</h1>
-        </div>
+
+      <main className="absolute inset-0 overflow-y-auto overflow-x-hidden z-10">
+        <div className="container mx-auto px-4 pt-24 pb-40 max-w-3xl">
+          <div className="flex items-center gap-4 mb-12">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => router.push("/profile")}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </Button>
+            <div>
+              <h1 className="text-4xl font-black italic tracking-tighter text-foreground">Edit Profile</h1>
+              <p className="text-sm text-muted-foreground mt-2">Update your information and stand out</p>
+            </div>
+          </div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-8">
           <section className="space-y-6">
@@ -171,10 +186,15 @@ export default function EditProfilePage() {
               Profile Photos
             </div>
             
-            <PhotoUpload 
-              userId={user.id} 
-              initialPhotos={profile.photos} 
-              onPhotosChange={(photos) => setProfile({ ...profile, photos })} 
+            <PhotoUpload
+              userId={user.id}
+              initialPhotos={photos}
+              onPhotosChange={(newPhotos) => {
+                setPhotos(newPhotos);
+                if (newPhotos && newPhotos.length > 0) {
+                  setProfile({ ...profile, avatar_url: newPhotos[0] });
+                }
+              }}
             />
             
             <div className="flex items-center gap-2 text-muted-foreground text-xs bg-secondary/20 p-3 rounded-xl">
@@ -185,36 +205,52 @@ export default function EditProfilePage() {
 
           <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
             <CardHeader className="bg-secondary/10 border-b border-border/50">
-              <CardTitle className="text-xl">Basic Information</CardTitle>
-              <CardDescription>Update your personal details.</CardDescription>
+              <CardTitle className="text-2xl font-black italic tracking-tighter">Basic Information</CardTitle>
+              <CardDescription>Update your personal details, username, and bio.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Full Name</label>
-                  <Input 
-                    placeholder="Enter your name" 
+                  <label className="text-sm font-semibold text-foreground">Full Name</label>
+                  <Input
+                    placeholder="Enter your name"
                     value={profile.full_name}
                     onChange={(e) => setProfile({...profile, full_name: e.target.value})}
                     className="rounded-xl border-border focus:ring-primary h-11"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Birth Date</label>
-                  <Input 
+                  <label className="text-sm font-semibold text-foreground">Username</label>
+                  <Input
+                    type="text"
+                    placeholder="e.g., john_doe"
+                    value={profile.username || ""}
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      const cleanValue = rawValue.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                      console.log("Username changed:", rawValue, "->", cleanValue);
+                      setProfile({...profile, username: cleanValue});
+                    }}
+                    className="rounded-xl border-border focus:ring-primary h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">Others can find you by @{profile.username || 'username'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Birth Date</label>
+                  <Input
                     type="date"
                     value={profile.birth_date}
                     onChange={(e) => setProfile({...profile, birth_date: e.target.value})}
                     className="rounded-xl border-border focus:ring-primary h-11"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Gender</label>
-                  <Select 
-                    value={profile.gender} 
+                  <label className="text-sm font-semibold text-foreground">Gender</label>
+                  <Select
+                    value={profile.gender}
                     onValueChange={(value) => setProfile({...profile, gender: value})}
                   >
                     <SelectTrigger className="rounded-xl h-11 border-border">
@@ -228,45 +264,52 @@ export default function EditProfilePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-muted-foreground">Intent</label>
-                  <Select 
-                    value={profile.intent} 
-                    onValueChange={(value) => setProfile({...profile, intent: value})}
-                  >
-                    <SelectTrigger className="rounded-xl h-11 border-border">
-                      <SelectValue placeholder="What are you looking for?" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border">
-                      {INTENTS.map((intent) => (
-                        <SelectItem key={intent.value} value={intent.value}>
-                          {intent.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
-              <div className="space-y-2 pt-2">
-                <label className="text-sm font-semibold text-muted-foreground flex justify-between">
-                  Bio <span>{profile.bio.length}/500</span>
-                </label>
-                <Textarea 
-                  placeholder="Share your story..." 
-                  className="rounded-xl border-border min-h-[120px] resize-none"
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">What Are You Looking For?</label>
+                <Select
+                  value={profile.intent}
+                  onValueChange={(value) => setProfile({...profile, intent: value})}
+                >
+                  <SelectTrigger className="rounded-xl h-11 border-border">
+                    <SelectValue placeholder="Select your intention" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border">
+                    {INTENTS.map((intent) => (
+                      <SelectItem key={intent.value} value={intent.value}>
+                        {intent.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 pt-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-foreground">Your Bio (Aura)</label>
+                  <span className="text-xs text-muted-foreground">{(profile.bio || "").length}/500</span>
+                </div>
+                <Textarea
+                  placeholder="Tell the world about yourself... What makes you unique? What are your passions and interests?"
+                  className="rounded-xl border-border min-h-[140px] resize-none focus:ring-primary"
                   maxLength={500}
-                  value={profile.bio}
-                  onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                  value={profile.bio || ""}
+                  onChange={(e) => {
+                    const bioValue = e.target.value;
+                    console.log("Bio changed, length:", bioValue.length);
+                    setProfile({...profile, bio: bioValue});
+                  }}
                 />
+                <p className="text-xs text-muted-foreground">Be authentic and genuine. Your bio helps others understand who you are.</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
             <CardHeader className="bg-secondary/10 border-b border-border/50">
-              <CardTitle className="text-xl">Values & Beliefs</CardTitle>
-              <CardDescription>Select up to 5 core values.</CardDescription>
+              <CardTitle className="text-2xl font-black italic tracking-tighter">Values & Beliefs</CardTitle>
+              <CardDescription>Select up to 5 core values that define you.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-2">
@@ -321,6 +364,7 @@ export default function EditProfilePage() {
             </div>
           </div>
         </section>
+        </div>
       </main>
     </div>
   );

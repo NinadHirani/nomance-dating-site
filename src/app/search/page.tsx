@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "../../hooks/use-debounce";
+import Link from "next/link";
 
 export default function SearchPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -67,7 +68,7 @@ export default function SearchPage() {
         .lte("birth_date", maxDate);
 
       if (debouncedSearchQuery.trim()) {
-        query = query.ilike("full_name", `%${debouncedSearchQuery}%`);
+        query = query.or(`full_name.ilike.%${debouncedSearchQuery}%,username.ilike.%${debouncedSearchQuery}%`);
       }
 
       const { data: profilesData, error } = await query;
@@ -134,8 +135,8 @@ export default function SearchPage() {
               <div className="flex gap-4">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input 
-                    placeholder="Search by name..." 
+                  <Input
+                    placeholder="Search by name or @username..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-14 bg-card/50 border-border backdrop-blur-xl rounded-2xl focus:ring-primary font-bold italic"
@@ -230,12 +231,13 @@ export default function SearchPage() {
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="bg-card/50 border-border backdrop-blur-md rounded-3xl overflow-hidden hover:border-primary/30 transition-all group">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <Avatar className="w-16 h-16 rounded-2xl ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
-                            <AvatarImage src={profile.avatar_url} className="object-cover" />
-                            <AvatarFallback className="bg-secondary rounded-2xl font-black">{profile.full_name?.[0]}</AvatarFallback>
-                          </Avatar>
+                      <Link href={`/profile/${profile.id}`}>
+                        <Card className="bg-card/50 border-border backdrop-blur-md rounded-3xl overflow-hidden hover:border-primary/30 transition-all group cursor-pointer">
+                          <CardContent className="p-4 flex items-center gap-4">
+                            <Avatar className="w-16 h-16 rounded-2xl ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+                              <AvatarImage src={profile.avatar_url} className="object-cover" />
+                              <AvatarFallback className="bg-secondary rounded-2xl font-black">{profile.full_name?.[0]}</AvatarFallback>
+                            </Avatar>
                           
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
@@ -244,11 +246,14 @@ export default function SearchPage() {
                                   {profile.birth_date ? differenceInYears(new Date(), new Date(profile.birth_date)) : '??'}
                                 </span>
                               </div>
-                            
+                              {profile.username && (
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">@{profile.username}</p>
+                              )}
+
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 <MapPin className="w-3 h-3" />
-                                {profile.location_lat && currentUserProfile?.location_lat 
+                                {profile.location_lat && currentUserProfile?.location_lat
                                   ? `${Math.round(calculateDistance(currentUserProfile.location_lat, currentUserProfile.location_lng, profile.location_lat, profile.location_lng))}km`
                                   : 'Hidden'}
                               </div>
@@ -259,9 +264,9 @@ export default function SearchPage() {
                             </div>
                           </div>
 
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="rounded-2xl w-12 h-12 bg-accent/50 hover:bg-primary/20 text-primary transition-all"
                             onClick={() => toast.success(`Frequency shared with ${profile.full_name.split(' ')[0]}`)}
                           >
@@ -269,6 +274,7 @@ export default function SearchPage() {
                           </Button>
                         </CardContent>
                       </Card>
+                      </Link>
                     </motion.div>
                   ))}
                 </AnimatePresence>

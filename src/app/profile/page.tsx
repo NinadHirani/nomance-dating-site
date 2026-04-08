@@ -234,7 +234,7 @@ export default function ProfilePage() {
       </div>
 
       <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
-        <div className="container mx-auto px-4 pt-12 pb-32 max-w-2xl">
+        <div className="container mx-auto px-4 pt-12 pb-40 max-w-2xl">
           <div className="mb-8">
             <Button 
               variant="ghost" 
@@ -285,6 +285,9 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <h2 className="text-3xl font-black tracking-tighter text-primary">{profile?.full_name || "Nomance Member"}</h2>
+                      {profile?.username && (
+                        <p className="text-sm text-muted-foreground font-semibold mt-0.5 mb-3">@{profile.username}</p>
+                      )}
                       <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1 mb-3">
                       <MapPin className="w-3 h-3 mr-1 text-primary" />
                       <span>Global Community</span>

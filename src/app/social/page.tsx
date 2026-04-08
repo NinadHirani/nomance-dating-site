@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff, Edit3, Trash2 } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff, Edit3, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
@@ -79,7 +79,7 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
 
       <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
         <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1">
             <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
               <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
                 <AvatarImage src={post.profiles?.avatar_url} />
@@ -89,14 +89,27 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
                 <Zap className="w-2 h-2 text-white fill-current" />
               </div>
             </Link>
-            <div>
+            <div className="flex-1">
               <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black tracking-tighter hover:text-primary transition-colors">
                 {post.profiles?.full_name}
               </Link>
+              {post.profiles?.username && (
+                <p className="text-[8px] font-semibold text-muted-foreground/60">@{post.profiles.username}</p>
+              )}
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                 {formatDistanceToNow(new Date(post.created_at))} AGO
               </p>
             </div>
+            <Link href={`/profile/${post.profiles?.id}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full hover:bg-primary/20 hover:text-primary transition-all"
+                title="View Profile"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         
         {post.profiles?.id !== user?.id && (
@@ -320,14 +333,15 @@ export default function SocialPage() {
         .select(`
           *,
           profiles:user_id!inner (
-            id, 
-            full_name, 
-            avatar_url, 
-            birth_date, 
-            intent, 
-            location_lat, 
+            id,
+            full_name,
+            avatar_url,
+            birth_date,
+            intent,
+            location_lat,
             location_lng,
-            values
+            values,
+            username
           )
         `)
         .order("created_at", { ascending: false });

@@ -81,16 +81,17 @@ export default function PublicProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background text-foreground overflow-hidden relative">
       <Navbar />
-      
+
       {/* Extraordinary Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
       </div>
 
-        <main className="container mx-auto px-4 pt-24 max-w-4xl relative z-10">
+      <main className="absolute top-0 left-0 right-0 bottom-0 overflow-y-auto overflow-x-hidden z-10">
+        <div className="container mx-auto px-4 pt-24 pb-40 max-w-4xl">
           {/* Header Navigation */}
           <div className="flex items-center justify-between mb-12">
             <Button 
@@ -119,11 +120,19 @@ export default function PublicProfilePage() {
               <div className="absolute -bottom-12 left-12 flex items-end gap-6">
                 <div className="relative group">
                   <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card">
-                    <img 
-                      src={profile.avatar_url || "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=800&q=80"} 
-                      alt={profile.full_name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.full_name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/40 to-purple-600/40 flex items-center justify-center">
+                        <Avatar className="w-full h-full">
+                          <AvatarFallback className="text-4xl font-black">{profile.full_name?.[0]}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                    )}
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-foreground text-background p-2 rounded-2xl shadow-xl flex items-center justify-center border-4 border-background">
                     <Zap className="w-4 h-4 fill-current text-primary" />
@@ -135,6 +144,9 @@ export default function PublicProfilePage() {
                     <h1 className="text-4xl font-black italic tracking-tighter text-foreground">{profile.full_name}</h1>
                     <UserCheck className="w-6 h-6 text-primary" />
                   </div>
+                  {profile.username && (
+                    <p className="text-sm text-muted-foreground font-semibold mt-1 mb-2">@{profile.username}</p>
+                  )}
                   <div className="flex gap-2 mt-1">
                     <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
                       {profile.gender || "Human"}
@@ -295,7 +307,8 @@ export default function PublicProfilePage() {
               </div>
             </div>
           </div>
-        </main>
+        </div>
+      </main>
     </div>
   );
 }
