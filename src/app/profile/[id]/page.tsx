@@ -69,7 +69,47 @@ export default function PublicProfilePage() {
     );
   }
 
-  if (!profile) return null;
+  const handleSendSpark = async () => {
+    if (!profile) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
+
+      if (!currentUserId || currentUserId === profile.id) {
+        toast.error("You cannot send a spark to yourself!");
+        return;
+      }
+
+      // Try to create a new match
+      const { error } = await supabase.from("matches").insert({
+        user_1: currentUserId,
+        user_2: profile.id,
+        status: 'pending'
+      });
+
+      if (error) {
+        // Check if reverse match exists
+        const { data: reverseLike } = await supabase
+          .from("matches")
+          .select("*")
+          .eq("user_1", profile.id)
+          .eq("user_2", currentUserId)
+          .single();
+
+        if (reverseLike) {
+          await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
+          toast.success("It's a match!");
+        } else {
+          toast.info("Interest already sent.");
+        }
+      } else {
+        toast.success("Spark sent!");
+      }
+    } catch (error: any) {
+      console.error("Error sending spark:", error);
+      toast.error("Failed to send spark");
+    }
+  };
 
   const strength = profile.profile_strength || 80;
   
@@ -301,7 +341,9 @@ export default function PublicProfilePage() {
 
                   {/* Action Bar */}
                 <div className="pt-8 relative flex gap-4">
-                   <Button className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
+                   <Button
+                     onClick={handleSendSpark}
+                     className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
                      <Heart className="w-6 h-6 fill-current text-primary" />
                      Send Spark
                    </Button>
