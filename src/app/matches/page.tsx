@@ -54,7 +54,13 @@ export default function MatchesPage() {
     try {
       setLoading(true);
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" };
+
+      if (!authUser) {
+        router.push("/auth");
+        return;
+      }
+
+      const activeUser = authUser;
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
@@ -128,6 +134,21 @@ export default function MatchesPage() {
 
   useEffect(() => {
     fetchAllData();
+
+    // Refresh data when visibility changes (user comes back to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAllData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchAllData);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchAllData);
+    };
   }, [router]);
 
   // --- Discovery Handlers ---
