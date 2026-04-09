@@ -24,32 +24,46 @@ export default function MessagesListPage() {
         // Fetch accepted matches
         const { data: matches, error } = await supabase
           .from("matches")
-          .select(`
-            id,
-            created_at,
-            user_1,
-            user_2,
-            status,
-            profiles_user_1:user_1 (*),
-            profiles_user_2:user_2 (*)
-          `)
+          .select("id, created_at, user_1, user_2, status")
           .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`)
           .eq("status", "accepted");
 
         if (error) throw error;
 
+        if (!matches || matches.length === 0) {
+          setChats([]);
+          return;
+        }
+
+        // Deduplicate matches - keep only one match per other user
+        const seenUserIds = new Set<string>();
+        const uniqueMatches = matches.filter(m => {
+          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+          if (seenUserIds.has(otherUserId)) return false;
+          seenUserIds.add(otherUserId);
+          return true;
+        });
+
+        // Fetch all matched user IDs and their profiles
+        const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
+        const { data: allProfiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("id", matchedUserIds);
+
         // For each match, fetch the latest message
         const chatsWithLastMessage = await Promise.all(
-          (matches || []).map(async (match) => {
-            const otherProfile = match.user_1 === activeUser.id ? match.profiles_user_2 : match.profiles_user_1;
-            
+          (uniqueMatches || []).map(async (match) => {
+            const otherUserId = match.user_1 === activeUser.id ? match.user_2 : match.user_1;
+            const otherProfile = allProfiles?.find(p => p.id === otherUserId);
+
             const { data: lastMessage } = await supabase
               .from("messages")
               .select("*")
               .eq("match_id", match.id)
               .order("created_at", { ascending: false })
               .limit(1)
-              .single();
+              .maybeSingle();
 
             return {
               ...match,

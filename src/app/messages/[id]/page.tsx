@@ -62,26 +62,27 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
         if (!mounted) return;
         setUser(activeUser);
 
+        // Step 1: Query match data
         const { data: matchData, error: matchError } = await supabase
           .from("matches")
-          .select(`
-            id,
-            user_1,
-            user_2,
-            status,
-            profiles_user_1:user_1 (*),
-            profiles_user_2:user_2 (*)
-          `)
+          .select("id, user_1, user_2, status")
           .eq("id", matchId)
           .single();
 
-        if (matchError || matchData.status !== 'accepted') {
+        if (matchError || !matchData || matchData.status !== 'accepted') {
           toast.error("You must have a mutual match to message.");
           router.push("/matches");
           return;
         }
 
-        const otherProfile = matchData.user_1 === activeUser.id ? matchData.profiles_user_2 : matchData.profiles_user_1;
+        // Step 2: Get the other user's profile
+        const otherUserId = matchData.user_1 === activeUser.id ? matchData.user_2 : matchData.user_1;
+        const { data: otherProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", otherUserId)
+          .single();
+
         if (!mounted) return;
         setMatchInfo({ ...matchData, otherProfile });
 
@@ -101,7 +102,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           .neq("sender_id", activeUser.id)
           .is("read_at", null);
 
-        setupRealtimeSubscription(activeUser.id, matchData.user_1 === activeUser.id ? matchData.user_2 : matchData.user_1);
+        setupRealtimeSubscription(activeUser.id, otherUserId);
       } catch (error: any) {
         console.error("Messages fetch error:", error);
       } finally {
@@ -122,18 +123,19 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
       });
 
       channel
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages', 
-          filter: `match_id=eq.${matchId}` 
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `match_id=eq.${matchId}`
         }, async (payload) => {
+          console.log("New message received via realtime:", payload.new);
           if (!mounted) return;
           setMessages(prev => {
             if (prev.some(m => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
-          
+
           if (payload.new.sender_id !== currentUserId) {
             await supabase
               .from("messages")
@@ -163,6 +165,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           setOtherUserOnline(isOnline);
         })
         .subscribe(async (status) => {
+          console.log("Chat channel subscription status:", status);
           if (status === 'SUBSCRIBED') {
             await channel.track({ online_at: new Date().toISOString() });
           }
@@ -239,10 +242,12 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
     }).select().single();
 
     if (error) {
+      console.error("Message send error:", error);
       toast.error("Failed to send message");
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       setNewMessage(messageContent);
     } else if (data) {
+      console.log("Message sent successfully:", data);
       setMessages(prev => prev.map(m => m.id === optimisticMessage.id ? data : m));
     }
   };
@@ -272,12 +277,12 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col h-screen overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden relative">
       <Navbar />
-      
-      <main className="flex-grow pt-20 flex flex-col container mx-auto px-4 max-w-5xl h-full overflow-hidden">
-        <div className="flex gap-4 flex-grow h-full py-4 overflow-hidden">
-          <div className="flex-grow flex flex-col h-full">
+
+      <main className="flex-grow overflow-y-auto pt-32 pb-32">
+        <div className="container mx-auto px-4 max-w-5xl py-4">
+          <div className="flex gap-4 flex-col lg:flex-row">
             <header className="bg-card p-3 rounded-2xl shadow-sm border border-border flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="icon" onClick={() => router.push('/messages')} className="md:hidden">
@@ -311,8 +316,8 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
               </div>
             </header>
 
-            <div className="flex-grow bg-card rounded-3xl shadow-sm border border-border overflow-hidden flex flex-col min-h-0">
-              <div ref={scrollRef} className="flex-grow overflow-y-auto p-4 space-y-3">
+            <div className="bg-card rounded-3xl shadow-sm border border-border flex flex-col min-h-[500px]">
+              <div ref={scrollRef} className="flex-grow overflow-y-auto p-4 space-y-3 max-h-[400px]">
                 {messages.length === 0 && (
                   <div className="h-full flex flex-col items-center justify-center text-center space-y-6 max-w-xs mx-auto py-10">
                     <div className="p-4 bg-accent/20 rounded-2xl">

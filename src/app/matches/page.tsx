@@ -89,13 +89,22 @@ export default function MatchesPage() {
 
       // Fetch profile details for matched users
       if (mutualData && mutualData.length > 0) {
-        const matchedUserIds = mutualData.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
+        // Deduplicate matches - keep only one match per other user
+        const seenUserIds = new Set<string>();
+        const uniqueMatches = (mutualData || []).filter(m => {
+          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+          if (seenUserIds.has(otherUserId)) return false;
+          seenUserIds.add(otherUserId);
+          return true;
+        });
+
+        const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
         const { data: matchedProfiles } = await supabase
           .from("profiles")
           .select("id, full_name, avatar_url, intent")
           .in("id", matchedUserIds);
 
-        const formattedMatches = (mutualData || []).map(m => {
+        const formattedMatches = (uniqueMatches || []).map(m => {
           const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
           const profile = matchedProfiles?.find(p => p.id === otherUserId);
           return { id: m.id, profile };
