@@ -117,15 +117,8 @@ function AuthContent() {
   };
 
   const handleAdminLogin = () => {
-    if (adminPassword === "1234") {
-      setAdminError(false);
-      localStorage.setItem("adminBypass", "true");
-      toast.success("Admin access granted!");
-      router.push("/social");
-    } else {
-      setAdminError(true);
-      toast.error("Invalid admin password");
-    }
+    // Removed admin bypass - use proper email/password authentication instead
+    toast.info("Please use your email and password to login");
   };
 
   if (checkingSession) {

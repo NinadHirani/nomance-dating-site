@@ -300,10 +300,12 @@ export default function SocialPage() {
       setLoading(true);
       const { data: { user: authUser } } = await supabase.auth.getUser();
 
-      // Check for admin bypass
-      const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
+      if (!authUser) {
+        router.push("/auth");
+        return;
+      }
 
-      const activeUser = authUser || (isAdminBypass ? { id: "00000000-0000-0000-0000-000000000002" } : { id: "00000000-0000-0000-0000-000000000001" });
+      const activeUser = authUser;
       setUser(activeUser);
 
       const { data: profileData } = await supabase
