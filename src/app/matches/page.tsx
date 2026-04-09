@@ -90,7 +90,7 @@ export default function MatchesPage() {
       }
 
       // --- Fetch Mutual Matches ---
-      const { data: mutualData } = await supabase
+      const { data: mutualData, error: mutualError } = await supabase
         .from("matches")
         .select(`
           id,
@@ -102,14 +102,17 @@ export default function MatchesPage() {
         .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`)
         .eq("status", "accepted");
 
+      if (mutualError) console.error("Mutual matches error:", mutualError);
+      console.log("Mutual matches data:", mutualData);
+
       const formattedMatches = (mutualData || []).map(m => {
         const otherProfile = m.user_1 === activeUser.id ? m.profiles_user_2 : m.profiles_user_1;
         return { id: m.id, profile: otherProfile };
       });
       setMatches(formattedMatches);
 
-      // --- Fetch Liked Profiles ---
-      const { data: likedData } = await supabase
+      // --- Fetch Liked Profiles (Sent Sparks) ---
+      const { data: likedData, error: likedError } = await supabase
         .from("matches")
         .select(`
           id,
@@ -118,6 +121,9 @@ export default function MatchesPage() {
         `)
         .eq("user_1", activeUser.id)
         .eq("status", "pending");
+
+      if (likedError) console.error("Liked profiles error:", likedError);
+      console.log("Sent sparks data:", likedData);
 
       const formattedLiked = (likedData || []).map(l => ({
         id: l.id,
@@ -242,7 +248,7 @@ export default function MatchesPage() {
 
       <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
         <div className="container mx-auto px-4 pt-12 pb-32 max-w-4xl relative z-10">
-          <header className="mb-8">
+          <header className="mb-8 flex items-center justify-between">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -251,6 +257,16 @@ export default function MatchesPage() {
                     Connections <Sparkles className="w-8 h-8 text-primary fill-current" />
                   </h1>
                 </motion.div>
+
+                <Button
+                  onClick={() => fetchAllData()}
+                  disabled={loading}
+                  variant="outline"
+                  className="rounded-full border-primary text-primary hover:bg-primary/10 font-black uppercase tracking-widest text-[10px]"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
 
           </header>
 
