@@ -303,7 +303,7 @@ export default function SocialPage() {
       // Check for admin bypass
       const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
 
-      const activeUser = authUser || (isAdminBypass ? { id: "admin" } : { id: "00000000-0000-0000-0000-000000000001" });
+      const activeUser = authUser || (isAdminBypass ? { id: "00000000-0000-0000-0000-000000000002" } : { id: "00000000-0000-0000-0000-000000000001" });
       setUser(activeUser);
 
       const { data: profileData } = await supabase

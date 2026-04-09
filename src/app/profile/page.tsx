@@ -66,13 +66,13 @@ export default function ProfilePage() {
         setUser(authUser);
       } else if (isAdminBypass) {
         // Set admin user for bypass
-        setUser({ id: "admin", email: "admin@nomance.com" });
+        setUser({ id: "00000000-0000-0000-0000-000000000002", email: "admin@nomance.com" });
       } else {
         router.push("/auth");
         return;
       }
 
-      const activeUserId = authUser?.id || "admin";
+      const activeUserId = authUser?.id || "00000000-0000-0000-0000-000000000002";
 
       const { data, error } = await supabase
         .from("profiles")
