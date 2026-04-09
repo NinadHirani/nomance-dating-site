@@ -64,75 +64,79 @@ export default function MatchesPage() {
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
-      const today = new Date().toISOString().split('T')[0];
-      const { count: discoveryCount } = await supabase
-        .from("discovery_history")
-        .select("*", { count: 'exact', head: true })
-        .eq("user_id", activeUser.id)
-        .eq("discovered_at", today);
+      // Skip discovery_history for now - simplified approach
+      setDailyLimitReached(false);
 
-      if (discoveryCount && discoveryCount >= 5) {
-        setDailyLimitReached(true);
-      } else {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", activeUser.id).single();
-        setUserProfile(profile);
-        setSelectedMood(profile?.mood || "talking");
-        
-        const { data: potentialMatches, error: discoveryError } = await supabase
-          .rpc("get_recommended_profiles", { 
-            p_user_id: activeUser.id,
-            p_limit: 5 
-          });
+      // Skip RPC call - use direct query instead
+      const { data: allProfiles } = await supabase
+        .from("profiles")
+        .select("*")
+        .neq("id", activeUser.id)
+        .limit(5);
 
-        if (!discoveryError) {
-          setProfiles(potentialMatches || []);
-        }
-      }
+      setProfiles(allProfiles || []);
 
       // --- Fetch Mutual Matches ---
+      // Query matches where user is involved and status is accepted
       const { data: mutualData, error: mutualError } = await supabase
         .from("matches")
-        .select(`
-          id,
-          user_1,
-          user_2,
-          profiles_user_1:user_1 (id, full_name, avatar_url, intent),
-          profiles_user_2:user_2 (id, full_name, avatar_url, intent)
-        `)
-        .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`)
-        .eq("status", "accepted");
+        .select("id, user_1, user_2, status")
+        .eq("status", "accepted")
+        .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`);
 
       if (mutualError) console.error("Mutual matches error:", mutualError);
       console.log("Mutual matches data:", mutualData);
 
-      const formattedMatches = (mutualData || []).map(m => {
-        const otherProfile = m.user_1 === activeUser.id ? m.profiles_user_2 : m.profiles_user_1;
-        return { id: m.id, profile: otherProfile };
-      });
-      setMatches(formattedMatches);
+      // Fetch profile details for matched users
+      if (mutualData && mutualData.length > 0) {
+        const matchedUserIds = mutualData.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
+        const { data: matchedProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, intent")
+          .in("id", matchedUserIds);
 
-      // --- Fetch Liked Profiles (Sent Sparks) ---
+        const formattedMatches = (mutualData || []).map(m => {
+          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+          const profile = matchedProfiles?.find(p => p.id === otherUserId);
+          return { id: m.id, profile };
+        }).filter(m => m.profile);
+
+        setMatches(formattedMatches);
+      } else {
+        setMatches([]);
+      }
+
+      // --- Fetch Sent Sparks (Liked Profiles) ---
       const { data: likedData, error: likedError } = await supabase
         .from("matches")
-        .select(`
-          id,
-          user_2,
-          profiles:user_2 (id, full_name, avatar_url, intent)
-        `)
+        .select("id, user_2, status")
         .eq("user_1", activeUser.id)
         .eq("status", "pending");
 
       if (likedError) console.error("Liked profiles error:", likedError);
       console.log("Sent sparks data:", likedData);
 
-      const formattedLiked = (likedData || []).map(l => ({
-        id: l.id,
-        profile: l.profiles
-      }));
-      setLikedProfiles(formattedLiked);
+      // Fetch profile details for sent spark users
+      if (likedData && likedData.length > 0) {
+        const sentToUserIds = likedData.map(l => l.user_2);
+        const { data: sentToProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, intent")
+          .in("id", sentToUserIds);
+
+        const formattedLiked = (likedData || []).map(l => {
+          const profile = sentToProfiles?.find(p => p.id === l.user_2);
+          return { id: l.id, profile };
+        }).filter(l => l.profile);
+
+        setLikedProfiles(formattedLiked);
+      } else {
+        setLikedProfiles([]);
+      }
 
     } catch (error: any) {
       console.error("Fetch all data error:", error);
+      toast.error("Error loading matches");
     } finally {
       setLoading(false);
     }
