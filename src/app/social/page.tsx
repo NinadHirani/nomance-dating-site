@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff, Edit3, Trash2, Eye } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff, Edit3, Trash2, Eye, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
@@ -22,243 +22,103 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, handleBlock, setIsReporting, setReportingPostId, setReportingUserId, handleDeletePost, openEditDialog }: any) {
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-25, 25]);
-  const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
-  const likeOpacity = useTransform(x, [50, 150], [0, 1]);
-  const nopeOpacity = useTransform(x, [-150, -50], [1, 0]);
+function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReporting, setReportingPostId, setReportingUserId, handleDeletePost, openEditDialog }: any) {
+  const isOwnPost = post.profiles?.id === user?.id;
 
   return (
-    <motion.div
-      layout
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      style={{ x, rotate, opacity }}
-      onDragEnd={(e, { offset, velocity }) => {
-        if (offset.x > 150) {
-          handleMatchAction(post.profiles?.id, 'spark', post.id);
-        } else if (offset.x < -150) {
-          handleMatchAction(post.profiles?.id, 'pass', post.id);
-        }
-      }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ 
-        opacity: 0, 
-        scale: 0.95, 
-        x: x.get() > 0 ? 500 : -500,
-        transition: { duration: 0.3 } 
-      }}
-      transition={{ 
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-        delay: idx * 0.05 
-      }}
-      className="relative"
-    >
-      {/* Swipe Indicators */}
-      <motion.div 
-        style={{ opacity: likeOpacity }}
-        className="absolute top-10 right-10 z-50 pointer-events-none"
-      >
-        <div className="border-4 border-green-500 rounded-xl px-4 py-2 rotate-12">
-          <span className="text-4xl font-black text-green-500 uppercase">INTERESTED</span>
-        </div>
-      </motion.div>
-
-      <motion.div 
-        style={{ opacity: nopeOpacity }}
-        className="absolute top-10 left-10 z-50 pointer-events-none"
-      >
-        <div className="border-4 border-red-500 rounded-xl px-4 py-2 -rotate-12">
-          <span className="text-4xl font-black text-red-500 uppercase">NOPE</span>
-        </div>
-      </motion.div>
-
-      <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
-        <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
-            <div className="flex items-center gap-4 flex-1">
-            <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
-              <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
-                <AvatarImage src={post.profiles?.avatar_url} />
-                <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-background flex items-center justify-center">
-                <Zap className="w-2 h-2 text-white fill-current" />
-              </div>
+    <Card className="bg-card/50 backdrop-blur-xl border-border shadow-sm rounded-3xl overflow-hidden mb-8 transition-all duration-300">
+      {/* Header */}
+      <CardHeader className="p-4 flex flex-row items-center justify-between space-y-0 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <Link href={`/profile/${post.profiles?.id}`} className="relative group">
+            <Avatar className="w-10 h-10 ring-2 ring-primary/20 group-hover:ring-primary transition-all">
+              <AvatarImage src={post.profiles?.avatar_url} />
+              <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
+            </Avatar>
+          </Link>
+          <div className="flex flex-col">
+            <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-bold hover:text-primary transition-colors">
+              {post.profiles?.username || post.profiles?.full_name}
             </Link>
-            <div className="flex-1">
-              <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black tracking-tighter hover:text-primary transition-colors">
-                {post.profiles?.full_name}
-              </Link>
-              {post.profiles?.username && (
-                <p className="text-[8px] font-semibold text-muted-foreground/60">@{post.profiles.username}</p>
-              )}
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                {formatDistanceToNow(new Date(post.created_at))} AGO
-              </p>
-            </div>
-            <Link href={`/profile/${post.profiles?.id}`}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 rounded-full hover:bg-primary/20 hover:text-primary transition-all"
-                title="View Profile"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-            </Link>
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(post.created_at))} ago
+            </span>
           </div>
+        </div>
         
-        {post.profiles?.id !== user?.id && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
-              <MoreHorizontal className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+              <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
-            <DropdownMenuItem 
-              onClick={() => {
-                setReportingPostId(post.id);
-                setReportingUserId(post.profiles?.id);
-                setIsReporting(true);
-              }}
-              className="rounded-xl gap-3 cursor-pointer py-3"
-            >
-              <Flag className="w-4 h-4 text-orange-500" />
-              <span className="font-bold">Report Post</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => handleUnmatch(post.profiles?.id)}
-              className="rounded-xl gap-3 cursor-pointer py-3"
-            >
-              <HeartOff className="w-4 h-4 text-pink-500" />
-              <span className="font-bold">Unmatch</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-1 bg-border/50" />
-            <DropdownMenuItem 
-              onClick={() => handleBlock(post.profiles?.id)}
-              variant="destructive"
-              className="rounded-xl gap-3 cursor-pointer py-3"
-            >
-              <Ban className="w-4 h-4" />
-              <span className="font-bold">Block User</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        )}
-
-        {post.profiles?.id === user?.id && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
-              <MoreHorizontal className="w-5 h-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
-            <DropdownMenuItem
-              onClick={() => openEditDialog(post.id, post.content)}
-              className="rounded-xl gap-3 cursor-pointer py-3"
-            >
-              <Edit3 className="w-4 h-4 text-blue-500" />
-              <span className="font-bold">Edit</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-1 bg-border/50" />
-            <DropdownMenuItem
-              onClick={() => handleDeletePost(post.id)}
-              className="rounded-xl gap-3 cursor-pointer py-3"
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-              <span className="font-bold">Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        )}
-      </CardHeader>
-      
-      {post.image_url && (
-        <div className="px-4 pb-4">
-          <div className="aspect-[4/5] rounded-[2.5rem] overflow-hidden relative bg-secondary/5">
-            {post.media_type === 'video' ? (
-              <video 
-                src={post.image_url} 
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-              />
+          <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl">
+            {isOwnPost ? (
+              <>
+                <DropdownMenuItem onClick={() => openEditDialog(post.id, post.content)} className="rounded-xl py-3 cursor-pointer">
+                  <Edit3 className="w-4 h-4 mr-2 text-blue-500" /> <span className="font-bold">Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeletePost(post.id)} className="rounded-xl py-3 cursor-pointer text-red-500">
+                  <Trash2 className="w-4 h-4 mr-2" /> <span className="font-bold">Delete</span>
+                </DropdownMenuItem>
+              </>
             ) : (
-              <img 
-                src={post.image_url} 
-                alt="Aura" 
-                className="absolute inset-0 w-full h-full object-cover"
-              />
+              <>
+                <DropdownMenuItem onClick={() => { setReportingPostId(post.id); setReportingUserId(post.profiles?.id); setIsReporting(true); }} className="rounded-xl py-3 cursor-pointer">
+                  <Flag className="w-4 h-4 mr-2 text-orange-500" /> <span className="font-bold">Report</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBlock(post.profiles?.id)} className="rounded-xl py-3 cursor-pointer text-red-500">
+                  <Ban className="w-4 h-4 mr-2" /> <span className="font-bold">Block</span>
+                </DropdownMenuItem>
+              </>
             )}
-          </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </CardHeader>
+
+      {/* Image/Video */}
+      {post.image_url && (
+        <div className="w-full aspect-square relative bg-secondary/10">
+          {post.media_type === 'video' ? (
+            <video src={post.image_url} className="absolute inset-0 w-full h-full object-cover" controls playsInline />
+          ) : (
+            <img src={post.image_url} alt="Post" className="absolute inset-0 w-full h-full object-cover" />
+          )}
         </div>
       )}
 
-      <CardContent className="p-8 pt-2">
-        <p className="text-lg font-medium leading-relaxed tracking-tight text-foreground/90 italic">
-          &quot;{post.content}&quot;
-        </p>
-      </CardContent>
-
-        <CardFooter className="p-6 pt-0 flex flex-col gap-6">
-          {post.profiles?.id !== user?.id && (
-          <div className="flex flex-col items-center justify-center w-full gap-4">
-            {/* Interaction Hub Label */}
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Intentional Connection</span>
-            
-            {/* Extraordinary Interaction Hub */}
-            <div className="flex items-center gap-6 p-2 bg-card/80 rounded-[2.5rem] border border-border backdrop-blur-3xl shadow-2xl">
-              <motion.button
-                whileHover={{ scale: 1.05, x: -5, backgroundColor: "hsl(var(--accent))" }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleMatchAction(post.profiles?.id, 'pass', post.id)}
-                className="h-14 px-8 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-all flex items-center gap-3 border border-transparent hover:border-border"
-              >
-                <X className="w-4 h-4" />
-                Not Interested
-              </motion.button>
-              
-              <div className="w-px h-8 bg-border" />
-
-              <motion.button
-                whileHover={{ scale: 1.05, x: 5, boxShadow: "0 0 40px rgba(var(--primary), 0.2)" }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleMatchAction(post.profiles?.id, 'spark', post.id)}
-                className="h-14 px-10 rounded-[2rem] font-black text-[12px] uppercase tracking-[0.2em] bg-foreground text-background flex items-center gap-3 group/interest"
-              >
-                <Heart className="w-5 h-5 fill-current transition-transform group-hover/interest:scale-125" />
-                Interested
-              </motion.button>
-            </div>
-          </div>
+      {/* Actions & Content */}
+      <CardContent className="p-4 flex flex-col gap-3">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-10 h-10 rounded-full hover:text-primary hover:bg-primary/10 transition-colors"
+            onClick={() => handleMatchAction(post.profiles?.id, 'like', post.id)}
+          >
+            <Heart className="w-6 h-6" />
+          </Button>
+          {!isOwnPost && (
+            <Link href={`/profile/${post.profiles?.id}`}>
+              <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full hover:text-blue-500 hover:bg-blue-500/10 transition-colors">
+                <MessageCircle className="w-6 h-6" />
+              </Button>
+            </Link>
           )}
-          
-          <div className="flex items-center justify-center gap-3 px-2">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="w-5 h-5 rounded-full border-2 border-background bg-primary/20 flex items-center justify-center overflow-hidden">
-                 <Avatar className="w-full h-full">
-                   <AvatarImage src={`https://i.pravatar.cc/100?u=${post.id}${i}`} />
-                 </Avatar>
-              </div>
-            ))}
-          </div>
-          <span className="text-[10px] font-black italic tracking-tight text-muted-foreground">
-            {post.likes_count || 0} INTERESTED
-          </span>
         </div>
-      </CardFooter>
+        
+        <div className="font-bold text-sm">
+          {post.likes_count || 0} {post.likes_count === 1 ? 'like' : 'likes'}
+        </div>
 
+        <div className="text-sm">
+          <Link href={`/profile/${post.profiles?.id}`} className="font-bold mr-2 hover:underline">
+            {post.profiles?.username || post.profiles?.full_name}
+          </Link>
+          <span className="text-foreground/90">{post.content}</span>
+        </div>
+      </CardContent>
     </Card>
-  </motion.div>
   );
 }
 
@@ -330,7 +190,7 @@ export default function SocialPage() {
       
       const blockedUserIds = blocks?.map(b => b.blocker_id === activeUser.id ? b.blocked_id : b.blocker_id) || [];
 
-      let query = supabase
+      let { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select(`
           *,
@@ -348,18 +208,17 @@ export default function SocialPage() {
         `)
         .order("created_at", { ascending: false });
 
-      if (skippedIds.length > 0) {
-        query = query.not("id", "in", `(${skippedIds.join(',')})`);
-      }
-
-      if (blockedUserIds.length > 0) {
-        query = query.not("user_id", "in", `(${blockedUserIds.join(',')})`);
-      }
-
-      const { data: postsData, error: postsError } = await query;
-
       if (postsError) throw postsError;
-      setPosts(postsData || []);
+      
+      let filteredPosts = postsData || [];
+      if (skippedIds.length > 0) {
+        filteredPosts = filteredPosts.filter(p => !skippedIds.includes(p.id));
+      }
+      if (blockedUserIds.length > 0) {
+        filteredPosts = filteredPosts.filter(p => !blockedUserIds.includes(p.user_id));
+      }
+
+      setPosts(filteredPosts);
 
       const { data: storiesData, error: storiesError } = await supabase
         .from("stories")
@@ -419,7 +278,7 @@ export default function SocialPage() {
     };
   }, []); 
 
-    const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass', postId: string) => {
+    const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass' | 'like', postId: string) => {
       if (!user || user.id === targetUserId) {
           toast.info("This is your own creation!");
           return;
@@ -439,7 +298,8 @@ export default function SocialPage() {
           return;
       }
 
-      setPosts(prev => prev.filter(p => p.id !== postId));
+      // Update like count locally immediately for better UX
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1 } : p));
 
       try {
         const { error } = await supabase.from("matches").insert({
@@ -462,7 +322,7 @@ export default function SocialPage() {
           .select("*")
           .eq("user_1", targetUserId)
           .eq("user_2", user.id)
-          .single();
+          .maybeSingle();
 
         if (reverseLike) {
           await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
@@ -470,7 +330,7 @@ export default function SocialPage() {
           await supabase.rpc('increment_likes_count', { post_id: postId });
           toast.success("It's a match!");
         } else {
-          toast.info("Interest already sent.");
+          toast.info("Already liked!");
         }
       }
     };
@@ -969,17 +829,14 @@ export default function SocialPage() {
         </Dialog>
 
 
-        {/* Feed: Extraordinary "Asymmetric" Design */}
-        <div className="space-y-12">
-          <AnimatePresence mode="popLayout">
+        {/* Feed: Instagram Style Design */}
+        <div className="space-y-6">
             {posts.map((post, idx) => (
-              <SwipeableCard
+              <InstagramCard
                 key={post.id}
                 post={post}
-                idx={idx}
                 user={user}
                 handleMatchAction={handleMatchAction}
-                handleUnmatch={handleUnmatch}
                 handleBlock={handleBlock}
                 setIsReporting={setIsReporting}
                 setReportingPostId={setReportingPostId}
@@ -988,7 +845,6 @@ export default function SocialPage() {
                 openEditDialog={openEditDialog}
               />
             ))}
-          </AnimatePresence>
         </div>
         </div>
       </main>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Search, SlidersHorizontal, Heart, Sparkles, Flame, Zap, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, Heart, Sparkles, Flame, Zap, MapPin, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { subYears, differenceInYears } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "../../hooks/use-debounce";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SearchPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -24,6 +25,7 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const router = useRouter();
 
   const [ageRange, setAgeRange] = useState([18, 50]);
   const [maxDistance, setMaxDistance] = useState(100);
@@ -111,6 +113,37 @@ export default function SearchPage() {
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  };
+
+  const handleMessage = async (e: React.MouseEvent, targetUserId: string) => {
+    e.preventDefault(); // Prevent navigating to profile
+    if (!currentUserProfile) return;
+    try {
+      // Check if match already exists
+      const { data: existingMatch } = await supabase
+        .from('matches')
+        .select('*')
+        .or(`and(user_1.eq.${currentUserProfile.id},user_2.eq.${targetUserId}),and(user_1.eq.${targetUserId},user_2.eq.${currentUserProfile.id})`)
+        .maybeSingle();
+      
+      if (existingMatch) {
+        if (existingMatch.status !== 'accepted') {
+          await supabase.from('matches').update({ status: 'accepted' }).eq('id', existingMatch.id);
+        }
+        router.push(`/messages/${existingMatch.id}`);
+      } else {
+        const { data: newMatch, error } = await supabase.from('matches').insert({
+          user_1: currentUserProfile.id,
+          user_2: targetUserId,
+          status: 'accepted'
+        }).select().single();
+        if (error) throw error;
+        router.push(`/messages/${newMatch.id}`);
+      }
+    } catch (error) {
+      console.error("Message error:", error);
+      toast.error("Failed to start chat");
+    }
   };
 
   useEffect(() => {
@@ -271,10 +304,11 @@ export default function SearchPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="rounded-2xl w-12 h-12 bg-accent/50 hover:bg-primary/20 text-primary transition-all"
-                            onClick={() => toast.success(`Frequency shared with ${profile.full_name.split(' ')[0]}`)}
+                            className="rounded-2xl w-12 h-12 bg-primary/10 hover:bg-primary/20 text-primary transition-all shadow-sm"
+                            onClick={(e) => handleMessage(e, profile.id)}
+                            title="Message directly"
                           >
-                            <Zap className="w-6 h-6 fill-current" />
+                            <MessageCircle className="w-6 h-6 fill-current" />
                           </Button>
                         </CardContent>
                       </Card>
