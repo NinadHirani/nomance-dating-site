@@ -39,7 +39,9 @@ export default function EditProfilePage() {
     birth_date: "",
     values: [],
     avatar_url: "",
-    photos: []
+    photos: [],
+    location_lat: null,
+    location_lng: null,
   });
 
   useEffect(() => {
@@ -72,7 +74,9 @@ export default function EditProfilePage() {
           birth_date: data.birth_date || "",
           values: data.values || [],
           avatar_url: data.avatar_url || "",
-          photos: data.photos || []
+          photos: data.photos || [],
+          location_lat: data.location_lat || null,
+          location_lng: data.location_lng || null,
         });
       }
     } catch (error: any) {
@@ -105,6 +109,8 @@ export default function EditProfilePage() {
         values: profile.values || [],
         photos: profile.photos || [],
         avatar_url: avatar_url || null,
+        location_lat: profile.location_lat,
+        location_lng: profile.location_lng,
         last_active: new Date().toISOString()
       };
 
@@ -285,6 +291,49 @@ export default function EditProfilePage() {
                   </button>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-border shadow-sm overflow-hidden">
+            <CardHeader className="bg-secondary/10 border-b border-border/50">
+              <CardTitle className="text-xl">Location</CardTitle>
+              <CardDescription>Share your location for better matches.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {profile.location_lat && profile.location_lng ? (
+                <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl text-sm text-green-700">
+                  ✓ Location: {profile.location_lat.toFixed(4)}, {profile.location_lng.toFixed(4)}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">No location set. Enable location access for better matches based on proximity.</p>
+              )}
+
+              <Button
+                type="button"
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        setProfile(prev => ({
+                          ...prev,
+                          location_lat: pos.coords.latitude,
+                          location_lng: pos.coords.longitude,
+                        }));
+                        toast.success("Location updated!");
+                      },
+                      (err) => {
+                        toast.error("Location permission denied");
+                      }
+                    );
+                  } else {
+                    toast.error("Geolocation not supported");
+                  }
+                }}
+                variant="outline"
+                className="w-full text-primary border-primary hover:bg-primary/10"
+              >
+                📍 {profile.location_lat ? "Update Location" : "Enable Location"}
+              </Button>
             </CardContent>
           </Card>
 

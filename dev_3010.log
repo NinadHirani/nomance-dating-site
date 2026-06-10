@@ -1,0 +1,17 @@
+   ▲ Next.js 15.5.14
+   - Local:        http://localhost:3010
+   - Network:      http://10.72.219.253:3010
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 13.5s (1810 modules)
+ ⨯ [Error: Invariant: missing bootstrap script. This is a bug in Next.js]
+ ⨯ [Error: Invariant: missing bootstrap script. This is a bug in Next.js] {
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 21s (2143 modules)
+ HEAD / 500 in 44373ms
+[?25h

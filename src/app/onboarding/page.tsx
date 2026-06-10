@@ -44,6 +44,8 @@ export default function OnboardingPage() {
     intent: "",
     bio: "",
     selectedValues: [] as string[],
+    location_lat: null as number | null,
+    location_lng: null as number | null,
   });
 
     useEffect(() => {
@@ -95,11 +97,13 @@ export default function OnboardingPage() {
           bio: formData.bio || null,
           values: formData.selectedValues || [],
           quality_score: 100,
+          location_lat: formData.location_lat,
+          location_lng: formData.location_lng,
         });
 
       if (error) throw error;
       toast.success("Profile created successfully!");
-      router.push("/discovery");
+      router.push("/matches");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -233,9 +237,44 @@ export default function OnboardingPage() {
                       We&apos;ve captured your intent. Now we&apos;ll show you high-quality matches based on your values.
                     </p>
                   </div>
-                  <div className="bg-secondary/20 p-4 rounded-lg text-sm text-primary italic max-w-sm">
-                    &quot;Remember: Nomance only shows you a few matches per day. Take your time with each one.&quot;
-                </div>
+
+                  <div className="w-full max-w-sm space-y-4">
+                    <div className="bg-secondary/20 p-4 rounded-lg text-sm text-primary italic">
+                      &quot;Remember: Nomance only shows you a few matches per day. Take your time with each one.&quot;
+                    </div>
+
+                    {formData.location_lat && formData.location_lng ? (
+                      <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-lg text-sm text-green-700">
+                        ✓ Location enabled for better matches
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  location_lat: pos.coords.latitude,
+                                  location_lng: pos.coords.longitude,
+                                }));
+                                toast.success("Location captured!");
+                              },
+                              (err) => {
+                                toast.info("Location permission denied. You can enable it later in your profile.");
+                              }
+                            );
+                          } else {
+                            toast.error("Geolocation not supported by your browser");
+                          }
+                        }}
+                        variant="outline"
+                        className="w-full text-primary border-primary hover:bg-primary/10"
+                      >
+                        📍 Enable Location for Better Matches
+                      </Button>
+                    )}
+                  </div>
               </div>
             )}
           </CardContent>

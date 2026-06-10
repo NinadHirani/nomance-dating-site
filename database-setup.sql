@@ -1,5 +1,6 @@
 -- Drop existing tables (if needed for cleanup)
 DROP TABLE IF EXISTS reports CASCADE;
+DROP TABLE IF EXISTS profile_views CASCADE;
 DROP TABLE IF EXISTS discovery_history CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS matches CASCADE;
@@ -89,6 +90,14 @@ CREATE TABLE messages (
   seen_at TIMESTAMP
 );
 
+-- Create profile_views table
+CREATE TABLE profile_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  viewer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  viewed_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Create discovery_history table
 CREATE TABLE discovery_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -120,6 +129,8 @@ CREATE INDEX idx_matches_user_1 ON matches(user_1);
 CREATE INDEX idx_matches_user_2 ON matches(user_2);
 CREATE INDEX idx_messages_match_id ON messages(match_id);
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX idx_profile_views_viewed_id ON profile_views(viewed_id);
+CREATE INDEX idx_profile_views_viewer_id ON profile_views(viewer_id);
 CREATE INDEX idx_discovery_history_user ON discovery_history(user_id);
 
 -- Enable Row Level Security (RLS) for security
@@ -130,6 +141,7 @@ ALTER TABLE post_skips ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_blocks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profile_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
@@ -218,6 +230,15 @@ CREATE POLICY "Users can read their messages"
 CREATE POLICY "Users can insert messages"
   ON messages FOR INSERT
   WITH CHECK (auth.uid() = sender_id);
+
+-- Profile views: users can record their own views and read views on their profile
+CREATE POLICY "Users can read views on their profile"
+  ON profile_views FOR SELECT
+  USING (auth.uid() = viewed_id OR auth.uid() = viewer_id);
+
+CREATE POLICY "Users can insert their own profile views"
+  ON profile_views FOR INSERT
+  WITH CHECK (auth.uid() = viewer_id);
 
 -- Discovery history: users can read/insert their own
 CREATE POLICY "Users can read their discovery history"

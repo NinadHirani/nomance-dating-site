@@ -38,11 +38,11 @@ export default function MessagesListPage() {
 
         if (error) throw error;
 
-        // For each match, fetch the latest message
+        // For each match, fetch the latest message and unread count
         const chatsWithLastMessage = await Promise.all(
           (matches || []).map(async (match) => {
             const otherProfile = match.user_1 === activeUser.id ? match.profiles_user_2 : match.profiles_user_1;
-            
+
             const { data: lastMessage } = await supabase
               .from("messages")
               .select("*")
@@ -51,10 +51,19 @@ export default function MessagesListPage() {
               .limit(1)
               .single();
 
+            // Count unread messages from the other user
+            const { count: unreadCount } = await supabase
+              .from("messages")
+              .select("*", { count: "exact", head: true })
+              .eq("match_id", match.id)
+              .neq("sender_id", activeUser.id)
+              .is("seen_at", null);
+
             return {
               ...match,
               otherProfile,
-              lastMessage
+              lastMessage,
+              unreadCount: unreadCount || 0
             };
           })
         );
@@ -167,14 +176,21 @@ className="group"
 <h3 className="text-xl font-black tracking-tighter text-primary group-hover:text-primary transition-colors">
 {chat.otherProfile?.full_name}
 </h3>
-<span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">
-{chat.lastMessage 
-? new Date(chat.lastMessage.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
-: "AUTHENTIC MATCH"}
-</span>
+<div className="flex items-center gap-3 ml-auto">
+  {chat.unreadCount > 0 && (
+    <Badge className="bg-red-500 text-white text-[10px] font-black rounded-full px-2 py-0.5 h-auto">
+      {chat.unreadCount}
+    </Badge>
+  )}
+  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap">
+  {chat.lastMessage
+  ? new Date(chat.lastMessage.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
+  : "AUTHENTIC MATCH"}
+  </span>
 </div>
-<p className={`text-sm italic font-medium truncate ${!chat.lastMessage || (chat.lastMessage.sender_id !== user?.id && !chat.lastMessage.read_at) ? "text-foreground font-bold" : "text-muted-foreground/70"}`}>
-{chat.lastMessage 
+</div>
+<p className={`text-sm italic font-medium truncate ${!chat.lastMessage || (chat.lastMessage.sender_id !== user?.id && !chat.lastMessage.seen_at) ? "text-foreground font-bold" : "text-muted-foreground/70"}`}>
+{chat.lastMessage
 ? (chat.lastMessage.sender_id === user?.id ? `You: ${chat.lastMessage.content}` : chat.lastMessage.content)
 : "Begin a meaningful conversation..."}
 </p>
