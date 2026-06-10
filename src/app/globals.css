@@ -49,28 +49,28 @@
   --background: oklch(0.97 0.015 45);
   /* Deep Burgundy Foreground */
   --foreground: oklch(0.2 0.06 25);
-  
+
   --card: oklch(0.98 0.01 45);
   --card-foreground: oklch(0.2 0.06 25);
-  
+
   --popover: oklch(0.98 0.01 45);
   --popover-foreground: oklch(0.2 0.06 25);
-  
+
   /* Rich Burgundy Primary */
   --primary: oklch(0.35 0.1 25);
   --primary-foreground: oklch(0.95 0.03 45);
-  
+
   /* Soft Peach Secondary */
   --secondary: oklch(0.88 0.06 45);
   --secondary-foreground: oklch(0.35 0.1 25);
-  
+
   --muted: oklch(0.92 0.03 45);
   --muted-foreground: oklch(0.45 0.06 25);
-  
+
   /* Accent Peach/Orange */
   --accent: oklch(0.75 0.12 45);
   --accent-foreground: oklch(0.2 0.06 25);
-  
+
   --destructive: oklch(0.5 0.2 25);
   --border: oklch(0.85 0.04 45);
   --input: oklch(0.85 0.04 45);
@@ -81,7 +81,7 @@
   --chart-3: oklch(0.88 0.06 45);
   --chart-4: oklch(0.5 0.08 25);
   --chart-5: oklch(0.95 0.03 45);
-  
+
   --sidebar: oklch(0.98 0.01 45);
   --sidebar-foreground: oklch(0.2 0.06 25);
   --sidebar-primary: oklch(0.35 0.1 25);
@@ -96,32 +96,32 @@
   /* Deep Burgundy Background */
   --background: oklch(0.15 0.04 25);
   --foreground: oklch(0.95 0.03 45);
-  
+
   --card: oklch(0.18 0.04 25);
   --card-foreground: oklch(0.95 0.03 45);
-  
+
   --popover: oklch(0.18 0.04 25);
   --popover-foreground: oklch(0.95 0.03 45);
-  
+
   /* Soft Peach Primary in Dark Mode */
   --primary: oklch(0.88 0.06 45);
   --primary-foreground: oklch(0.15 0.04 25);
-  
+
   /* Burgundy Secondary in Dark Mode */
   --secondary: oklch(0.25 0.08 25);
   --secondary-foreground: oklch(0.95 0.03 45);
-  
+
   --muted: oklch(0.22 0.05 25);
   --muted-foreground: oklch(0.75 0.04 45);
-  
+
   --accent: oklch(0.3 0.1 25);
   --accent-foreground: oklch(0.95 0.03 45);
-  
+
   --destructive: oklch(0.6 0.2 25);
   --border: oklch(0.3 0.05 25);
   --input: oklch(0.3 0.05 25);
   --ring: oklch(0.88 0.06 45 / 0.5);
-  
+
   --sidebar: oklch(0.18 0.04 25);
   --sidebar-foreground: oklch(0.95 0.03 45);
   --sidebar-primary: oklch(0.88 0.06 45);
@@ -133,11 +133,14 @@
 }
 
 @layer base {
+  html {
+    @apply overflow-x-hidden;
+  }
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply bg-background text-foreground transition-colors duration-300 overflow-x-hidden;
   }
 }
 

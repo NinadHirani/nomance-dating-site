@@ -9,7 +9,7 @@ export function LayoutMain({ children }: { children: React.ReactNode }) {
 
   return (
     <main className={cn(
-      "min-h-[calc(100vh-64px)]",
+      "flex-1",
       !isAuthPage && "pt-16"
     )}>
       {children}

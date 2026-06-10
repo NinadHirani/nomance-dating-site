@@ -77,7 +77,47 @@ export default function PublicProfilePage() {
     );
   }
 
-  if (!profile) return null;
+  const handleSendSpark = async () => {
+    if (!profile) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUserId = session?.user?.id;
+
+      if (!currentUserId || currentUserId === profile.id) {
+        toast.error("You cannot send a spark to yourself!");
+        return;
+      }
+
+      // Try to create a new match
+      const { error } = await supabase.from("matches").insert({
+        user_1: currentUserId,
+        user_2: profile.id,
+        status: 'pending'
+      });
+
+      if (error) {
+        // Check if reverse match exists
+        const { data: reverseLike } = await supabase
+          .from("matches")
+          .select("*")
+          .eq("user_1", profile.id)
+          .eq("user_2", currentUserId)
+          .single();
+
+        if (reverseLike) {
+          await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
+          toast.success("It's a match!");
+        } else {
+          toast.info("Interest already sent.");
+        }
+      } else {
+        toast.success("Spark sent!");
+      }
+    } catch (error: any) {
+      console.error("Error sending spark:", error);
+      toast.error("Failed to send spark");
+    }
+  };
 
   const strength = profile.profile_strength || 80;
   
@@ -89,16 +129,17 @@ export default function PublicProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background text-foreground overflow-hidden relative">
       <Navbar />
-      
+
       {/* Extraordinary Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
       </div>
 
-        <main className="container mx-auto px-4 pt-24 max-w-4xl relative z-10">
+      <main className="absolute top-0 left-0 right-0 bottom-0 overflow-y-auto overflow-x-hidden z-10">
+        <div className="container mx-auto px-4 pt-24 pb-40 max-w-4xl">
           {/* Header Navigation */}
           <div className="flex items-center justify-between mb-12">
             <Button 
@@ -122,34 +163,50 @@ export default function PublicProfilePage() {
               <div className="h-48 w-full rounded-[3rem] bg-gradient-to-r from-primary/20 via-purple-600/10 to-pink-500/20 backdrop-blur-md border border-border overflow-hidden">
                 <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
               </div>
-              
+
               {/* Profile Picture - Small & Normal Size */}
               <div className="absolute -bottom-12 left-12 flex items-end gap-6">
                 <div className="relative group">
                   <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl bg-card">
-                    <img 
-                      src={profile.avatar_url || "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=800&q=80"} 
-                      alt={profile.full_name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.full_name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/40 to-purple-600/40 flex items-center justify-center">
+                        <Avatar className="w-full h-full">
+                          <AvatarFallback className="text-4xl font-black">{profile.full_name?.[0]}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                    )}
                   </div>
                   <div className="absolute -bottom-2 -right-2 bg-foreground text-background p-2 rounded-2xl shadow-xl flex items-center justify-center border-4 border-background">
                     <Zap className="w-4 h-4 fill-current text-primary" />
                   </div>
                 </div>
-                
+
                 <div className="pb-4">
                   <div className="flex items-center gap-3">
                     <h1 className="text-4xl font-black italic tracking-tighter text-foreground">{profile.full_name}</h1>
                     <UserCheck className="w-6 h-6 text-primary" />
                   </div>
-                  <div className="flex gap-2 mt-1">
+                  {profile.username && (
+                    <p className="text-sm text-muted-foreground font-semibold mt-1 mb-2">@{profile.username}</p>
+                  )}
+                  <div className="flex gap-2 mt-1 flex-wrap">
                     <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
                       {profile.gender || "Human"}
                     </Badge>
                     <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-600/10 text-purple-600 border-none">
                       {profile.birth_date ? `${new Date().getFullYear() - new Date(profile.birth_date).getFullYear()} Years` : "Ageless"}
                     </Badge>
+                    {profile.intent && (
+                      <Badge variant="secondary" className="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/10 text-accent border-none">
+                        {profile.intent.replace('_', ' ')}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -292,7 +349,9 @@ export default function PublicProfilePage() {
 
                   {/* Action Bar */}
                 <div className="pt-8 relative flex gap-4">
-                   <Button className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
+                   <Button
+                     onClick={handleSendSpark}
+                     className="flex-1 h-16 rounded-[2rem] bg-foreground text-background font-black text-lg uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex gap-3 shadow-xl group">
                      <Heart className="w-6 h-6 fill-current text-primary" />
                      Send Spark
                    </Button>
@@ -303,7 +362,8 @@ export default function PublicProfilePage() {
               </div>
             </div>
           </div>
-        </main>
+        </div>
+      </main>
     </div>
   );
 }

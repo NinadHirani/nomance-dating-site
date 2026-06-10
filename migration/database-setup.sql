@@ -1,3 +1,5 @@
+-- Consolidated database setup for Nomance
+
 -- Drop existing tables (if needed for cleanup)
 DROP TABLE IF EXISTS reports CASCADE;
 DROP TABLE IF EXISTS profile_views CASCADE;
@@ -13,6 +15,7 @@ DROP TABLE IF EXISTS profiles CASCADE;
 -- Create profiles table
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE,
   full_name TEXT,
   bio TEXT,
   birth_date DATE,
@@ -27,6 +30,9 @@ CREATE TABLE profiles (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Create index for username search
+CREATE INDEX idx_profiles_username ON profiles(username);
 
 -- Create posts table (Auras)
 CREATE TABLE posts (
@@ -132,6 +138,7 @@ CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_profile_views_viewed_id ON profile_views(viewed_id);
 CREATE INDEX idx_profile_views_viewer_id ON profile_views(viewer_id);
 CREATE INDEX idx_discovery_history_user ON discovery_history(user_id);
+CREATE INDEX idx_profiles_created_at ON profiles(created_at);
 
 -- Enable Row Level Security (RLS) for security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -145,7 +152,7 @@ ALTER TABLE profile_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discovery_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
--- Profiles: public can read, users can update their own
+-- Profiles Policies
 CREATE POLICY "Public profiles are readable"
   ON profiles FOR SELECT
   USING (true);
@@ -159,7 +166,7 @@ CREATE POLICY "Users can insert their own profile"
   ON profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
--- Posts: public can read, users can insert their own
+-- Posts Policies
 CREATE POLICY "Public posts are readable"
   ON posts FOR SELECT
   USING (true);
@@ -177,7 +184,7 @@ CREATE POLICY "Users can update their own posts"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- Stories: public can read, users can insert their own
+-- Stories Policies
 CREATE POLICY "Public stories are readable"
   ON stories FOR SELECT
   USING (true);
@@ -190,7 +197,7 @@ CREATE POLICY "Users can insert their own stories"
     OR user_id = '00000000-0000-0000-0000-000000000001'
   );
 
--- Post skips: users can read/insert their own
+-- Post skips Policies
 CREATE POLICY "Users can read their own post_skips"
   ON post_skips FOR SELECT
   USING (auth.uid() = user_id);
@@ -199,7 +206,7 @@ CREATE POLICY "Users can insert their own post_skips"
   ON post_skips FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- User blocks: users can manage their own blocks
+-- User blocks Policies
 CREATE POLICY "Users can read blocks involving them"
   ON user_blocks FOR SELECT
   USING (auth.uid() = blocker_id OR auth.uid() = blocked_id);
@@ -208,7 +215,7 @@ CREATE POLICY "Users can insert their own blocks"
   ON user_blocks FOR INSERT
   WITH CHECK (auth.uid() = blocker_id);
 
--- Matches: users in match can read/insert/update
+-- Matches Policies
 CREATE POLICY "Users can read their matches"
   ON matches FOR SELECT
   USING (auth.uid() = user_1 OR auth.uid() = user_2);
@@ -222,7 +229,7 @@ CREATE POLICY "Users can update their matches"
   USING (auth.uid() = user_1 OR auth.uid() = user_2)
   WITH CHECK (auth.uid() = user_1 OR auth.uid() = user_2);
 
--- Messages: users in match can read/insert
+-- Messages Policies
 CREATE POLICY "Users can read their messages"
   ON messages FOR SELECT
   USING (auth.uid() = sender_id);
@@ -240,7 +247,7 @@ CREATE POLICY "Users can insert their own profile views"
   ON profile_views FOR INSERT
   WITH CHECK (auth.uid() = viewer_id);
 
--- Discovery history: users can read/insert their own
+-- Discovery history Policies
 CREATE POLICY "Users can read their discovery history"
   ON discovery_history FOR SELECT
   USING (auth.uid() = user_id);
@@ -249,7 +256,7 @@ CREATE POLICY "Users can insert their discovery history"
   ON discovery_history FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- Reports: users can insert reports
+-- Reports Policies
 CREATE POLICY "Users can insert reports"
   ON reports FOR INSERT
   WITH CHECK (auth.uid() = reporter_id);
@@ -291,3 +298,30 @@ CREATE POLICY "Anyone can update stories"
 CREATE POLICY "Anyone can delete stories" 
   ON storage.objects FOR DELETE 
   USING (bucket_id = 'stories');
+
+-- Functions
+CREATE OR REPLACE FUNCTION public.increment_likes_count(post_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.posts
+  SET likes_count = COALESCE(likes_count, 0) + 1
+  WHERE id = post_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to automatically create profile when user is created
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, quality_score)
+  VALUES (new.id, 100)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

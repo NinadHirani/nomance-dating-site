@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { Loader2, Heart, User, Users, UserPlus, LogOut, Edit3, MapPin, Sparkles, LayoutGrid, Zap, ArrowLeft, TrendingUp, Eye, MessageCircle, Flame, Target, Star } from "lucide-react";
+import { Loader2, Heart, User, Users, UserPlus, LogOut, Edit3, MapPin, Sparkles, LayoutGrid, Zap, ArrowLeft, TrendingUp, Eye, MessageCircle, Flame, Target, Star, Trash2, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface AuraStats {
   sparksReceived: number;
@@ -35,6 +38,10 @@ export default function ProfilePage() {
     messagesExchanged: 0,
   });
 
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingPostContent, setEditingPostContent] = useState("");
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -44,28 +51,14 @@ export default function ProfilePage() {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Check for admin bypass or real session
-      const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
-
-      if (!session?.user && !isAdminBypass) {
+      if (!session?.user) {
         router.push("/auth");
         return;
       }
 
-      const authUser = session?.user;
-
-      if (authUser) {
-        const activeUserId = authUser.id;
-        setUser(authUser);
-      } else if (isAdminBypass) {
-        // Set admin user for bypass
-        setUser({ id: "admin", email: "admin@nomance.com" });
-      } else {
-        router.push("/auth");
-        return;
-      }
-
-      const activeUserId = authUser?.id || "admin";
+      const authUser = session.user;
+      setUser(authUser);
+      const activeUserId = authUser.id;
 
       const { data, error } = await supabase
         .from("profiles")
@@ -160,6 +153,57 @@ export default function ProfilePage() {
     }, 1000);
   };
 
+  const handleDeletePost = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      toast.success("Post deleted");
+    } catch (error: any) {
+      console.error("Delete post error:", error);
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!editingPostId || !editingPostContent.trim()) {
+      toast.error("Post content cannot be empty");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .update({ content: editingPostContent })
+        .eq("id", editingPostId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.map(p =>
+        p.id === editingPostId ? { ...p, content: editingPostContent } : p
+      ));
+
+      setIsEditingPost(false);
+      setEditingPostId(null);
+      setEditingPostContent("");
+      toast.success("Post updated");
+    } catch (error: any) {
+      console.error("Edit post error:", error);
+      toast.error("Failed to update post");
+    }
+  };
+
+  const openEditDialog = (postId: string, content: string) => {
+    setEditingPostId(postId);
+    setEditingPostContent(content);
+    setIsEditingPost(true);
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -181,7 +225,7 @@ export default function ProfilePage() {
       </div>
 
       <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
-        <div className="container mx-auto px-4 pt-12 pb-32 max-w-2xl">
+        <div className="container mx-auto px-4 pt-12 pb-40 max-w-2xl">
           <div className="mb-8">
             <Button 
               variant="ghost" 
@@ -232,6 +276,9 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex-1">
                       <h2 className="text-3xl font-black tracking-tighter text-primary">{profile?.full_name || "Nomance Member"}</h2>
+                      {profile?.username && (
+                        <p className="text-sm text-muted-foreground font-semibold mt-0.5 mb-3">@{profile.username}</p>
+                      )}
                       <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1 mb-3">
                       <MapPin className="w-3 h-3 mr-1 text-primary" />
                       <span>Global Community</span>
@@ -391,7 +438,7 @@ export default function ProfilePage() {
                       whileHover={{ y: -5 }}
                       className="group"
                     >
-                      <Card className="bg-card/50 backdrop-blur-3xl border-border rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-500">
+                      <Card className="bg-card/50 backdrop-blur-3xl border-border rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-500 relative">
                         <div className="aspect-square relative bg-secondary/5">
                           {post.image_url ? (
                             post.media_type === 'video' ? (
@@ -411,6 +458,35 @@ export default function ProfilePage() {
                               {post.likes_count || 0} <Heart className="w-2.5 h-2.5 fill-primary text-primary" />
                             </div>
                           </div>
+
+                          {/* Edit/Delete Menu */}
+                          {post.user_id === user?.id && (
+                            <div className="absolute top-3 left-3 z-10">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-xl hover:bg-background/95">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-40 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
+                                  <DropdownMenuItem
+                                    onClick={() => openEditDialog(post.id, post.content)}
+                                    className="rounded-xl gap-3 cursor-pointer py-2"
+                                  >
+                                    <Edit3 className="w-4 h-4 text-blue-500" />
+                                    <span className="font-bold text-sm">Edit</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeletePost(post.id)}
+                                    className="rounded-xl gap-3 cursor-pointer py-2"
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                    <span className="font-bold text-sm">Delete</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          )}
                         </div>
                         <CardContent className="p-4">
                           <p className="text-xs font-medium italic line-clamp-2 text-muted-foreground leading-relaxed">
@@ -440,6 +516,46 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+
+      {/* Edit Post Dialog */}
+      <Dialog open={isEditingPost} onOpenChange={setIsEditingPost}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
+          <DialogHeader className="p-8 pb-4">
+            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-3 text-primary">
+              <Edit3 className="w-6 h-6 text-blue-500" />
+              Edit Aura
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-8 pt-4 space-y-6">
+            <Textarea
+              placeholder="Update your aura..."
+              value={editingPostContent}
+              onChange={(e) => setEditingPostContent(e.target.value)}
+              className="min-h-[120px] bg-secondary/20 border-none rounded-2xl p-6 text-lg font-medium italic placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
+            />
+            <DialogFooter className="flex-row gap-3 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsEditingPost(false);
+                  setEditingPostId(null);
+                  setEditingPostContent("");
+                }}
+                className="flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditPost}
+                disabled={!editingPostContent.trim()}
+                className="flex-[2] h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-sm uppercase tracking-widest transition-all"
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

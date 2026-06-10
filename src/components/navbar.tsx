@@ -65,7 +65,7 @@ export function Navbar() {
     };
   }, []);
 
-    const isHidden = ["/auth", "/onboarding", "/coach", "/profile", "/notifications"].includes(pathname);
+  const isHidden = ["/auth", "/onboarding", "/coach", "/notifications"].includes(pathname) || pathname.startsWith("/profile");
   if (isHidden) return null;
 
   const navLinks = [

@@ -9,7 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { LoadingScreen } from "@/components/loading-screen";
-import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff } from "lucide-react";
+import { Plus, Camera, Loader2, MoreHorizontal, X, Sparkles, Flame, Zap, ShieldAlert, Heart, Upload, Flag, Ban, HeartOff, Edit3, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, handleBlock, setIsReporting, setReportingPostId, setReportingUserId }: any) {
+function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, handleBlock, setIsReporting, setReportingPostId, setReportingUserId, handleDeletePost, openEditDialog }: any) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
@@ -80,7 +80,7 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
 
       <Card className="bg-card/50 backdrop-blur-3xl border-border shadow-2xl shadow-black/50 rounded-[3rem] overflow-hidden group hover:border-primary/20 transition-all duration-500">
         <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between space-y-0">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1">
             <Link href={`/profile/${post.profiles?.id}`} className="relative group/avatar">
               <Avatar className="w-10 h-10 ring-2 ring-blue-500/30 transition-all group-hover/avatar:ring-blue-500">
                 <AvatarImage src={post.profiles?.avatar_url} />
@@ -90,14 +90,27 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
                 <Zap className="w-2 h-2 text-white fill-current" />
               </div>
             </Link>
-            <div>
+            <div className="flex-1">
               <Link href={`/profile/${post.profiles?.id}`} className="text-sm font-black tracking-tighter hover:text-primary transition-colors">
                 {post.profiles?.full_name}
               </Link>
+              {post.profiles?.username && (
+                <p className="text-[8px] font-semibold text-muted-foreground/60">@{post.profiles.username}</p>
+              )}
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
                 {formatDistanceToNow(new Date(post.created_at))} AGO
               </p>
             </div>
+            <Link href={`/profile/${post.profiles?.id}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full hover:bg-primary/20 hover:text-primary transition-all"
+                title="View Profile"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         
         {post.profiles?.id !== user?.id && (
@@ -134,6 +147,33 @@ function SwipeableCard({ post, idx, user, handleMatchAction, handleUnmatch, hand
             >
               <Ban className="w-4 h-4" />
               <span className="font-bold">Block User</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        )}
+
+        {post.profiles?.id === user?.id && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-accent">
+              <MoreHorizontal className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
+            <DropdownMenuItem
+              onClick={() => openEditDialog(post.id, post.content)}
+              className="rounded-xl gap-3 cursor-pointer py-3"
+            >
+              <Edit3 className="w-4 h-4 text-blue-500" />
+              <span className="font-bold">Edit</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 bg-border/50" />
+            <DropdownMenuItem
+              onClick={() => handleDeletePost(post.id)}
+              className="rounded-xl gap-3 cursor-pointer py-3"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+              <span className="font-bold">Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -249,6 +289,11 @@ export default function SocialPage() {
   const [reportReason, setReportReason] = useState("");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
+  const [isEditingPost, setIsEditingPost] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingPostContent, setEditingPostContent] = useState("");
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+
     const getMediaType = (file: File) => {
       if (file.type.startsWith('video/')) return 'video';
       return 'image';
@@ -259,10 +304,12 @@ export default function SocialPage() {
       setLoading(true);
       const { data: { user: authUser } } = await supabase.auth.getUser();
 
-      // Check for admin bypass
-      const isAdminBypass = typeof window !== "undefined" && localStorage.getItem("adminBypass") === "true";
+      if (!authUser) {
+        router.push("/auth");
+        return;
+      }
 
-      const activeUser = authUser || (isAdminBypass ? { id: "admin" } : { id: "00000000-0000-0000-0000-000000000001" });
+      const activeUser = authUser;
       setUser(activeUser);
 
       const { data: profileData } = await supabase
@@ -292,14 +339,15 @@ export default function SocialPage() {
         .select(`
           *,
           profiles:user_id!inner (
-            id, 
-            full_name, 
-            avatar_url, 
-            birth_date, 
-            intent, 
-            location_lat, 
+            id,
+            full_name,
+            avatar_url,
+            birth_date,
+            intent,
+            location_lat,
             location_lng,
-            values
+            values,
+            username
           )
         `)
         .order("created_at", { ascending: false });
@@ -348,6 +396,31 @@ export default function SocialPage() {
 
   useEffect(() => {
     fetchData();
+
+    // Subscribe to social changes
+    const socialSubscription = supabase
+      .channel('social_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'posts' },
+        () => {
+          console.log("Realtime post update, refreshing...");
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'stories' },
+        () => {
+          console.log("Realtime story update, refreshing...");
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(socialSubscription);
+    };
   }, []); 
 
     const handleMatchAction = async (targetUserId: string, action: 'spark' | 'pass', postId: string) => {
@@ -359,7 +432,7 @@ export default function SocialPage() {
       if (action === 'pass') {
           setPosts(prev => prev.filter(p => p.id !== postId));
           
-          if (user?.id && user.id !== "00000000-0000-0000-0000-000000000001") {
+          if (user?.id) {
             await supabase.from("post_skips").insert({
               user_id: user.id,
               post_id: postId
@@ -372,16 +445,22 @@ export default function SocialPage() {
 
       setPosts(prev => prev.filter(p => p.id !== postId));
 
-      const { error } = await supabase.from("matches").insert({
-        user_1: user.id,
-        user_2: targetUserId,
-        status: 'pending'
-      });
+      try {
+        const { error } = await supabase.from("matches").insert({
+          user_1: user.id,
+          user_2: targetUserId,
+          status: 'pending'
+        });
 
-      // Update likes count on the post
-      await supabase.rpc('increment_likes_count', { post_id: postId });
-      
-      if (error) {
+        if (error) throw error;
+
+        // Increment likes count after successful match
+        await supabase.rpc('increment_likes_count', { post_id: postId });
+        toast.success("Spark sent!");
+      } catch (error: any) {
+        console.error("Match error:", error);
+
+        // Check if reverse match exists
         const { data: reverseLike } = await supabase
           .from("matches")
           .select("*")
@@ -391,12 +470,12 @@ export default function SocialPage() {
 
         if (reverseLike) {
           await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
+          // Increment likes for mutual match
+          await supabase.rpc('increment_likes_count', { post_id: postId });
           toast.success("It's a match!");
         } else {
           toast.info("Interest already sent.");
         }
-      } else {
-        toast.success("Spark sent!");
       }
     };
 
@@ -678,6 +757,63 @@ export default function SocialPage() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    try {
+      setIsDeletingPost(true);
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      toast.success("Post deleted");
+    } catch (error: any) {
+      console.error("Delete post error:", error);
+      toast.error("Failed to delete post");
+    } finally {
+      setIsDeletingPost(false);
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!editingPostId || !editingPostContent.trim()) {
+      toast.error("Post content cannot be empty");
+      return;
+    }
+
+    try {
+      setIsDeletingPost(true);
+      const { error } = await supabase
+        .from("posts")
+        .update({ content: editingPostContent })
+        .eq("id", editingPostId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.map(p =>
+        p.id === editingPostId ? { ...p, content: editingPostContent } : p
+      ));
+
+      setIsEditingPost(false);
+      setEditingPostId(null);
+      setEditingPostContent("");
+      toast.success("Post updated");
+    } catch (error: any) {
+      console.error("Edit post error:", error);
+      toast.error("Failed to update post");
+    } finally {
+      setIsDeletingPost(false);
+    }
+  };
+
+  const openEditDialog = (postId: string, content: string) => {
+    setEditingPostId(postId);
+    setEditingPostContent(content);
+    setIsEditingPost(true);
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -898,7 +1034,7 @@ export default function SocialPage() {
         <div className="space-y-12">
           <AnimatePresence mode="popLayout">
             {posts.map((post, idx) => (
-              <SwipeableCard 
+              <SwipeableCard
                 key={post.id}
                 post={post}
                 idx={idx}
@@ -909,6 +1045,8 @@ export default function SocialPage() {
                 setIsReporting={setIsReporting}
                 setReportingPostId={setReportingPostId}
                 setReportingUserId={setReportingUserId}
+                handleDeletePost={handleDeletePost}
+                openEditDialog={openEditDialog}
               />
             ))}
           </AnimatePresence>
@@ -1075,6 +1213,46 @@ export default function SocialPage() {
                 className="flex-[2] h-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm uppercase tracking-widest transition-all"
               >
                 {isSubmittingReport ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit Report"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Post Dialog */}
+      <Dialog open={isEditingPost} onOpenChange={setIsEditingPost}>
+        <DialogContent className="sm:max-w-md rounded-[2.5rem] bg-background/95 backdrop-blur-2xl border-border p-0 overflow-hidden">
+          <DialogHeader className="p-8 pb-4">
+            <DialogTitle className="text-2xl font-black tracking-tighter flex items-center gap-3 text-primary">
+              <Edit3 className="w-6 h-6 text-blue-500" />
+              Edit Aura
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-8 pt-4 space-y-6">
+            <Textarea
+              placeholder="Update your aura..."
+              value={editingPostContent}
+              onChange={(e) => setEditingPostContent(e.target.value)}
+              className="min-h-[120px] bg-secondary/20 border-none rounded-2xl p-6 text-lg font-medium italic placeholder:text-muted-foreground/40 focus-visible:ring-primary/20"
+            />
+            <DialogFooter className="flex-row gap-3 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsEditingPost(false);
+                  setEditingPostId(null);
+                  setEditingPostContent("");
+                }}
+                className="flex-1 h-14 rounded-2xl font-black text-sm uppercase tracking-widest"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditPost}
+                disabled={isDeletingPost || !editingPostContent.trim()}
+                className="flex-[2] h-14 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-black text-sm uppercase tracking-widest transition-all"
+              >
+                {isDeletingPost ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
               </Button>
             </DialogFooter>
           </div>

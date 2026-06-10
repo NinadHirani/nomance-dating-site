@@ -55,7 +55,13 @@ export default function MatchesPage() {
     try {
       setLoading(true);
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      const activeUser = authUser || { id: "00000000-0000-0000-0000-000000000001", email: "guest@example.com" };
+
+      if (!authUser) {
+        router.push("/auth");
+        return;
+      }
+
+      const activeUser = authUser;
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
@@ -91,43 +97,75 @@ export default function MatchesPage() {
       }
 
       // --- Fetch Mutual Matches ---
-      const { data: mutualData } = await supabase
+      // Query matches where user is involved and status is accepted
+      const { data: mutualData, error: mutualError } = await supabase
         .from("matches")
-        .select(`
-          id,
-          user_1,
-          user_2,
-          profiles_user_1:user_1 (id, full_name, avatar_url, intent),
-          profiles_user_2:user_2 (id, full_name, avatar_url, intent)
-        `)
-        .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`)
-        .eq("status", "accepted");
+        .select("id, user_1, user_2, status")
+        .eq("status", "accepted")
+        .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`);
 
-      const formattedMatches = (mutualData || []).map(m => {
-        const otherProfile = m.user_1 === activeUser.id ? m.profiles_user_2 : m.profiles_user_1;
-        return { id: m.id, profile: otherProfile };
-      });
-      setMatches(formattedMatches);
+      if (mutualError) console.error("Mutual matches error:", mutualError);
+      console.log("Mutual matches data:", mutualData);
 
-      // --- Fetch Liked Profiles ---
-      const { data: likedData } = await supabase
+      // Fetch profile details for matched users
+      if (mutualData && mutualData.length > 0) {
+        // Deduplicate matches - keep only one match per other user
+        const seenUserIds = new Set<string>();
+        const uniqueMatches = (mutualData || []).filter(m => {
+          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+          if (seenUserIds.has(otherUserId)) return false;
+          seenUserIds.add(otherUserId);
+          return true;
+        });
+
+        const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
+        const { data: matchedProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, intent")
+          .in("id", matchedUserIds);
+
+        const formattedMatches = (uniqueMatches || []).map(m => {
+          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+          const profile = matchedProfiles?.find(p => p.id === otherUserId);
+          return { id: m.id, profile };
+        }).filter(m => m.profile);
+
+        setMatches(formattedMatches);
+      } else {
+        setMatches([]);
+      }
+
+      // --- Fetch Sent Sparks (Liked Profiles) ---
+      const { data: likedData, error: likedError } = await supabase
         .from("matches")
-        .select(`
-          id,
-          user_2,
-          profiles:user_2 (id, full_name, avatar_url, intent)
-        `)
+        .select("id, user_2, status")
         .eq("user_1", activeUser.id)
         .eq("status", "pending");
 
-      const formattedLiked = (likedData || []).map(l => ({
-        id: l.id,
-        profile: l.profiles
-      }));
-      setLikedProfiles(formattedLiked);
+      if (likedError) console.error("Liked profiles error:", likedError);
+      console.log("Sent sparks data:", likedData);
+
+      // Fetch profile details for sent spark users
+      if (likedData && likedData.length > 0) {
+        const sentToUserIds = likedData.map(l => l.user_2);
+        const { data: sentToProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, intent")
+          .in("id", sentToUserIds);
+
+        const formattedLiked = (likedData || []).map(l => {
+          const profile = sentToProfiles?.find(p => p.id === l.user_2);
+          return { id: l.id, profile };
+        }).filter(l => l.profile);
+
+        setLikedProfiles(formattedLiked);
+      } else {
+        setLikedProfiles([]);
+      }
 
     } catch (error: any) {
       console.error("Fetch all data error:", error);
+      toast.error("Error loading matches");
     } finally {
       setLoading(false);
     }
@@ -135,6 +173,39 @@ export default function MatchesPage() {
 
   useEffect(() => {
     fetchAllData();
+
+    // Subscribe to matches table changes
+    const matchesSubscription = supabase
+      .channel('matches_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches',
+        },
+        () => {
+          console.log("Realtime match update received, refreshing data...");
+          fetchAllData();
+        }
+      )
+      .subscribe();
+
+    // Refresh data when visibility changes (user comes back to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchAllData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchAllData);
+
+    return () => {
+      supabase.removeChannel(matchesSubscription);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchAllData);
+    };
   }, [router]);
 
   // --- Discovery Handlers ---
@@ -233,7 +304,7 @@ export default function MatchesPage() {
 
       <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
         <div className="container mx-auto px-4 pt-12 pb-32 max-w-4xl relative z-10">
-          <header className="mb-8">
+          <header className="mb-8 flex items-center justify-between">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -242,6 +313,16 @@ export default function MatchesPage() {
                     Connections <Sparkles className="w-8 h-8 text-primary fill-current" />
                   </h1>
                 </motion.div>
+
+                <Button
+                  onClick={() => fetchAllData()}
+                  disabled={loading}
+                  variant="outline"
+                  className="rounded-full border-primary text-primary hover:bg-primary/10 font-black uppercase tracking-widest text-[10px]"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
 
           </header>
 
