@@ -60,28 +60,30 @@ export default function SearchPage() {
 
       const dbIntents = selectedIntent.flatMap(i => intentMapping[i] || []);
 
+      const cleanQuery = debouncedSearchQuery.trim().replace(/^@/, '');
+
       let query = supabase
         .from("profiles")
         .select("*")
         .neq("id", activeUser.id);
 
-      if (dbIntents.length > 0) {
-        query = query.in("intent", dbIntents);
-      }
-      
-      query = query
-        .gte("birth_date", minDate)
-        .lte("birth_date", maxDate);
-
-      if (debouncedSearchQuery.trim()) {
-        query = query.or(`full_name.ilike.%${debouncedSearchQuery}%,username.ilike.%${debouncedSearchQuery}%`);
+      if (cleanQuery) {
+        query = query.or(`full_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`);
+      } else {
+        if (dbIntents.length > 0) {
+          query = query.in("intent", dbIntents);
+        }
+        
+        query = query
+          .gte("birth_date", minDate)
+          .lte("birth_date", maxDate);
       }
 
       const { data: profilesData, error } = await query;
       if (error) throw error;
 
       let filtered = profilesData || [];
-      if (profile?.location_lat && profile?.location_lng && maxDistance < 200) {
+      if (!cleanQuery && profile?.location_lat && profile?.location_lng && maxDistance < 200) {
         filtered = filtered.filter(p => {
           if (!p.location_lat || !p.location_lng) return true;
           const d = calculateDistance(
