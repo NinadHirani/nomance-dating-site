@@ -7,12 +7,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
-});
 
 export async function POST(request: NextRequest) {
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || "dummy_key_for_build",
+    });
+
     const body = await request.json();
     const { action, type, bio, userId, message, conversationHistory } = body;
     const requestType = action || type;
