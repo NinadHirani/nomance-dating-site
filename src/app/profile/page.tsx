@@ -95,6 +95,11 @@ export default function ProfilePage() {
         .select("id")
         .eq("sender_id", activeUserId);
 
+      const { count: profileViewsCount } = await supabase
+        .from("profile_views")
+        .select("*", { count: "exact", head: true })
+        .eq("viewed_id", activeUserId);
+
       const sparksGiven = matchesAsUser1?.length || 0;
       const sparksReceived = matchesAsUser2?.length || 0;
       const acceptedMatches = [
@@ -109,7 +114,7 @@ export default function ProfilePage() {
         sparksGiven,
         matchRate,
         totalMatches,
-        profileViews: Math.floor(Math.random() * 200) + 50,
+        profileViews: profileViewsCount || 0,
         messagesExchanged: messagesData?.length || 0,
       });
 

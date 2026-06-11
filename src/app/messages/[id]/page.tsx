@@ -101,10 +101,10 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
 
         await supabase
           .from("messages")
-          .update({ read_at: new Date().toISOString() })
+          .update({ seen_at: new Date().toISOString() })
           .eq("match_id", matchId)
           .neq("sender_id", activeUser.id)
-          .is("read_at", null);
+          .is("seen_at", null);
 
         setupRealtimeSubscription(activeUser.id, otherUserId);
       } catch (error: any) {
@@ -143,7 +143,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           if (payload.new.sender_id !== currentUserId) {
             await supabase
               .from("messages")
-              .update({ read_at: new Date().toISOString() })
+              .update({ seen_at: new Date().toISOString() })
               .eq("id", payload.new.id);
           }
         })
@@ -233,7 +233,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
       sender_id: user.id,
       content: messageContent,
       created_at: new Date().toISOString(),
-      read_at: null,
+      seen_at: null,
       _optimistic: true,
     };
 
@@ -242,7 +242,8 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
     const { data, error } = await supabase.from("messages").insert({
       match_id: matchId,
       sender_id: user.id,
-      content: messageContent
+      content: messageContent,
+      delivered_at: new Date().toISOString()
     }).select().single();
 
     if (error) {
@@ -373,13 +374,13 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
                             <div className="mt-1 flex items-center gap-1 pr-1">
                               {msg._optimistic ? (
                                 <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />
-                              ) : msg.read_at ? (
+                              ) : msg.seen_at ? (
                                 <CheckCheck className="w-3 h-3 text-primary" />
                               ) : (
                                 <Check className="w-3 h-3 text-muted-foreground" />
                               )}
                               <span className="text-[9px] text-muted-foreground">
-                                {msg._optimistic ? 'Sending...' : msg.read_at ? 'Seen' : 'Sent'}
+                                {msg._optimistic ? 'Sending...' : msg.seen_at ? 'Seen' : 'Sent'}
                               </span>
                             </div>
                           )}

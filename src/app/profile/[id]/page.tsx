@@ -48,6 +48,14 @@ export default function PublicProfilePage() {
           .order("created_at", { ascending: false });
         
         setPosts(postsData || []);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id && user.id !== id) {
+          await supabase.from("profile_views").insert({
+            viewer_id: user.id,
+            viewed_id: id,
+          });
+        }
       } catch (error: any) {
       console.error("Error fetching profile:", error);
       toast.error("Profile not found");

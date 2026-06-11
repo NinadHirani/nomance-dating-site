@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -123,6 +124,7 @@ function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReport
 }
 
 export default function SocialPage() {
+  const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +136,8 @@ export default function SocialPage() {
   const [newPostMediaType, setNewPostMediaType] = useState("image");
   const [selectedStory, setSelectedStory] = useState<any>(null);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [storyReply, setStoryReply] = useState("");
+  const [sendingStoryReply, setSendingStoryReply] = useState(false);
   const [isUploadingStory, setIsUploadingStory] = useState(false);
   const [isUploadingPostImage, setIsUploadingPostImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -364,6 +368,63 @@ export default function SocialPage() {
         toast.error("Failed to upload file");
       } finally {
         setIsUploadingPostImage(false);
+      }
+    };
+
+    const handleStoryReply = async () => {
+      const replyText = storyReply.trim();
+      const storyOwnerId = selectedStory?.items?.[storyIndex]?.user_id;
+
+      if (!user || !storyOwnerId || !replyText || sendingStoryReply) return;
+
+      if (user.id === storyOwnerId) {
+        toast.info("This is your own story.");
+        return;
+      }
+
+      setSendingStoryReply(true);
+      try {
+        const { data: existingMatch } = await supabase
+          .from("matches")
+          .select("id, status")
+          .or(`and(user_1.eq.${user.id},user_2.eq.${storyOwnerId}),and(user_1.eq.${storyOwnerId},user_2.eq.${user.id})`)
+          .maybeSingle();
+
+        let matchId = existingMatch?.id;
+
+        if (!matchId) {
+          const { data: newMatch, error: matchError } = await supabase
+            .from("matches")
+            .insert({
+              user_1: user.id,
+              user_2: storyOwnerId,
+              status: "pending",
+            })
+            .select("id")
+            .single();
+
+          if (matchError) throw matchError;
+          matchId = newMatch.id;
+        }
+
+        const { error: messageError } = await supabase.from("messages").insert({
+          match_id: matchId,
+          sender_id: user.id,
+          content: replyText,
+          delivered_at: new Date().toISOString(),
+        });
+
+        if (messageError) throw messageError;
+
+        setStoryReply("");
+        setSelectedStory(null);
+        toast.success("Reply sent!");
+        router.push(`/messages/${matchId}`);
+      } catch (error: any) {
+        console.error("Story reply error:", error);
+        toast.error(error.message || "Failed to send reply");
+      } finally {
+        setSendingStoryReply(false);
       }
     };
 
@@ -942,9 +1003,24 @@ export default function SocialPage() {
                   {/* Interaction Overlay */}
                   <div className="absolute bottom-12 left-8 right-8 z-20">
                      <div className="flex items-center gap-4">
-                        <Input className="flex-1 bg-background/50 border-border rounded-2xl h-14 backdrop-blur-xl text-foreground placeholder:text-muted-foreground placeholder:italic font-bold" placeholder="Say something..." />
-                        <Button className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/10">
-                           <Zap className="w-6 h-6 fill-current" />
+                        <Input
+                          className="flex-1 bg-background/50 border-border rounded-2xl h-14 backdrop-blur-xl text-foreground placeholder:text-muted-foreground placeholder:italic font-bold"
+                          placeholder="Say something..."
+                          value={storyReply}
+                          onChange={(e) => setStoryReply(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleStoryReply();
+                            }
+                          }}
+                        />
+                        <Button
+                          className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/10"
+                          disabled={!storyReply.trim() || sendingStoryReply}
+                          onClick={handleStoryReply}
+                        >
+                           {sendingStoryReply ? <Loader2 className="w-6 h-6 animate-spin" /> : <Zap className="w-6 h-6 fill-current" />}
                         </Button>
                      </div>
                   </div>

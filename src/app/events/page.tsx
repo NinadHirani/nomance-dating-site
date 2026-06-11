@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Calendar, MapPin, Users, Zap, Video, Coffee, Palette, BookOpen, Heart, Clock, ChevronRight, Plus, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -87,6 +89,16 @@ export default function EventsPage() {
   const [joinedEvents, setJoinedEvents] = useState<string[]>([]);
   const [joinedRooms, setJoinedRooms] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    event_type: "meetup",
+    location: "",
+    event_date: "",
+    max_participants: 15,
+  });
   const router = useRouter();
 
   const fetchEventsAndRooms = async () => {
@@ -217,6 +229,58 @@ export default function EventsPage() {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   };
 
+  const handleCreateEvent = async () => {
+    if (!user || !newEvent.title || !newEvent.event_date || !newEvent.location) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setCreatingEvent(true);
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .insert({
+          title: newEvent.title,
+          description: newEvent.description,
+          event_type: newEvent.event_type,
+          location: newEvent.location,
+          event_date: newEvent.event_date,
+          max_participants: newEvent.max_participants,
+          created_by: user.id,
+        })
+        .select();
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const newEventData = {
+          id: data[0].id,
+          ...newEvent,
+          current_participants: 1,
+          interest_tags: [],
+          host: { name: "You", avatar: null },
+        };
+
+        setEvents(prev => [newEventData, ...prev]);
+        toast.success("Event created! People will see it in the discovery feed.");
+        setShowCreateEvent(false);
+        setNewEvent({
+          title: "",
+          description: "",
+          event_type: "meetup",
+          location: "",
+          event_date: "",
+          max_participants: 15,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+      toast.error(error.message || "Failed to create event");
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
+
   const filteredEvents = events.filter(event => 
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (event.interest_tags || []).some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -236,7 +300,8 @@ export default function EventsPage() {
 
       <main className="h-full overflow-y-auto no-scrollbar scroll-smooth relative z-10">
         <div className="container mx-auto px-4 pt-12 pb-32 max-w-6xl">
-        <header className="mb-10 text-center">
+        <div className="flex items-center justify-between mb-10">
+          <div className="text-center flex-1">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/20 text-primary text-sm font-semibold mb-4">
               <Users className="w-4 h-4" />
               Micro-Communities
@@ -245,7 +310,90 @@ export default function EventsPage() {
             <p className="text-muted-foreground max-w-lg mx-auto">
             Move beyond profiles. Meet like-minded singles at curated events and interest-based rooms.
           </p>
-        </header>
+          </div>
+          <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
+            <DialogTrigger asChild>
+              <Button className="rounded-full bg-primary text-primary-foreground font-black h-14 px-6 shadow-lg">
+                <Plus className="w-5 h-5 mr-2" />
+                Create Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create a New Event</DialogTitle>
+                <DialogDescription>Host an event and meet like-minded people.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Event Title *</label>
+                  <Input
+                    placeholder="e.g., Coffee & Conversations"
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea
+                    placeholder="What's this event about?"
+                    value={newEvent.description}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
+                    className="min-h-[80px]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Type</label>
+                    <select
+                      value={newEvent.event_type}
+                      onChange={(e) => setNewEvent(prev => ({ ...prev, event_type: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                    >
+                      <option value="meetup">Meetup</option>
+                      <option value="speed_dating">Speed Dating</option>
+                      <option value="interest_room">Discussion</option>
+                      <option value="online">Virtual</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Max People</label>
+                    <Input
+                      type="number"
+                      min="2"
+                      max="100"
+                      value={newEvent.max_participants}
+                      onChange={(e) => setNewEvent(prev => ({ ...prev, max_participants: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Location *</label>
+                  <Input
+                    placeholder="e.g., Blue Bottle Coffee, Hayes Valley"
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, location: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date & Time *</label>
+                  <Input
+                    type="datetime-local"
+                    value={newEvent.event_date}
+                    onChange={(e) => setNewEvent(prev => ({ ...prev, event_date: e.target.value }))}
+                  />
+                </div>
+                <Button
+                  onClick={handleCreateEvent}
+                  disabled={creatingEvent}
+                  className="w-full"
+                >
+                  {creatingEvent ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                  {creatingEvent ? "Creating..." : "Create Event"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {/* Search */}
         <div className="max-w-md mx-auto mb-8">

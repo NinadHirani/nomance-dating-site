@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { rankProfiles } from "@/lib/matching";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -64,17 +65,36 @@ export default function MatchesPage() {
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
-      // Skip discovery_history for now - simplified approach
-      setDailyLimitReached(false);
+      const today = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const { count: discoveryCount } = await supabase
+        .from("discovery_history")
+        .select("*", { count: 'exact', head: true })
+        .eq("user_id", activeUser.id)
+        .gte("created_at", today)
+        .lt("created_at", tomorrow);
 
-      // Skip RPC call - use direct query instead
-      const { data: allProfiles } = await supabase
-        .from("profiles")
-        .select("*")
-        .neq("id", activeUser.id)
-        .limit(5);
+      if (discoveryCount && discoveryCount >= 5) {
+        setDailyLimitReached(true);
+      } else {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", activeUser.id).single();
+        setUserProfile(profile);
+        setSelectedMood(profile?.mood || "talking");
+        
+        const { data: potentialMatches, error: discoveryError } = await supabase
+          .rpc("get_recommended_profiles", {
+            p_user_id: activeUser.id,
+            p_limit: 50  // Fetch more, then rank client-side
+          });
 
-      setProfiles(allProfiles || []);
+        if (!discoveryError && potentialMatches && profile) {
+          // Rank profiles using the matching algorithm
+          const ranked = rankProfiles(profile, potentialMatches).slice(0, 10);
+          setProfiles(ranked);
+        } else if (!discoveryError) {
+          setProfiles(potentialMatches || []);
+        }
+      }
 
       // --- Fetch Mutual Matches ---
       // Query matches where user is involved and status is accepted
@@ -210,9 +230,14 @@ export default function MatchesPage() {
       .not("id", "in", `(${excludedIds.join(',')})`)
       .eq("mood", mood)
       .eq("intent", userProfile?.intent)
-      .limit(5);
+      .limit(50);  // Fetch more, then rank
 
-    setProfiles(moodMatches || []);
+    if (moodMatches && userProfile) {
+      const ranked = rankProfiles(userProfile, moodMatches).slice(0, 10);
+      setProfiles(ranked);
+    } else {
+      setProfiles(moodMatches || []);
+    }
     setCurrentIndex(0);
     setDailyLimitReached(false);
     setMoodMatching(false);
@@ -227,7 +252,7 @@ export default function MatchesPage() {
     await supabase.from("discovery_history").insert({
       user_id: user.id,
       discovered_user_id: targetProfile.id,
-      discovered_at: today
+      action
     });
 
     if (action === 'like') {

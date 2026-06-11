@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { VisualEditsMessenger } from "orchids-visual-edits";
 import { Navbar } from "@/components/navbar";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -10,6 +9,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LayoutMain } from "@/components/layout-main";
 import { SparkTrail } from "@/components/spark-trail";
+import { VisualEditsBridge } from "@/components/visual-edits-bridge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,7 +51,7 @@ export default function RootLayout({
                   <Navbar />
                   <SparkTrail />
                   <Toaster position="top-center" richColors />
-                <VisualEditsMessenger />
+                <VisualEditsBridge />
               </AuthProvider>
             </ThemeProvider>
           </body>

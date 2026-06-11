@@ -2,14 +2,70 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { LayoutGrid, MessageCircle, Heart, Users, Search } from "lucide-react";
+import { LayoutGrid, MessageCircle, Heart, Users, Search, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 export function Navbar() {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifCount, setNotifCount] = useState(0);
+  const [user, setUser] = useState<any>(null);
 
-    const isHidden = ["/auth", "/onboarding", "/coach"].includes(pathname) || pathname.startsWith("/profile");
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+        setUser(authUser);
+
+        // Count unread messages for current user
+        const { count, error } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .neq("sender_id", authUser.id)
+          .is("seen_at", null);
+
+        if (!error && count !== null) {
+          setUnreadCount(count);
+        }
+
+        // Count unread notifications
+        const { count: nCount, error: nError } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", authUser.id)
+          .is("read_at", null);
+
+        if (!nError && nCount !== null) {
+          setNotifCount(nCount);
+        }
+      } catch (error) {
+        console.error("Error fetching unread count:", error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel("unread_messages")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+        fetchUnreadCount();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        fetchUnreadCount();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const isHidden = ["/auth", "/onboarding", "/coach", "/notifications"].includes(pathname) || pathname.startsWith("/profile");
   if (isHidden) return null;
 
   const navLinks = [
@@ -17,7 +73,7 @@ export function Navbar() {
     { href: "/messages", label: "Chat", icon: MessageCircle },
     { href: "/search", label: "Search", icon: Search, isAction: true },
     { href: "/matches", label: "Matches", icon: Heart },
-    { href: "/events", label: "Events", icon: Users },
+    { href: "/notifications", label: "Alerts", icon: Bell },
   ];
 
   return (
@@ -61,8 +117,26 @@ export function Navbar() {
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  
+
                   <link.icon className={cn("w-6 h-6 relative z-10", isActive && "text-pink-600 fill-pink-600/20")} />
+                  {link.label === "Chat" && unreadCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg"
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </motion.div>
+                  )}
+                  {link.label === "Alerts" && notifCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 w-6 h-6 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-lg"
+                    >
+                      {notifCount > 99 ? "99+" : notifCount}
+                    </motion.div>
+                  )}
                   <span className={cn(
                     "text-[9px] font-black uppercase tracking-tighter mt-1 relative z-10 transition-all",
                     isActive ? "text-pink-600 opacity-100" : "opacity-0 group-hover:opacity-60"
@@ -71,7 +145,7 @@ export function Navbar() {
                   </span>
 
                     {isActive && (
-                      <motion.div 
+                      <motion.div
                         layoutId="active-dot"
                           className="absolute -bottom-1 w-1 h-1 bg-pink-500 rounded-full shadow-[0_0_8px_rgba(219,39,119,0.2)]"
                       />
