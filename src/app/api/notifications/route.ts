@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Prevent Next.js from pre-rendering this route at build time
+export const dynamic = "force-dynamic";
+
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // GET: Fetch notifications for current user
 export async function GET(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
 
@@ -52,6 +59,8 @@ export async function GET(request: NextRequest) {
 // POST: Create a notification (internal/admin use)
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     const body = await request.json();
     const { user_id, type, title, body: notifBody, metadata } = body;
 
@@ -89,6 +98,8 @@ export async function POST(request: NextRequest) {
 // PATCH: Mark notifications as read
 export async function PATCH(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+
     const body = await request.json();
     const { notification_ids, mark_all } = body;
 

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// This endpoint recalculates quality scores for users.
-// In production, you'd call this from a cron job or Edge Function.
-// For now it can be called manually or via a Supabase scheduled function.
+// Prevent Next.js from pre-rendering this route at build time
+export const dynamic = "force-dynamic";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 interface ScoreFactors {
   hasPhotos: boolean;
@@ -51,44 +52,7 @@ function calculateQualityScore(factors: ScoreFactors): number {
   return Math.max(0, Math.min(200, Math.round(score)));
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    // Optional: validate a secret key for cron security
-    const body = await request.json().catch(() => ({}));
-    const userId = body.user_id;
-
-    // If a specific user ID is provided, update just that user
-    if (userId) {
-      const newScore = await updateUserScore(userId);
-      return NextResponse.json({ success: true, user_id: userId, score: newScore });
-    }
-
-    // Otherwise, batch update all active users
-    const { data: profiles, error } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .order("last_active", { ascending: false, nullsFirst: false })
-      .limit(500);
-
-    if (error) throw error;
-
-    let updated = 0;
-    for (const profile of profiles || []) {
-      await updateUserScore(profile.id);
-      updated++;
-    }
-
-    return NextResponse.json({ success: true, updated });
-  } catch (error: any) {
-    console.error("Quality score update error:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to update quality scores" },
-      { status: 500 }
-    );
-  }
-}
-
-async function updateUserScore(userId: string): Promise<number> {
+async function updateUserScore(supabaseAdmin: ReturnType<typeof createClient>, userId: string): Promise<number> {
   // Fetch profile
   const { data: profile } = await supabaseAdmin
     .from("profiles")
@@ -146,6 +110,45 @@ async function updateUserScore(userId: string): Promise<number> {
   });
 
   return newScore;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // Optional: validate a secret key for cron security
+    const body = await request.json().catch(() => ({}));
+    const userId = body.user_id;
+
+    // If a specific user ID is provided, update just that user
+    if (userId) {
+      const newScore = await updateUserScore(supabaseAdmin, userId);
+      return NextResponse.json({ success: true, user_id: userId, score: newScore });
+    }
+
+    // Otherwise, batch update all active users
+    const { data: profiles, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .order("last_active", { ascending: false, nullsFirst: false })
+      .limit(500);
+
+    if (error) throw error;
+
+    let updated = 0;
+    for (const profile of profiles || []) {
+      await updateUserScore(supabaseAdmin, profile.id);
+      updated++;
+    }
+
+    return NextResponse.json({ success: true, updated });
+  } catch (error: any) {
+    console.error("Quality score update error:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to update quality scores" },
+      { status: 500 }
+    );
+  }
 }
 
 // GET handler for health check
