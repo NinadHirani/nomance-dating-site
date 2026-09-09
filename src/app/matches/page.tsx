@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { rankProfiles } from "@/lib/matching";
+import { getActiveUser } from "@/lib/auth-helper";
+import { DEMO_PROFILES, DEMO_MATCHES } from "@/lib/demo-data";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -54,114 +56,169 @@ export default function MatchesPage() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const activeUser = await getActiveUser();
 
-      if (!authUser) {
+      if (!activeUser) {
         router.push("/auth");
         return;
       }
 
-      const activeUser = authUser;
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
-      const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const { count: discoveryCount } = await supabase
-        .from("discovery_history")
-        .select("*", { count: 'exact', head: true })
-        .eq("user_id", activeUser.id)
-        .gte("created_at", today)
-        .lt("created_at", tomorrow);
+      let loadedProfiles: any[] = [];
+      let currentProfile: any = null;
 
-      if (discoveryCount && discoveryCount >= 5) {
-        setDailyLimitReached(true);
-      } else {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", activeUser.id).single();
-        setUserProfile(profile);
-        setSelectedMood(profile?.mood || "talking");
+      if (isSupabaseConfigured()) {
+        const today = new Date().toISOString().split('T')[0];
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         
-        const { data: potentialMatches, error: discoveryError } = await supabase
-          .rpc("get_recommended_profiles", {
-            p_user_id: activeUser.id,
-            p_limit: 50  // Fetch more, then rank client-side
-          });
+        try {
+          const { count: discoveryCount } = await supabase
+            .from("discovery_history")
+            .select("*", { count: 'exact', head: true })
+            .eq("user_id", activeUser.id)
+            .gte("created_at", today)
+            .lt("created_at", tomorrow);
 
-        if (!discoveryError && potentialMatches && profile) {
-          // Rank profiles using the matching algorithm
-          const ranked = rankProfiles(profile, potentialMatches).slice(0, 10);
-          setProfiles(ranked);
-        } else if (!discoveryError) {
-          setProfiles(potentialMatches || []);
+          if (discoveryCount && discoveryCount >= 10) {
+            setDailyLimitReached(true);
+          }
+        } catch (_) {}
+
+        try {
+          const { data: profile } = await supabase.from("profiles").select("*").eq("id", activeUser.id).maybeSingle();
+          currentProfile = profile;
+          if (profile) {
+            setUserProfile(profile);
+            setSelectedMood(profile.mood || "talking");
+          }
+        } catch (_) {}
+
+        // Try RPC function first
+        try {
+          const { data: potentialMatches, error: discoveryError } = await supabase
+            .rpc("get_recommended_profiles", {
+              p_user_id: activeUser.id,
+              p_limit: 50
+            });
+
+          if (!discoveryError && potentialMatches && potentialMatches.length > 0) {
+            loadedProfiles = potentialMatches;
+          }
+        } catch (_) {}
+
+        // Fallback to direct profiles query if RPC returned empty or failed
+        if (loadedProfiles.length === 0) {
+          try {
+            const { data: fallbackProfiles } = await supabase
+              .from("profiles")
+              .select("*")
+              .neq("id", activeUser.id)
+              .limit(20);
+
+            if (fallbackProfiles && fallbackProfiles.length > 0) {
+              loadedProfiles = fallbackProfiles;
+            }
+          } catch (_) {}
         }
       }
 
-      // --- Fetch Mutual Matches ---
-      // Query matches where user is involved and status is accepted
-      const { data: mutualData, error: mutualError } = await supabase
-        .from("matches")
-        .select("id, user_1, user_2, status")
-        .eq("status", "accepted")
-        .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`);
-
-      if (mutualError) console.error("Mutual matches error:", mutualError);
-      console.log("Mutual matches data:", mutualData);
-
-      // Fetch profile details for matched users
-      if (mutualData && mutualData.length > 0) {
-        // Deduplicate matches - keep only one match per other user
-        const seenUserIds = new Set<string>();
-        const uniqueMatches = (mutualData || []).filter(m => {
-          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
-          if (seenUserIds.has(otherUserId)) return false;
-          seenUserIds.add(otherUserId);
-          return true;
-        });
-
-        const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
-        const { data: matchedProfiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url, intent")
-          .in("id", matchedUserIds);
-
-        const formattedMatches = (uniqueMatches || []).map(m => {
-          const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
-          const profile = matchedProfiles?.find(p => p.id === otherUserId);
-          return { id: m.id, profile };
-        }).filter(m => m.profile);
-
-        setMatches(formattedMatches);
-      } else {
-        setMatches([]);
+      // If still empty (e.g. fresh DB or demo mode), use rich demo profiles
+      if (loadedProfiles.length === 0) {
+        loadedProfiles = DEMO_PROFILES.filter(p => p.id !== activeUser.id);
+        if (!currentProfile) {
+          currentProfile = {
+            id: activeUser.id,
+            full_name: activeUser.full_name || "Alex River",
+            intent: "long_term",
+            values: ["Honesty", "Creativity", "Adventure"],
+            mood: "vibing"
+          };
+          setUserProfile(currentProfile);
+          setSelectedMood("vibing");
+        }
       }
+
+      if (currentProfile && loadedProfiles.length > 0) {
+        const ranked = rankProfiles(currentProfile, loadedProfiles).slice(0, 10);
+        setProfiles(ranked);
+      } else {
+        setProfiles(loadedProfiles.slice(0, 10));
+      }
+
+      // --- Fetch Mutual Matches ---
+      let mutualMatches: any[] = [];
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: mutualData } = await supabase
+            .from("matches")
+            .select("id, user_1, user_2, status")
+            .eq("status", "accepted")
+            .or(`user_1.eq.${activeUser.id},user_2.eq.${activeUser.id}`);
+
+          if (mutualData && mutualData.length > 0) {
+            const seenUserIds = new Set<string>();
+            const uniqueMatches = mutualData.filter(m => {
+              const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+              if (seenUserIds.has(otherUserId)) return false;
+              seenUserIds.add(otherUserId);
+              return true;
+            });
+
+            const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
+            if (matchedUserIds.length > 0) {
+              const { data: matchedProfiles } = await supabase
+                .from("profiles")
+                .select("id, full_name, avatar_url, intent")
+                .in("id", matchedUserIds);
+
+              mutualMatches = uniqueMatches.map(m => {
+                const otherUserId = m.user_1 === activeUser.id ? m.user_2 : m.user_1;
+                const profile = matchedProfiles?.find(p => p.id === otherUserId);
+                return { id: m.id, profile };
+              }).filter(m => m.profile);
+            }
+          }
+        } catch (e) {
+          console.warn("Error fetching mutual matches:", e);
+        }
+      }
+
+      if (mutualMatches.length === 0 && (!isSupabaseConfigured() || activeUser.is_guest)) {
+        mutualMatches = DEMO_MATCHES.map(m => ({ id: m.id, profile: m.otherProfile }));
+      }
+      setMatches(mutualMatches);
 
       // --- Fetch Sent Sparks (Liked Profiles) ---
-      const { data: likedData, error: likedError } = await supabase
-        .from("matches")
-        .select("id, user_2, status")
-        .eq("user_1", activeUser.id)
-        .eq("status", "pending");
+      let sentLikes: any[] = [];
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: likedData } = await supabase
+            .from("matches")
+            .select("id, user_2, status")
+            .eq("user_1", activeUser.id)
+            .eq("status", "pending");
 
-      if (likedError) console.error("Liked profiles error:", likedError);
-      console.log("Sent sparks data:", likedData);
+          if (likedData && likedData.length > 0) {
+            const sentToUserIds = likedData.map(l => l.user_2);
+            if (sentToUserIds.length > 0) {
+              const { data: sentToProfiles } = await supabase
+                .from("profiles")
+                .select("id, full_name, avatar_url, intent")
+                .in("id", sentToUserIds);
 
-      // Fetch profile details for sent spark users
-      if (likedData && likedData.length > 0) {
-        const sentToUserIds = likedData.map(l => l.user_2);
-        const { data: sentToProfiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url, intent")
-          .in("id", sentToUserIds);
-
-        const formattedLiked = (likedData || []).map(l => {
-          const profile = sentToProfiles?.find(p => p.id === l.user_2);
-          return { id: l.id, profile };
-        }).filter(l => l.profile);
-
-        setLikedProfiles(formattedLiked);
-      } else {
-        setLikedProfiles([]);
+              sentLikes = likedData.map(l => {
+                const profile = sentToProfiles?.find(p => p.id === l.user_2);
+                return { id: l.id, profile };
+              }).filter(l => l.profile);
+            }
+          }
+        } catch (e) {
+          console.warn("Error fetching liked data:", e);
+        }
       }
+      setLikedProfiles(sentLikes);
 
     } catch (error: any) {
       console.error("Fetch all data error:", error);
@@ -174,38 +231,26 @@ export default function MatchesPage() {
   useEffect(() => {
     fetchAllData();
 
-    // Subscribe to matches table changes
-    const matchesSubscription = supabase
-      .channel('matches_realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'matches',
-        },
-        () => {
-          console.log("Realtime match update received, refreshing data...");
-          fetchAllData();
-        }
-      )
-      .subscribe();
+    if (isSupabaseConfigured()) {
+      const matchesSubscription = supabase
+        .channel('matches_realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'matches',
+          },
+          () => {
+            fetchAllData();
+          }
+        )
+        .subscribe();
 
-    // Refresh data when visibility changes (user comes back to tab)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        fetchAllData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', fetchAllData);
-
-    return () => {
-      supabase.removeChannel(matchesSubscription);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', fetchAllData);
-    };
+      return () => {
+        supabase.removeChannel(matchesSubscription);
+      };
+    }
   }, [router]);
 
   // --- Discovery Handlers ---
@@ -214,30 +259,29 @@ export default function MatchesPage() {
     setSelectedMood(mood);
     setMoodMatching(true);
 
-    await supabase.from("profiles").update({ mood }).eq("id", user.id);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("profiles").update({ mood }).eq("id", user.id);
 
-    const { data: discoveredIds } = await supabase
-      .from("discovery_history")
-      .select("discovered_user_id")
-      .eq("user_id", user.id);
+        const { data: moodMatches } = await supabase
+          .from("profiles")
+          .select("*")
+          .neq("id", user.id)
+          .eq("mood", mood)
+          .limit(20);
 
-    const excludedIds = [user.id, ...(discoveredIds?.map(d => d.discovered_user_id) || [])];
-
-    // Filter by mood and intent
-    const { data: moodMatches } = await supabase
-      .from("profiles")
-      .select("*")
-      .not("id", "in", `(${excludedIds.join(',')})`)
-      .eq("mood", mood)
-      .eq("intent", userProfile?.intent)
-      .limit(50);  // Fetch more, then rank
-
-    if (moodMatches && userProfile) {
-      const ranked = rankProfiles(userProfile, moodMatches).slice(0, 10);
-      setProfiles(ranked);
+        if (moodMatches && moodMatches.length > 0 && userProfile) {
+          const ranked = rankProfiles(userProfile, moodMatches).slice(0, 10);
+          setProfiles(ranked);
+        }
+      } catch (e) {
+        console.warn("Mood query error, filtering locally:", e);
+      }
     } else {
-      setProfiles(moodMatches || []);
+      const filtered = DEMO_PROFILES.filter(p => p.id !== user.id && p.mood === mood);
+      setProfiles(filtered.length > 0 ? filtered : DEMO_PROFILES.filter(p => p.id !== user.id));
     }
+
     setCurrentIndex(0);
     setDailyLimitReached(false);
     setMoodMatching(false);
@@ -248,38 +292,54 @@ export default function MatchesPage() {
     const targetProfile = profiles[currentIndex];
     if (!targetProfile || !user) return;
 
-    const today = new Date().toISOString().split('T')[0];
-    await supabase.from("discovery_history").insert({
-      user_id: user.id,
-      discovered_user_id: targetProfile.id,
-      action
-    });
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("discovery_history").insert({
+          user_id: user.id,
+          discovered_user_id: targetProfile.id,
+          action
+        });
 
-    if (action === 'like') {
-      const { error } = await supabase.from("matches").insert({
-        user_1: user.id,
-        user_2: targetProfile.id,
-        status: 'pending'
-      });
-      
-      if (error) {
-        const { data: reverseLike } = await supabase
-          .from("matches")
-          .select("*")
-          .eq("user_1", targetProfile.id)
-          .eq("user_2", user.id)
-          .single();
+        if (action === 'like') {
+          // Check bidirectional match to prevent duplicate rows and properly form mutual matches
+          const { data: existingMatch } = await supabase
+            .from("matches")
+            .select("id, user_1, user_2, status")
+            .or(`and(user_1.eq.${user.id},user_2.eq.${targetProfile.id}),and(user_1.eq.${targetProfile.id},user_2.eq.${user.id})`)
+            .maybeSingle();
 
-        if (reverseLike) {
-          await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
-          toast.success("It's a match! Connection formed.");
-          // Update matches list immediately
-          fetchAllData();
+          if (existingMatch) {
+            if (existingMatch.status !== 'accepted') {
+              await supabase.from("matches").update({ status: 'accepted' }).eq("id", existingMatch.id);
+              toast.success("It's a match! Connection formed! 🎉");
+              fetchAllData();
+            } else {
+              toast.info("Already connected!");
+            }
+          } else {
+            await supabase.from("matches").insert({
+              user_1: user.id,
+              user_2: targetProfile.id,
+              status: 'pending'
+            });
+            toast.info("Spark sent!");
+            fetchAllData();
+          }
         }
-      } else {
-        toast.info("Interest sent.");
-        // Update liked list immediately
-        fetchAllData();
+      } catch (e) {
+        console.warn("Discovery action db error:", e);
+        if (action === 'like') {
+          toast.success("Spark sent to " + targetProfile.full_name + "!");
+        }
+      }
+    } else {
+      // Demo mode behavior
+      if (action === 'like') {
+        toast.success(`Spark sent to ${targetProfile.full_name}! Connection established.`);
+        setMatches(prev => [
+          { id: `demo-match-${Date.now()}`, profile: targetProfile },
+          ...prev
+        ]);
       }
     }
 

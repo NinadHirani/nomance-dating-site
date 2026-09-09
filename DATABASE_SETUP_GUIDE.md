@@ -7,7 +7,7 @@
    - ✅ `stories` bucket - for temporary story media
 
 2. **Database Schema File Created:**
-   - `database-setup.sql` - Contains all table definitions with proper relationships, indexes, and RLS policies
+   - `migration/consolidated-database-setup.sql` - Complete master schema with all tables, RLS policies, storage buckets, RPC functions, and triggers
 
 ## 📋 Setup Instructions
 
@@ -17,22 +17,29 @@
 2. Select your project
 3. Navigate to **SQL Editor** (left sidebar)
 4. Click **New Query**
-5. Copy the entire contents of `database-setup.sql` and paste it into the editor
+5. Copy the entire contents of `migration/consolidated-database-setup.sql` and paste it into the editor
 6. Click **Run** button
-7. Wait for execution to complete (should see ✅ for each statement)
+7. Wait for execution to complete (all tables, storage buckets, and functions created)
 
 ### Step 2: Verify Tables
 
-After running the SQL, you should see these tables in your Supabase dashboard under **Table Editor**:
-- `profiles` - User profiles with bio, intent, values, etc.
-- `posts` - Auras/posts with media support
+After running the SQL, you should see all 16 tables in your Supabase dashboard under **Table Editor**:
+- `profiles` - User profiles with bio, intent, values, quality score, etc.
+- `posts` - Auras/posts with media support & likes count
 - `stories` - Temporary 24-hour stories with media
 - `post_skips` - Track skipped posts
-- `user_blocks` - Block users
-- `matches` - Match history between users
-- `messages` - Messages between matched users
-- `discovery_history` - Track user discovery
-- `reports` - Report posts/users
+- `user_blocks` - Block and report users
+- `matches` - Match history and connection status between users
+- `messages` - Messages between matched users with bidirectional RLS
+- `profile_views` - Track profile visitor analytics
+- `discovery_history` - Track user discovery and swipe queue
+- `reports` - Moderation queue for reported posts and users
+- `events` - Community speed dating and social mixer events
+- `event_participants` - RSVPs and event attendees
+- `interest_rooms` - Topic-based audio/chat interest lounges
+- `room_members` - Active members in interest rooms
+- `notifications` - User alerts for matches, messages, and likes
+- `quality_score_log` - Historical trust & safety score tracking
 
 ### Step 3: Test Upload
 

@@ -68,7 +68,7 @@ function AuthContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
-  const [isSignUp, setIsSignUp] = useState(searchParams.get("mode") === "signup");
+  const [isSignUp, setIsSignUp] = useState(searchParams?.get("mode") === "signup");
   const [checkingSession, setCheckingSession] = useState(true);
   const router = useRouter();
 
@@ -128,6 +128,21 @@ function AuthContent() {
       toast.error(error.message || "Google authentication failed");
       setLoading(false);
     }
+  };
+
+  const handleGuestMode = () => {
+    document.cookie = "nomance_guest_mode=true; path=/; max-age=86400";
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nomance_guest_mode", "true");
+      localStorage.setItem("nomance_guest_user", JSON.stringify({
+        id: "00000000-0000-0000-0000-000000000001",
+        email: "demo@nomance.com",
+        full_name: "Alex River",
+        avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80"
+      }));
+    }
+    toast.success("Welcome to Demo Mode! Exploring Nomance.");
+    router.push("/social");
   };
 
 
@@ -341,6 +356,15 @@ function AuthContent() {
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
                   Google
+                </Button>
+
+                <Button 
+                  type="button"
+                  onClick={handleGuestMode}
+                  className="w-full h-14 mt-3 rounded-2xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 text-white border border-pink-500/30 font-black text-[12px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  Explore Demo Mode
                 </Button>
               </div>
             </CardContent>

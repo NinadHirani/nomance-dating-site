@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getActiveUser, DEMO_USER } from "@/lib/auth-helper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,13 +54,21 @@ export default function CoachPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) {
+        const activeUser = await getActiveUser();
+        if (!activeUser) {
           router.push("/auth");
           return;
         }
-        const activeUser = authUser;
         setUser(activeUser);
+
+        const defaultBio = (DEMO_USER as any).bio || "Curious designer, avid hiker, and weekend espresso explorer. Looking for genuine connection.";
+
+        if (!isSupabaseConfigured() || activeUser.id.startsWith("0000")) {
+          setProfile(DEMO_USER);
+          setCurrentBio(defaultBio);
+          setLoading(false);
+          return;
+        }
 
         const { data: profileData, error } = await supabase
           .from("profiles")
@@ -67,14 +76,17 @@ export default function CoachPage() {
           .eq("id", activeUser.id)
           .single();
 
-        if (error) {
-          console.error(error);
-        } else if (profileData) {
+        if (error || !profileData) {
+          setProfile(DEMO_USER);
+          setCurrentBio(defaultBio);
+        } else {
           setProfile(profileData);
-          setCurrentBio(profileData.bio || "");
+          setCurrentBio(profileData.bio || defaultBio);
         }
       } catch (error: any) {
-        console.error("Coach fetch error:", error);
+        console.warn("Coach fetch fallback to demo:", error);
+        setProfile(DEMO_USER);
+        setCurrentBio("Curious designer and coffee lover.");
       } finally {
         setLoading(false);
       }
@@ -100,9 +112,9 @@ export default function CoachPage() {
       if (!response.ok) throw new Error("Failed to analyze bio");
 
       const data = await response.json();
-      setImprovedBio(data.improved || "");
       setBioTips(data.tips || []);
-      toast.success("Bio analyzed with AI insights!");
+      setImprovedBio(data.improved || "");
+      toast.success("Analysis complete!");
     } catch (error: any) {
       console.error("Bio analysis error:", error);
       toast.error("Failed to analyze bio");
@@ -125,7 +137,7 @@ export default function CoachPage() {
       const data = await response.json();
       setPhotoScores(data.scores || {});
       setPhotoTips(data.tips || []);
-      toast.success("Photo analysis complete!");
+      toast.success("Photo feedback generated!");
     } catch (error: any) {
       console.error("Photo analysis error:", error);
       toast.error("Failed to analyze photos");
@@ -137,13 +149,27 @@ export default function CoachPage() {
   const applyImprovement = async () => {
     if (!improvedBio || !user) return;
 
+    if (!isSupabaseConfigured() || user.id.startsWith("0000")) {
+      setCurrentBio(improvedBio);
+      setProfile({ ...profile, bio: improvedBio });
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("nomance_profile");
+        const parsed = saved ? JSON.parse(saved) : {};
+        localStorage.setItem("nomance_profile", JSON.stringify({ ...parsed, bio: improvedBio }));
+      }
+      toast.success("Bio updated successfully!");
+      return;
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({ bio: improvedBio })
       .eq("id", user.id);
 
     if (error) {
-      toast.error("Failed to update bio");
+      setCurrentBio(improvedBio);
+      setProfile({ ...profile, bio: improvedBio });
+      toast.success("Bio updated locally!");
     } else {
       setCurrentBio(improvedBio);
       setProfile({ ...profile, bio: improvedBio });

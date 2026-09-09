@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 export function Footer() {
   const pathname = usePathname();
 
-  const isHidden = ["/auth", "/onboarding"].includes(pathname);
+  const isHidden = !pathname || ["/auth", "/onboarding"].includes(pathname);
   if (isHidden) return null;
 
   return (

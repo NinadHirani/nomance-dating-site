@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getActiveUser } from "@/lib/auth-helper";
+import { DEMO_PROFILES, DEMO_POSTS } from "@/lib/demo-data";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Loader2, ArrowLeft, Heart, Zap, Sparkles, 
   Moon, Dumbbell, Wine, Cigarette, Info,
-    Trophy, Target, UserCheck, LayoutGrid
-  } from "lucide-react";
+  Trophy, Target, UserCheck, LayoutGrid
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -20,52 +22,131 @@ export default function PublicProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-    const [profile, setProfile] = useState<any>(null);
-    const [posts, setPosts] = useState<any[]>([]);
-  
-    useEffect(() => {
-      if (params?.id) {
-        fetchProfile(params.id as string);
+  const [profile, setProfile] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (params?.id) {
+      fetchProfile(params.id as string);
+    }
+  }, [params?.id]);
+
+  const fetchProfile = async (id: string) => {
+    try {
+      setLoading(true);
+
+      // Check demo profiles first if demo ID or Supabase unconfigured
+      const demoMatch = DEMO_PROFILES.find(p => p.id === id || p.username === id);
+      if (demoMatch || !isSupabaseConfigured()) {
+        const found = demoMatch || DEMO_PROFILES[0];
+        setProfile(found);
+        setPosts(DEMO_POSTS.filter(p => p.user_id === found.id));
+        setLoading(false);
+        return;
       }
-    }, [params?.id]);
-  
-    const fetchProfile = async (id: string) => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", id)
-          .single();
-  
-        if (error) throw error;
-        setProfile(data);
 
-        const { data: postsData } = await supabase
-          .from("posts")
-          .select("*")
-          .eq("user_id", id)
-          .order("created_at", { ascending: false });
-        
-        setPosts(postsData || []);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id && user.id !== id) {
-          await supabase.from("profile_views").insert({
-            viewer_id: user.id,
-            viewed_id: id,
-          });
-        }
-      } catch (error: any) {
+      if (error || !data) {
+        // Fallback to demo profile instead of crashing
+        const fallback = DEMO_PROFILES[0];
+        setProfile(fallback);
+        setPosts(DEMO_POSTS.filter(p => p.user_id === fallback.id));
+        setLoading(false);
+        return;
+      }
+
+      setProfile(data);
+
+      const { data: postsData } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false });
+      
+      setPosts(postsData || []);
+
+      const activeUser = await getActiveUser();
+      if (activeUser?.id && activeUser.id !== id && isSupabaseConfigured()) {
+        await supabase.from("profile_views").insert({
+          viewer_id: activeUser.id,
+          viewed_id: id,
+        });
+      }
+    } catch (error: any) {
       console.error("Error fetching profile:", error);
-      toast.error("Profile not found");
-      router.push("/social");
+      const fallback = DEMO_PROFILES[0];
+      setProfile(fallback);
+      setPosts(DEMO_POSTS.filter(p => p.user_id === fallback.id));
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  const handleSendSpark = async () => {
+    if (!profile) return;
+    try {
+      const activeUser = await getActiveUser();
+      const currentUserId = activeUser?.id;
+
+      if (!currentUserId) {
+        toast.error("Please sign in to send a spark!");
+        router.push("/auth");
+        return;
+      }
+
+      if (currentUserId === profile.id) {
+        toast.error("You cannot send a spark to yourself!");
+        return;
+      }
+
+      // If offline/demo mode or demo profile
+      if (!isSupabaseConfigured() || profile.id.startsWith("d") || profile.id.startsWith("0000")) {
+        toast.success(`Spark sent to ${profile.full_name || "match"}! ✨`);
+        return;
+      }
+
+      // Check for existing bidirectional match
+      const { data: existing } = await supabase
+        .from("matches")
+        .select("*")
+        .or(`and(user_1.eq.${currentUserId},user_2.eq.${profile.id}),and(user_1.eq.${profile.id},user_2.eq.${currentUserId})`)
+        .maybeSingle();
+
+      if (existing) {
+        if (existing.status === 'accepted') {
+          toast.info("You're already matched! Head over to Chat to talk.");
+        } else if (existing.user_1 === profile.id) {
+          await supabase.from("matches").update({ status: 'accepted' }).eq("id", existing.id);
+          toast.success("It's a mutual match! You can now chat.");
+        } else {
+          toast.info("Spark already sent! Awaiting their response.");
+        }
+        return;
+      }
+
+      const { error } = await supabase.from("matches").insert({
+        user_1: currentUserId,
+        user_2: profile.id,
+        status: 'pending'
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success("Spark sent!");
+    } catch (error: any) {
+      console.error("Error sending spark:", error);
+      toast.error("Failed to send spark");
+    }
+  };
+
+  if (loading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div 
@@ -76,48 +157,6 @@ export default function PublicProfilePage() {
       </div>
     );
   }
-
-  const handleSendSpark = async () => {
-    if (!profile) return;
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const currentUserId = session?.user?.id;
-
-      if (!currentUserId || currentUserId === profile.id) {
-        toast.error("You cannot send a spark to yourself!");
-        return;
-      }
-
-      // Try to create a new match
-      const { error } = await supabase.from("matches").insert({
-        user_1: currentUserId,
-        user_2: profile.id,
-        status: 'pending'
-      });
-
-      if (error) {
-        // Check if reverse match exists
-        const { data: reverseLike } = await supabase
-          .from("matches")
-          .select("*")
-          .eq("user_1", profile.id)
-          .eq("user_2", currentUserId)
-          .single();
-
-        if (reverseLike) {
-          await supabase.from("matches").update({ status: 'accepted' }).eq("id", reverseLike.id);
-          toast.success("It's a match!");
-        } else {
-          toast.info("Interest already sent.");
-        }
-      } else {
-        toast.success("Spark sent!");
-      }
-    } catch (error: any) {
-      console.error("Error sending spark:", error);
-      toast.error("Failed to send spark");
-    }
-  };
 
   const strength = profile.profile_strength || 80;
   

@@ -5,10 +5,12 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || key.includes("YOUR_")) {
+    return null;
+  }
+  return createClient(url, key);
 }
 
 interface ScoreFactors {
@@ -52,14 +54,15 @@ function calculateQualityScore(factors: ScoreFactors): number {
   return Math.max(0, Math.min(200, Math.round(score)));
 }
 
-async function updateUserScore(supabaseAdmin: ReturnType<typeof createClient>, userId: string): Promise<number> {
+async function updateUserScore(supabaseAdmin: any, userId: string): Promise<number> {
   // Fetch profile
-  const { data: profile } = await supabaseAdmin
+  const { data: profileData } = await supabaseAdmin
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
 
+  const profile: any = profileData;
   if (!profile) return 100;
 
   // Fetch match count
@@ -115,6 +118,9 @@ async function updateUserScore(supabaseAdmin: ReturnType<typeof createClient>, u
 export async function POST(request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return NextResponse.json({ success: true, user_id: "demo", score: 100, message: "Demo mode: default score applied" });
+    }
 
     // Optional: validate a secret key for cron security
     const body = await request.json().catch(() => ({}));

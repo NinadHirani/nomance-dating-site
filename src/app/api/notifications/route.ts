@@ -5,16 +5,45 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 function getSupabaseAdmin() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || key.includes("YOUR_")) {
+    return null;
+  }
+  return createClient(url, key);
 }
 
 // GET: Fetch notifications for current user
 export async function GET(request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return NextResponse.json({
+        notifications: [
+          {
+            id: "notif-1",
+            user_id: "demo",
+            type: "new_match",
+            title: "New Match!",
+            body: "You and Maya Chen liked each other.",
+            read_at: null,
+            created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+            metadata: {},
+          },
+          {
+            id: "notif-2",
+            user_id: "demo",
+            type: "new_like",
+            title: "Someone liked your profile",
+            body: "Chloe Martinez sent you a spark ✨",
+            read_at: null,
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            metadata: {},
+          }
+        ],
+        unread_count: 2,
+      });
+    }
 
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
@@ -60,7 +89,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-
     const body = await request.json();
     const { user_id, type, title, body: notifBody, metadata } = body;
 
@@ -69,6 +97,10 @@ export async function POST(request: NextRequest) {
         { error: "Missing required fields: user_id, type, title" },
         { status: 400 }
       );
+    }
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ success: true, notification: { id: `notif-${Date.now()}`, ...body } });
     }
 
     const { data, error } = await supabaseAdmin
@@ -99,6 +131,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return NextResponse.json({ success: true, message: "Marked as read (demo mode)" });
+    }
 
     const body = await request.json();
     const { notification_ids, mark_all } = body;

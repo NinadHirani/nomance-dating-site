@@ -5,7 +5,7 @@ export interface Profile {
   quality_score?: number;
 }
 
-export function getIntentScore(viewerIntent: string, candidateIntent: string): number {
+export function getIntentScore(viewerIntent?: string, candidateIntent?: string): number {
   if (!viewerIntent || !candidateIntent) return 0.5;
   if (viewerIntent === candidateIntent) return 1.0;
   return 0.5;

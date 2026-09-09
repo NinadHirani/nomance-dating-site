@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LayoutGrid, MessageCircle, Heart, Users, Search, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getActiveUser } from "@/lib/auth-helper";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -15,17 +16,25 @@ export function Navbar() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    let channel: any = null;
+
     const fetchUnreadCount = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser) return;
-        setUser(authUser);
+        const activeUser = await getActiveUser();
+        if (!activeUser) return;
+        setUser(activeUser);
+
+        if (!isSupabaseConfigured() || activeUser.id.startsWith("0000")) {
+          setUnreadCount(1);
+          setNotifCount(2);
+          return;
+        }
 
         // Count unread messages for current user
         const { count, error } = await supabase
           .from("messages")
           .select("*", { count: "exact", head: true })
-          .neq("sender_id", authUser.id)
+          .neq("sender_id", activeUser.id)
           .is("seen_at", null);
 
         if (!error && count !== null) {
@@ -36,36 +45,41 @@ export function Navbar() {
         const { count: nCount, error: nError } = await supabase
           .from("notifications")
           .select("*", { count: "exact", head: true })
-          .eq("user_id", authUser.id)
+          .eq("user_id", activeUser.id)
           .is("read_at", null);
 
         if (!nError && nCount !== null) {
           setNotifCount(nCount);
         }
       } catch (error) {
-        console.error("Error fetching unread count:", error);
+        console.warn("Error fetching unread count:", error);
       }
     };
 
     fetchUnreadCount();
 
-    // Subscribe to new messages
-    const channel = supabase
-      .channel("unread_messages")
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
-        fetchUnreadCount();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
-        fetchUnreadCount();
-      })
-      .subscribe();
+    // Subscribe to new messages if configured
+    if (isSupabaseConfigured()) {
+      channel = supabase
+        .channel("unread_messages")
+        .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+          fetchUnreadCount();
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+          fetchUnreadCount();
+        })
+        .subscribe();
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel && isSupabaseConfigured()) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
-  const isHidden = ["/auth", "/onboarding", "/coach", "/notifications"].includes(pathname) || pathname.startsWith("/profile");
+  const currentPath = pathname || "";
+  const isHidden = ["/auth", "/onboarding", "/coach", "/notifications"].includes(currentPath) || currentPath.startsWith("/profile");
   if (isHidden) return null;
 
   const navLinks = [
@@ -83,7 +97,7 @@ export function Navbar() {
         <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/[0.02] via-transparent to-purple-500/[0.02] pointer-events-none" />
         
         {navLinks.map((link) => {
-          const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+          const isActive = currentPath === link.href || currentPath.startsWith(link.href + '/');
           
           if (link.isAction) {
             return (

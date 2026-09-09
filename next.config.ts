@@ -19,9 +19,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  turbopack: {
-    root: __dirname,
-  },
-} as NextConfig;
+};
 
 export default nextConfig;
