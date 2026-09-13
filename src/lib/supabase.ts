@@ -5,7 +5,7 @@ const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export const isSupabaseConfigured = (): boolean => {
   if (!rawUrl || !rawKey) return false
-  if (rawUrl.includes('placeholder') || rawUrl.includes('ngftjzquzmsfjjbwnuts')) return false
+  if (rawUrl.includes('placeholder')) return false
   if (rawKey.includes('YOUR_ANON_KEY') || rawKey === 'placeholder-key') return false
   return true
 }
