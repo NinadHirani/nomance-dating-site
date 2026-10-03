@@ -43,7 +43,27 @@ src/
 Create a `.env.local` file with:
 
 ```
+# Required
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-Test updates
+
+# Server-side only (API routes: notifications, quality score)
+SUPABASE_SERVICE_ROLE_KEY=...
+
+# Optional: enables the AI dating coach (falls back to built-in tips without it)
+OPENAI_API_KEY=...
+```
+
+Without Supabase credentials the app runs in demo mode with sample profiles.
+
+## Database
+
+Run the SQL files in `migration/` in your Supabase SQL editor. See `DATABASE_SETUP_GUIDE.md` and `SUPABASE_SETUP.md` (Google OAuth) for details.
+
+## Scripts
+
+```bash
+npm run dev     # dev server
+npm run build   # production build (fails on type errors)
+npm run lint    # ESLint
 ```

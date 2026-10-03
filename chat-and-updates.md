@@ -1,5 +1,14 @@
 # Nomance — Remaining Features Roadmap
 
+> **Status update (Oct 3, 2026):** Items 1 to 10 below are now implemented in the codebase:
+> `/api/coach` (OpenAI with built-in fallback tips), unread badge, read receipts, discovery history,
+> matching (`src/lib/matching.ts` → `rankProfiles`), location capture, event creation, story replies,
+> profile views and `/api/quality-score`. Item 11 Phase 1 (in-app notifications: `/notifications` page,
+> `/api/notifications`, `notifications` table in `migration/complete-schema-update.sql`) is done.
+> Still open: item 11 Phase 2 (web push: service worker, VAPID keys, `push_subscription` column) and
+> Phase 3 (transactional email). The project type-checks cleanly and `npm run build` passes.
+> The sections below are the original audit, kept for reference.
+
 > Generated from full codebase audit of `nomance-dating-site-main`.  
 > Stack: Next.js 15 · React 19 · Supabase · TypeScript
 

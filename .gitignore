@@ -3,9 +3,7 @@
 
 # env files
 .env
-.env*.local
-.env.local
-.env
+.env*
 
 
 # dependencies
@@ -45,4 +43,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.env*
+
+# local logs
+*.log

@@ -14,9 +14,11 @@ const nextConfig: NextConfig = {
     ],
   },
   typescript: {
-    ignoreBuildErrors: true,
+    // Type errors now fail the build (the codebase type-checks cleanly).
+    ignoreBuildErrors: false,
   },
   eslint: {
+    // Lint still reports style issues (mostly explicit `any`); run `npm run lint` to see them.
     ignoreDuringBuilds: true,
   },
 };
