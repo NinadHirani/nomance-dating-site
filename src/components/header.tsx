@@ -1,5 +1,6 @@
 "use client";
 
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {

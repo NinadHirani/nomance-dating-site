@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +34,7 @@ const VALUES = ["Honesty", "Ambition", "Family", "Adventure", "Stability", "Crea
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const router = useRouter();
 
   // Form State
@@ -121,7 +121,7 @@ export default function OnboardingPage() {
 
       toast.success("Profile created successfully!");
       router.push("/matches");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Saved profile locally:", error);
       toast.success("Profile created successfully!");
       router.push("/matches");

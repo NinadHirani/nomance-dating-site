@@ -1,8 +1,9 @@
 "use client";
 
+import type { PostRow, ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser, DEMO_USER } from "@/lib/auth-helper";
+import { getActiveUser, DEMO_USER, type CurrentUser } from "@/lib/auth-helper";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +28,9 @@ interface AuraStats {
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [profile, setProfile] = useState<Partial<ProfileRow> | null>(null);
+  const [posts, setPosts] = useState<PostRow[]>([]);
   const [stats, setStats] = useState<AuraStats>({
     sparksReceived: 4,
     sparksGiven: 7,
@@ -61,7 +62,7 @@ export default function ProfilePage() {
       const activeUserId = activeUser.id;
 
       // Check localStorage for any local edits first
-      let localDraft: any = null;
+      let localDraft: Partial<ProfileRow> | null = null;
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("nomance_profile");
         if (saved) {
@@ -148,7 +149,7 @@ export default function ProfilePage() {
         messagesExchanged: 12,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching profile:", error);
       setProfile(DEMO_USER);
     } finally {
@@ -167,7 +168,7 @@ export default function ProfilePage() {
       }
       toast.success("Logged out successfully");
       router.push("/auth");
-    } catch (error: any) {
+    } catch (error: unknown) {
       router.push("/auth");
     }
   };
@@ -199,7 +200,7 @@ export default function ProfilePage() {
 
       setPosts(prev => prev.filter(p => p.id !== postId));
       toast.success("Post deleted");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete post error:", error);
       toast.error("Failed to delete post");
     }
@@ -227,7 +228,7 @@ export default function ProfilePage() {
       setEditingPostId(null);
       setEditingPostContent("");
       toast.success("Post updated");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Edit post error:", error);
       toast.error("Failed to update post");
     }
@@ -332,7 +333,7 @@ export default function ProfilePage() {
                       <Sparkles className="w-12 h-12 text-primary" />
                     </div>
                     <p className="text-lg text-foreground italic font-medium leading-relaxed relative z-10">
-                      "{profile.bio}"
+                      &quot;{profile.bio}&quot;
                     </p>
                   </div>
                 )}
@@ -484,7 +485,7 @@ export default function ProfilePage() {
                           ) : (
                             <div className="w-full h-full flex items-center justify-center p-6">
                               <p className="text-xs font-medium italic text-center text-muted-foreground/60 line-clamp-4">
-                                "{post.content}"
+                                &quot;{post.content}&quot;
                               </p>
                             </div>
                           )}
@@ -505,7 +506,7 @@ export default function ProfilePage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start" className="w-40 rounded-2xl bg-background/95 backdrop-blur-xl border-border p-2">
                                   <DropdownMenuItem
-                                    onClick={() => openEditDialog(post.id, post.content)}
+                                    onClick={() => openEditDialog(post.id, post.content ?? "")}
                                     className="rounded-xl gap-3 cursor-pointer py-2"
                                   >
                                     <Edit3 className="w-4 h-4 text-blue-500" />

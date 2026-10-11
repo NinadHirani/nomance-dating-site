@@ -1,8 +1,9 @@
 "use client";
 
+import type { ProfileRow } from "@/types/models";
 import { useState, useEffect, useRef } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser, DEMO_USER } from "@/lib/auth-helper";
+import { getActiveUser, DEMO_USER, type CurrentUser } from "@/lib/auth-helper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,8 +28,8 @@ interface ChatMessage {
 }
 
 export default function CoachPage() {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [profile, setProfile] = useState<(Partial<ProfileRow> & { id: string }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [currentBio, setCurrentBio] = useState("");
@@ -36,7 +37,7 @@ export default function CoachPage() {
   const [bioTips, setBioTips] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"chat" | "photos" | "bio">("chat");
   const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
-  const [photoScores, setPhotoScores] = useState<any>(null);
+  const [photoScores, setPhotoScores] = useState<Record<string, number | string> | null>(null);
   const [photoTips, setPhotoTips] = useState<string[]>([]);
   const router = useRouter();
 
@@ -61,7 +62,7 @@ export default function CoachPage() {
         }
         setUser(activeUser);
 
-        const defaultBio = (DEMO_USER as any).bio || "Curious designer, avid hiker, and weekend espresso explorer. Looking for genuine connection.";
+        const defaultBio = (DEMO_USER as CurrentUser & { bio?: string }).bio || "Curious designer, avid hiker, and weekend espresso explorer. Looking for genuine connection.";
 
         if (!isSupabaseConfigured() || activeUser.id.startsWith("0000")) {
           setProfile(DEMO_USER);
@@ -83,7 +84,7 @@ export default function CoachPage() {
           setProfile(profileData);
           setCurrentBio(profileData.bio || defaultBio);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Coach fetch fallback to demo:", error);
         setProfile(DEMO_USER);
         setCurrentBio("Curious designer and coffee lover.");
@@ -115,7 +116,7 @@ export default function CoachPage() {
       setBioTips(data.tips || []);
       setImprovedBio(data.improved || "");
       toast.success("Analysis complete!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Bio analysis error:", error);
       toast.error("Failed to analyze bio");
     } finally {
@@ -138,7 +139,7 @@ export default function CoachPage() {
       setPhotoScores(data.scores || {});
       setPhotoTips(data.tips || []);
       toast.success("Photo feedback generated!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Photo analysis error:", error);
       toast.error("Failed to analyze photos");
     } finally {
@@ -151,7 +152,7 @@ export default function CoachPage() {
 
     if (!isSupabaseConfigured() || user.id.startsWith("0000")) {
       setCurrentBio(improvedBio);
-      setProfile({ ...profile, bio: improvedBio });
+      setProfile((prev) => (prev ? { ...prev, bio: improvedBio } : prev));
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("nomance_profile");
         const parsed = saved ? JSON.parse(saved) : {};
@@ -168,11 +169,11 @@ export default function CoachPage() {
 
     if (error) {
       setCurrentBio(improvedBio);
-      setProfile({ ...profile, bio: improvedBio });
+      setProfile((prev) => (prev ? { ...prev, bio: improvedBio } : prev));
       toast.success("Bio updated locally!");
     } else {
       setCurrentBio(improvedBio);
-      setProfile({ ...profile, bio: improvedBio });
+      setProfile((prev) => (prev ? { ...prev, bio: improvedBio } : prev));
       toast.success("Bio updated successfully!");
     }
   };
@@ -202,7 +203,7 @@ export default function CoachPage() {
 
       const data = await response.json();
       setChatMessages(prev => [...prev, { role: "assistant", content: data.response }]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Chat error:", error);
       toast.error("Failed to get coach response");
       setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, I had trouble processing that. Please try again!" }]);
@@ -263,7 +264,7 @@ return (
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as "chat" | "photos" | "bio")}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === tab.id 
                   ? "bg-foreground text-background shadow-xl" 

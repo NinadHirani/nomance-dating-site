@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Heart, MessageCircle, Eye, Zap, Users, Calendar, Check, CheckCheck, Trash2, ArrowLeft } from "lucide-react";
+import { Bell, Heart, MessageCircle, Eye, Zap, Users, Calendar, Check, CheckCheck, Trash2, ArrowLeft, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,11 +21,11 @@ interface Notification {
   title: string;
   body: string | null;
   read_at: string | null;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }
 
-const NOTIFICATION_ICONS: Record<string, { icon: any; color: string; bg: string }> = {
+const NOTIFICATION_ICONS: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   new_match: { icon: Heart, color: "text-pink-500", bg: "bg-pink-500/10" },
   new_message: { icon: MessageCircle, color: "text-blue-500", bg: "bg-blue-500/10" },
   new_like: { icon: Zap, color: "text-yellow-500", bg: "bg-yellow-500/10" },
@@ -38,7 +38,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
       } else {
         setNotifications(data);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Notifications fallback:", error);
       setNotifications(SAMPLE_NOTIFS);
     } finally {
@@ -147,13 +147,13 @@ export default function NotificationsPage() {
       )
     );
 
-    if (isSupabaseConfigured() && !user?.id.startsWith("0000")) {
+    if (isSupabaseConfigured() && user && !user.id.startsWith("0000")) {
       try {
         await supabase
           .from("notifications")
           .update({ read_at: new Date().toISOString() })
           .eq("id", notificationId);
-      } catch (error: any) {}
+      } catch (error: unknown) {}
     }
   };
 
@@ -169,14 +169,14 @@ export default function NotificationsPage() {
     );
     toast.success("All notifications marked as read");
 
-    if (isSupabaseConfigured() && !user?.id.startsWith("0000")) {
+    if (isSupabaseConfigured() && user && !user.id.startsWith("0000")) {
       try {
         await supabase
           .from("notifications")
           .update({ read_at: new Date().toISOString() })
           .eq("user_id", user.id)
           .is("read_at", null);
-      } catch (error: any) {}
+      } catch (error: unknown) {}
     }
   };
 
@@ -293,7 +293,7 @@ export default function NotificationsPage() {
                     All quiet
                   </h2>
                   <p className="text-muted-foreground font-medium italic max-w-xs mx-auto mb-10 leading-relaxed">
-                    When someone interacts with your profile, you'll see it here.
+                    When someone interacts with your profile, you&apos;ll see it here.
                   </p>
                 </motion.div>
               ) : (

@@ -18,8 +18,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    // Lint still reports style issues (mostly explicit `any`); run `npm run lint` to see them.
-    ignoreDuringBuilds: true,
+    // Lint errors now fail the build (the codebase lints with zero errors).
+    ignoreDuringBuilds: false,
   },
 };
 

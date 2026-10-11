@@ -1,8 +1,10 @@
 "use client";
 
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { EventRow, RoomRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,10 +85,10 @@ const EVENT_TYPE_STYLES = {
 };
 
 export default function EventsPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [events, setEvents] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [rooms, setRooms] = useState<RoomRow[]>([]);
   const [joinedEvents, setJoinedEvents] = useState<string[]>([]);
   const [joinedRooms, setJoinedRooms] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,7 +104,7 @@ export default function EventsPage() {
   });
   const router = useRouter();
 
-  const fetchEventsAndRooms = async (currentUser?: any) => {
+  const fetchEventsAndRooms = async (currentUser?: CurrentUser | null) => {
     const activeUser = currentUser || user;
     try {
       if (isSupabaseConfigured()) {
@@ -173,7 +175,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     let mounted = true;
-    let eventsChannel: any = null;
+    let eventsChannel: RealtimeChannel | null = null;
 
     const init = async () => {
       const activeUser = await getActiveUser();
@@ -364,7 +366,7 @@ export default function EventsPage() {
           max_participants: 15,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Notice: Saved event locally:", error);
       const localEvent = {
         id: `local-event-${Date.now()}`,
@@ -573,7 +575,7 @@ export default function EventsPage() {
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <div className="flex items-center gap-2">
                         <Avatar className="w-6 h-6">
-                          <AvatarImage src={event.host?.avatar_url} />
+                          <AvatarImage src={event.host?.avatar_url ?? undefined} />
                           <AvatarFallback className="bg-secondary text-primary text-xs">{event.host?.full_name?.[0] || '?'}</AvatarFallback>
                         </Avatar>
                         <span className="text-sm text-muted-foreground">Hosted by {event.host?.full_name || 'Anonymous'}</span>
@@ -640,7 +642,7 @@ export default function EventsPage() {
                       <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-purple-500 rounded-full" 
-                          style={{ width: `${(event.current_participants / event.max_participants) * 100}%` }}
+                          style={{ width: `${((event.current_participants ?? 0) / (event.max_participants || 1)) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -731,7 +733,7 @@ export default function EventsPage() {
                           <div className="flex items-center gap-3">
                             <div className="text-right">
                               <p className="text-sm font-bold text-foreground">{event.current_participants} joined</p>
-                              <p className="text-xs text-muted-foreground">{event.max_participants - event.current_participants} spots left</p>
+                              <p className="text-xs text-muted-foreground">{(event.max_participants ?? 0) - (event.current_participants ?? 0)} spots left</p>
                             </div>
                             <Button 
                               size="sm" 

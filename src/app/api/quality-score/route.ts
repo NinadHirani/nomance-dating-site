@@ -1,5 +1,8 @@
+import type { ProfileRow } from "@/types/models";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/utils";
 
 // Prevent Next.js from pre-rendering this route at build time
 export const dynamic = "force-dynamic";
@@ -54,7 +57,7 @@ function calculateQualityScore(factors: ScoreFactors): number {
   return Math.max(0, Math.min(200, Math.round(score)));
 }
 
-async function updateUserScore(supabaseAdmin: any, userId: string): Promise<number> {
+async function updateUserScore(supabaseAdmin: SupabaseClient, userId: string): Promise<number> {
   // Fetch profile
   const { data: profileData } = await supabaseAdmin
     .from("profiles")
@@ -62,7 +65,7 @@ async function updateUserScore(supabaseAdmin: any, userId: string): Promise<numb
     .eq("id", userId)
     .single();
 
-  const profile: any = profileData;
+  const profile = profileData as ProfileRow | null;
   if (!profile) return 100;
 
   // Fetch match count
@@ -93,7 +96,7 @@ async function updateUserScore(supabaseAdmin: any, userId: string): Promise<numb
     matchCount: matchCount || 0,
     messagesCount: messagesCount || 0,
     reportsCount: reportsCount || 0,
-    lastActive: profile.last_active,
+    lastActive: profile.last_active ?? null,
   };
 
   const newScore = calculateQualityScore(factors);
@@ -148,10 +151,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Quality score update error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to update quality scores" },
+      { error: getErrorMessage(error) || "Failed to update quality scores" },
       { status: 500 }
     );
   }

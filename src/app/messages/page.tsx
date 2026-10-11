@@ -1,8 +1,9 @@
 "use client";
 
+import type { ChatSummary, MatchRow, MessageRow, ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { DEMO_MATCHES } from "@/lib/demo-data";
 import { LoadingScreen } from "@/components/loading-screen";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,9 +13,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function MessagesListPage() {
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChats] = useState<ChatSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -26,7 +27,7 @@ export default function MessagesListPage() {
         }
         setUser(activeUser);
 
-        let matchesList: any[] = [];
+        let matchesList: MatchRow[] = [];
 
         if (isSupabaseConfigured()) {
           try {
@@ -62,7 +63,7 @@ export default function MessagesListPage() {
 
         // Fetch all matched user IDs and their profiles
         const matchedUserIds = uniqueMatches.map(m => m.user_1 === activeUser.id ? m.user_2 : m.user_1);
-        let allProfiles: any[] = [];
+        let allProfiles: ProfileRow[] = [];
 
         if (matchedUserIds.length > 0) {
           const { data } = await supabase
@@ -78,7 +79,7 @@ export default function MessagesListPage() {
             const otherUserId = match.user_1 === activeUser.id ? match.user_2 : match.user_1;
             const otherProfile = allProfiles?.find(p => p.id === otherUserId);
 
-            let lastMessage = null;
+            let lastMessage: MessageRow | null = null;
             let unreadCount = 0;
 
             try {
@@ -111,8 +112,8 @@ export default function MessagesListPage() {
 
         // Sort by last message date or match creation date
         const sortedChats = chatsWithLastMessage.sort((a, b) => {
-          const timeA = new Date(a.lastMessage?.created_at || (a as any).created_at || 0).getTime();
-          const timeB = new Date(b.lastMessage?.created_at || (b as any).created_at || 0).getTime();
+          const timeA = new Date(a.lastMessage?.created_at || a.created_at || 0).getTime();
+          const timeB = new Date(b.lastMessage?.created_at || b.created_at || 0).getTime();
           return timeB - timeA;
         });
 

@@ -5,7 +5,7 @@ import { useEffect, useState, type ComponentType } from "react";
 const loadVisualEditsMessenger = async () => {
   const importer = new Function("modulePath", "return import(modulePath);") as (
     modulePath: string
-  ) => Promise<{ VisualEditsMessenger: ComponentType<any> }>;
+  ) => Promise<{ VisualEditsMessenger: ComponentType }>;
 
   const mod = await importer("orchids-visual-edits");
   return mod.VisualEditsMessenger;
@@ -13,7 +13,7 @@ const loadVisualEditsMessenger = async () => {
 
 export function VisualEditsBridge() {
   const [VisualEditsMessenger, setVisualEditsMessenger] =
-    useState<ComponentType<any> | null>(null);
+    useState<ComponentType | null>(null);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") {

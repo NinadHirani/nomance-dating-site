@@ -1,8 +1,9 @@
 "use client";
 
+import type { ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser, DEMO_USER } from "@/lib/auth-helper";
+import { getActiveUser, DEMO_USER, type CurrentUser } from "@/lib/auth-helper";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +28,28 @@ const AVAILABLE_VALUES = [
   "Honesty", "Growth", "Freedom", "Stability", "Humor"
 ];
 
+/** The editable fields of the profile form. */
+interface EditableProfile {
+  full_name: string;
+  username: string;
+  bio: string;
+  intent: string;
+  gender: string;
+  birth_date: string;
+  values: string[];
+  avatar_url: string;
+  photos: string[];
+  location_lat: number | null;
+  location_lng: number | null;
+}
+
 export default function EditProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
-  const [profile, setProfile] = useState<any>({
+  const [profile, setProfile] = useState<EditableProfile>({
     full_name: "",
     username: "",
     bio: "",
@@ -62,7 +78,7 @@ export default function EditProfilePage() {
       setUser(activeUser);
 
       // Check localStorage first
-      let cachedProfile: any = null;
+      let cachedProfile: Partial<ProfileRow> | null = null;
       if (typeof window !== "undefined") {
         const saved = localStorage.getItem("nomance_profile");
         if (saved) {
@@ -96,7 +112,7 @@ export default function EditProfilePage() {
       }
 
       // Fallback to cached or demo profile
-      const base = cachedProfile || DEMO_USER;
+      const base: Partial<ProfileRow> = cachedProfile || DEMO_USER;
       setProfile({
         full_name: base.full_name || "",
         username: base.username || "",
@@ -111,7 +127,7 @@ export default function EditProfilePage() {
         location_lng: base.location_lng || null,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load profile, using local draft");
     } finally {
@@ -177,7 +193,7 @@ export default function EditProfilePage() {
       setTimeout(() => {
         router.push("/profile");
       }, 500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Notice: Saved profile locally:", error);
       toast.success("Profile saved locally!");
       setTimeout(() => {
@@ -189,7 +205,7 @@ export default function EditProfilePage() {
   };
 
   const toggleValue = (value: string) => {
-    setProfile((prev: any) => ({
+    setProfile((prev) => ({
       ...prev,
       values: prev.values.includes(value)
         ? prev.values.filter((v: string) => v !== value)
@@ -233,16 +249,18 @@ export default function EditProfilePage() {
               Profile Photos
             </div>
             
-            <PhotoUpload
-              userId={user.id}
-              initialPhotos={photos}
-              onPhotosChange={(newPhotos) => {
-                setPhotos(newPhotos);
-                if (newPhotos && newPhotos.length > 0) {
-                  setProfile({ ...profile, avatar_url: newPhotos[0] });
-                }
-              }}
-            />
+            {user && (
+              <PhotoUpload
+                userId={user.id}
+                initialPhotos={photos}
+                onPhotosChange={(newPhotos) => {
+                  setPhotos(newPhotos);
+                  if (newPhotos && newPhotos.length > 0) {
+                    setProfile({ ...profile, avatar_url: newPhotos[0] });
+                  }
+                }}
+              />
+            )}
             
             <div className="flex items-center gap-2 text-muted-foreground text-xs bg-secondary/20 p-3 rounded-xl">
               <Info className="w-4 h-4 text-primary" />
@@ -398,7 +416,7 @@ export default function EditProfilePage() {
                   if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                       (pos) => {
-                        setProfile((prev: any) => ({
+                        setProfile((prev) => ({
                           ...prev,
                           location_lat: pos.coords.latitude,
                           location_lng: pos.coords.longitude,

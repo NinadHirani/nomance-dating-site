@@ -5,8 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Loader2, Camera, X, GripVertical, Plus, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import Cropper from "react-easy-crop";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import Cropper, { type Area } from "react-easy-crop";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PhotoUploadProps {
@@ -21,12 +21,12 @@ export function PhotoUpload({ userId, initialPhotos, onPhotosChange }: PhotoUplo
   const [croppingImage, setCroppingImage] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [nudge, setNudge] = useState<{ message: string; type: "info" | "success" | "warning" } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
@@ -39,7 +39,7 @@ export function PhotoUpload({ userId, initialPhotos, onPhotosChange }: PhotoUplo
       image.src = url;
     });
 
-  const getCroppedImg = async (imageSrc: string, pixelCrop: any): Promise<Blob | null> => {
+  const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob | null> => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -126,7 +126,7 @@ export function PhotoUpload({ userId, initialPhotos, onPhotosChange }: PhotoUplo
       onPhotosChange(newPhotos);
       setCroppingImage(null);
       toast.success("Photo uploaded!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error:", error);
       toast.error("Failed to upload photo");
     } finally {
@@ -151,7 +151,7 @@ export function PhotoUpload({ userId, initialPhotos, onPhotosChange }: PhotoUplo
     }
   };
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(photos);

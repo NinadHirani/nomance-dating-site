@@ -1,5 +1,6 @@
 "use client";
 
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -7,16 +8,16 @@ import { motion } from "framer-motion";
 import { LayoutGrid, MessageCircle, Heart, Users, Search, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 
 export function Navbar() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifCount, setNotifCount] = useState(0);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
-    let channel: any = null;
+    let channel: RealtimeChannel | null = null;
 
     const fetchUnreadCount = async () => {
       try {

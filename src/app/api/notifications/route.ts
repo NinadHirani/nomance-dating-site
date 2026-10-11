@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getErrorMessage } from "@/lib/utils";
 
 // Prevent Next.js from pre-rendering this route at build time
 export const dynamic = "force-dynamic";
@@ -76,10 +77,10 @@ export async function GET(request: NextRequest) {
       notifications: data || [],
       unread_count: unreadCount || 0,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Notifications fetch error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch notifications" },
+      { error: getErrorMessage(error) || "Failed to fetch notifications" },
       { status: 500 }
     );
   }
@@ -118,10 +119,10 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, notification: data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Notification create error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create notification" },
+      { error: getErrorMessage(error) || "Failed to create notification" },
       { status: 500 }
     );
   }
@@ -173,10 +174,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Provide notification_ids or mark_all" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Notification update error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to update notifications" },
+      { error: getErrorMessage(error) || "Failed to update notifications" },
       { status: 500 }
     );
   }

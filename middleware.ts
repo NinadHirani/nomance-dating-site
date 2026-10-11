@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
 
         // Protect with 3 second timeout so network issues never block page rendering
         const getUserPromise = supabase.auth.getUser()
-        const timeoutPromise = new Promise<any>((resolve) => 
+        const timeoutPromise = new Promise<{ data: { user: null }; error: Error }>((resolve) =>
             setTimeout(() => resolve({ data: { user: null }, error: new Error('Timeout') }), 3000)
         )
         const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise])

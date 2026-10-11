@@ -1,9 +1,10 @@
 "use client";
 
+import type { ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { rankProfiles } from "@/lib/matching";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { DEMO_PROFILES, DEMO_MATCHES } from "@/lib/demo-data";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,20 +36,26 @@ const MOODS = [
   { id: "vibing", label: "Vibing", icon: Sparkles, description: "Casual energy, see what happens", color: "bg-purple-500/10 text-purple-600 border-purple-200" },
 ];
 
+/** A matched or liked person: the match row id plus their profile. */
+interface MatchEntry {
+  id: string;
+  profile?: ProfileRow | null;
+}
+
 export default function MatchesPage() {
   const [activeTab, setActiveTab] = useState("discover");
   
   // Matches & Liked State
-  const [matches, setMatches] = useState<any[]>([]);
-  const [likedProfiles, setLikedProfiles] = useState<any[]>([]);
+  const [matches, setMatches] = useState<MatchEntry[]>([]);
+  const [likedProfiles, setLikedProfiles] = useState<MatchEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const router = useRouter();
 
   // Discovery State
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<ProfileRow | null>(null);
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [moodMatching, setMoodMatching] = useState(false);
@@ -66,8 +73,8 @@ export default function MatchesPage() {
       setUser(activeUser);
 
       // --- Fetch Discovery Data ---
-      let loadedProfiles: any[] = [];
-      let currentProfile: any = null;
+      let loadedProfiles: ProfileRow[] = [];
+      let currentProfile: ProfileRow | null = null;
 
       if (isSupabaseConfigured()) {
         const today = new Date().toISOString().split('T')[0];
@@ -148,7 +155,7 @@ export default function MatchesPage() {
       }
 
       // --- Fetch Mutual Matches ---
-      let mutualMatches: any[] = [];
+      let mutualMatches: MatchEntry[] = [];
       if (isSupabaseConfigured()) {
         try {
           const { data: mutualData } = await supabase
@@ -191,7 +198,7 @@ export default function MatchesPage() {
       setMatches(mutualMatches);
 
       // --- Fetch Sent Sparks (Liked Profiles) ---
-      let sentLikes: any[] = [];
+      let sentLikes: MatchEntry[] = [];
       if (isSupabaseConfigured()) {
         try {
           const { data: likedData } = await supabase
@@ -220,7 +227,7 @@ export default function MatchesPage() {
       }
       setLikedProfiles(sentLikes);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Fetch all data error:", error);
       toast.error("Error loading matches");
     } finally {
@@ -453,7 +460,7 @@ export default function MatchesPage() {
                             <div className="w-48 h-48 rounded-[2rem] overflow-hidden border-4 border-background shadow-2xl relative group/img">
                               <img 
                                 src={profiles[currentIndex].avatar_url || `https://images.unsplash.com/photo-${profiles[currentIndex].gender === 'woman' ? '1494790108377-be9c29b29330' : '1500648767791-00dcc994a43e'}?q=80&w=800&auto=format&fit=crop`}
-                                alt={profiles[currentIndex].full_name}
+                                alt={profiles[currentIndex].full_name ?? undefined}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-110"
                               />
                               <div className="absolute top-2 left-2 flex gap-1">
@@ -599,7 +606,7 @@ export default function MatchesPage() {
     );
   }
   
-  function MatchCard({ profile, id, isMutual }: { profile: any, id: string, isMutual: boolean }) {
+  function MatchCard({ profile, id, isMutual }: { profile?: ProfileRow | null, id: string, isMutual: boolean }) {
     if (!profile) return null;
     
     return (

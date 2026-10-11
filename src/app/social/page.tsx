@@ -1,10 +1,11 @@
 "use client";
 
+import type { PostRow, ProfileRow, StoryGroup, StoryRow } from "@/types/models";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { DEMO_POSTS, DEMO_STORIES } from "@/lib/demo-data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -24,8 +25,21 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { getErrorMessage } from "@/lib/utils";
 
-function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReporting, setReportingPostId, setReportingUserId, handleDeletePost, openEditDialog }: any) {
+interface InstagramCardProps {
+  post: PostRow;
+  user: CurrentUser | null;
+  handleMatchAction: (targetUserId: string, action: "spark" | "pass" | "like", postId: string) => Promise<void>;
+  handleBlock: (targetUserId: string) => Promise<void>;
+  setIsReporting: (value: boolean) => void;
+  setReportingPostId: (value: string | null) => void;
+  setReportingUserId: (value: string | null) => void;
+  handleDeletePost: (postId: string) => Promise<void>;
+  openEditDialog: (postId: string, content: string) => void;
+}
+
+function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReporting, setReportingPostId, setReportingUserId, handleDeletePost, openEditDialog }: InstagramCardProps) {
   const isOwnPost = post.profiles?.id === user?.id;
 
   return (
@@ -35,7 +49,7 @@ function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReport
         <div className="flex items-center gap-3">
           <Link href={`/profile/${post.profiles?.id}`} className="relative group">
             <Avatar className="w-10 h-10 ring-2 ring-primary/20 group-hover:ring-primary transition-all">
-              <AvatarImage src={post.profiles?.avatar_url} />
+              <AvatarImage src={post.profiles?.avatar_url ?? undefined} />
               <AvatarFallback className="bg-secondary">{post.profiles?.full_name?.[0]}</AvatarFallback>
             </Avatar>
           </Link>
@@ -58,7 +72,7 @@ function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReport
           <DropdownMenuContent align="end" className="w-48 rounded-2xl bg-background/95 backdrop-blur-xl">
             {isOwnPost ? (
               <>
-                <DropdownMenuItem onClick={() => openEditDialog(post.id, post.content)} className="rounded-xl py-3 cursor-pointer">
+                <DropdownMenuItem onClick={() => openEditDialog(post.id, post.content ?? "")} className="rounded-xl py-3 cursor-pointer">
                   <Edit3 className="w-4 h-4 mr-2 text-blue-500" /> <span className="font-bold">Edit</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDeletePost(post.id)} className="rounded-xl py-3 cursor-pointer text-red-500">
@@ -127,16 +141,16 @@ function InstagramCard({ post, user, handleMatchAction, handleBlock, setIsReport
 
 export default function SocialPage() {
   const router = useRouter();
-  const [posts, setPosts] = useState<any[]>([]);
-  const [stories, setStories] = useState<any[]>([]);
+  const [posts, setPosts] = useState<PostRow[]>([]);
+  const [stories, setStories] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [userProfile, setUserProfile] = useState<ProfileRow | null>(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostImage, setNewPostImage] = useState("");
   const [newPostMediaType, setNewPostMediaType] = useState("image");
-  const [selectedStory, setSelectedStory] = useState<any>(null);
+  const [selectedStory, setSelectedStory] = useState<StoryGroup | null>(null);
   const [storyIndex, setStoryIndex] = useState(0);
   const [storyReply, setStoryReply] = useState("");
   const [sendingStoryReply, setSendingStoryReply] = useState(false);
@@ -176,7 +190,7 @@ export default function SocialPage() {
       if (!isSupabaseConfigured() || activeUser.id.startsWith("0000")) {
         // Offline / Demo Mode
         setPosts(DEMO_POSTS);
-        const demoGrouped = DEMO_STORIES.reduce((acc: any, story: any) => {
+        const demoGrouped = (DEMO_STORIES as StoryRow[]).reduce<Record<string, StoryGroup>>((acc, story) => {
           if (!acc[story.user_id]) {
             acc[story.user_id] = {
               user: story.profiles,
@@ -213,7 +227,7 @@ export default function SocialPage() {
       
       const blockedUserIds = blocks?.map(b => b.blocker_id === activeUser.id ? b.blocked_id : b.blocker_id) || [];
 
-      let { data: postsData, error: postsError } = await supabase
+      const { data: postsData, error: postsError } = await supabase
         .from("posts")
         .select(`
           *,
@@ -248,7 +262,7 @@ export default function SocialPage() {
         .order("created_at", { ascending: true });
 
       const rawStories = (storiesData && storiesData.length > 0) ? storiesData : DEMO_STORIES;
-      const groupedStories = rawStories.reduce((acc: any, story: any) => {
+      const groupedStories = (rawStories as StoryRow[]).reduce<Record<string, StoryGroup>>((acc, story) => {
         if (!acc[story.user_id]) {
           acc[story.user_id] = {
             user: story.profiles,
@@ -261,10 +275,10 @@ export default function SocialPage() {
       
       setStories(Object.values(groupedStories));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Fetch social fallback to demo:", error);
       setPosts(DEMO_POSTS);
-      const demoGrouped = DEMO_STORIES.reduce((acc: any, story: any) => {
+      const demoGrouped = (DEMO_STORIES as StoryRow[]).reduce<Record<string, StoryGroup>>((acc, story) => {
         if (!acc[story.user_id]) {
           acc[story.user_id] = {
             user: story.profiles,
@@ -346,7 +360,7 @@ export default function SocialPage() {
 
         await supabase.rpc('increment_likes_count', { post_id: postId });
         toast.success("Spark sent!");
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Check if reverse match exists
         const { data: reverseLike } = await supabase
           .from("matches")
@@ -397,7 +411,7 @@ export default function SocialPage() {
         setNewPostImage(publicUrl);
         setNewPostMediaType(mediaType);
         toast.success(`Aura ${mediaType} ready!`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Post image upload error, using local preview:", error);
         const objectUrl = URL.createObjectURL(file);
         setNewPostImage(objectUrl);
@@ -467,15 +481,16 @@ export default function SocialPage() {
         setSelectedStory(null);
         toast.success("Reply sent!");
         router.push(`/messages/${matchId}`);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Story reply error:", error);
-        toast.error(error.message || "Failed to send reply");
+        toast.error(getErrorMessage(error) || "Failed to send reply");
       } finally {
         setSendingStoryReply(false);
       }
     };
 
     const createPost = async () => {
+      if (!user) return;
       if (!newPostContent.trim()) {
         toast.error("What's the vibe?");
         return;
@@ -540,7 +555,7 @@ export default function SocialPage() {
         setNewPostMediaType("image");
         setIsCreatingPost(false);
         toast.success("Your aura has been shared!");
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Notice: Post saved to local feed:", error);
         const newPost = {
           id: `local-post-${Date.now()}`,
@@ -622,7 +637,7 @@ export default function SocialPage() {
 
       toast.success("Moment shared!");
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Story fallback to local display:", error);
       const objectUrl = URL.createObjectURL(file);
       const newStory = {
@@ -646,6 +661,7 @@ export default function SocialPage() {
   };
 
   const nextStory = () => {
+    if (!selectedStory) return;
     if (storyIndex < selectedStory.items.length - 1) {
       setStoryIndex(storyIndex + 1);
     } else {
@@ -674,7 +690,7 @@ export default function SocialPage() {
       
       setPosts(prev => prev.filter(p => p.profiles.id !== targetUserId));
       toast.success("User blocked. You won't see their content anymore.");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Block error:", error);
       toast.error("Failed to block user");
     }
@@ -694,13 +710,14 @@ export default function SocialPage() {
       // Optionally remove their posts from feed too
       setPosts(prev => prev.filter(p => p.profiles.id !== targetUserId));
       toast.success("Unmatched successfully.");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Unmatch error:", error);
       toast.error("Failed to unmatch");
     }
   };
 
   const submitReport = async () => {
+    if (!user) return;
     if (!reportReason.trim() || !reportingUserId) {
       toast.error("Please provide a reason");
       return;
@@ -726,7 +743,7 @@ export default function SocialPage() {
       setReportingPostId(null);
       setReportingUserId(null);
       toast.success("Report submitted. Thank you for keeping Aura safe.");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Report error:", error);
       toast.error("Failed to submit report");
     } finally {
@@ -746,7 +763,7 @@ export default function SocialPage() {
 
       setPosts(prev => prev.filter(p => p.id !== postId));
       toast.success("Post deleted");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete post error:", error);
       toast.error("Failed to delete post");
     } finally {
@@ -777,7 +794,7 @@ export default function SocialPage() {
       setEditingPostId(null);
       setEditingPostContent("");
       toast.success("Post updated");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Edit post error:", error);
       toast.error("Failed to update post");
     } finally {
@@ -826,7 +843,7 @@ export default function SocialPage() {
             >
               <div className="relative">
                 <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarImage src={user?.avatar_url} />
                   <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background text-white">
@@ -872,14 +889,14 @@ export default function SocialPage() {
                 <div className="absolute inset-0">
                   {group.items[group.items.length - 1].media_type === 'video' ? (
                     <video 
-                      src={group.items[group.items.length - 1].image_url} 
+                      src={group.items[group.items.length - 1].image_url ?? undefined} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       muted
                       playsInline
                     />
                   ) : (
                     <img 
-                      src={group.items[group.items.length - 1].image_url} 
+                      src={group.items[group.items.length - 1].image_url ?? undefined} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       alt="Story"
                     />
@@ -892,7 +909,7 @@ export default function SocialPage() {
                   <div className="w-10 h-10 rounded-2xl p-0.5 bg-gradient-to-tr from-blue-500 via-indigo-600 to-purple-600 shadow-lg">
                     <div className="w-full h-full rounded-xl border-2 border-background overflow-hidden">
                       <Avatar className="w-full h-full rounded-none">
-                        <AvatarImage src={group.user?.avatar_url} className="object-cover" />
+                        <AvatarImage src={group.user?.avatar_url ?? undefined} className="object-cover" />
                         <AvatarFallback className="bg-secondary text-[10px]">{group.user?.full_name?.[0]}</AvatarFallback>
                       </Avatar>
                     </div>
@@ -915,7 +932,7 @@ export default function SocialPage() {
           <Card className="bg-card/40 backdrop-blur-xl border-dashed border-muted-foreground/30 rounded-[2.5rem] p-6 hover:shadow-lg transition-all cursor-pointer group" onClick={() => setIsCreatingPost(true)}>
             <div className="flex items-center gap-4">
               <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
-                <AvatarImage src={user?.user_metadata?.avatar_url} />
+                <AvatarImage src={user?.avatar_url} />
                 <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 bg-secondary/20 rounded-2xl h-12 flex items-center px-6 text-muted-foreground/60 italic font-medium">
@@ -1058,7 +1075,7 @@ export default function SocialPage() {
               >
                 {/* Progress Bars */}
                 <div className="absolute top-8 left-8 right-8 flex gap-2 z-20">
-                  {selectedStory.items.map((_: any, i: number) => (
+                  {selectedStory.items.map((_, i: number) => (
                     <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
                       <motion.div 
                         className="h-full bg-white"
@@ -1077,7 +1094,7 @@ export default function SocialPage() {
                 <div className="absolute top-14 left-8 right-8 flex items-center justify-between z-20">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10 border-2 border-blue-500 ring-4 ring-blue-500/20">
-                      <AvatarImage src={selectedStory.user?.avatar_url} />
+                      <AvatarImage src={selectedStory.user?.avatar_url ?? undefined} />
                       <AvatarFallback>{selectedStory.user?.full_name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
@@ -1101,7 +1118,7 @@ export default function SocialPage() {
                   <div className="w-full h-full bg-black flex items-center justify-center">
                     {selectedStory.items[storyIndex].media_type === 'video' ? (
                       <video 
-                        src={selectedStory.items[storyIndex].image_url} 
+                        src={selectedStory.items[storyIndex].image_url ?? undefined} 
                         className="w-full h-full object-cover"
                         autoPlay
                         muted
@@ -1110,7 +1127,7 @@ export default function SocialPage() {
                       />
                     ) : (
                       <img 
-                        src={selectedStory.items[storyIndex].image_url} 
+                        src={selectedStory.items[storyIndex].image_url ?? undefined} 
                         className="w-full h-full object-cover"
                         alt="Story"
                       />
@@ -1164,7 +1181,7 @@ export default function SocialPage() {
           </DialogHeader>
           <div className="p-8 pt-4 space-y-6">
             <p className="text-sm text-muted-foreground font-medium italic">
-              Help us understand what's wrong with this content. Your report is anonymous.
+              Help us understand what&apos;s wrong with this content. Your report is anonymous.
             </p>
             <Textarea 
               placeholder="Reason for reporting (e.g., inappropriate content, harassment...)"

@@ -10,6 +10,7 @@ import { Loader2, Zap, ShieldCheck, Sparkles, Box, Heart } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { getErrorMessage } from "@/lib/utils";
 
 function FallingHearts() {
   const hearts = [...Array(30)];
@@ -107,8 +108,8 @@ function AuthContent() {
         toast.success("Frequency aligned! Welcome back.");
         router.push("/social");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -124,8 +125,8 @@ function AuthContent() {
         },
       });
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message || "Google authentication failed");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error) || "Google authentication failed");
       setLoading(false);
     }
   };

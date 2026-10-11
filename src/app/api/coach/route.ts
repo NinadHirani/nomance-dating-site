@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid request type" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Coach API error:", error);
     return NextResponse.json(
       { message: "Authentic connections take intention. Let's focus on highlighting what makes you genuinely unique!" },

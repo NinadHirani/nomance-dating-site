@@ -1,8 +1,10 @@
 "use client";
 
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { MatchRow, MessageRow, ProfileRow } from "@/types/models";
 import { useState, useEffect, use, useRef, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { getActiveUser } from "@/lib/auth-helper";
+import { getActiveUser, type CurrentUser } from "@/lib/auth-helper";
 import { DEMO_MATCHES, DEMO_PROFILES } from "@/lib/demo-data";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
@@ -30,18 +32,18 @@ const ACTIVITY_IDEAS = [
 export default function MessageDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const matchId = resolvedParams.id;
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MessageRow[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [matchInfo, setMatchInfo] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+  const [matchInfo, setMatchInfo] = useState<(MatchRow & { otherProfile?: ProfileRow }) | null>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [showDatePlanner, setShowDatePlanner] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [otherUserOnline, setOtherUserOnline] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const router = useRouter();
 
   const scrollToBottom = useCallback(() => {
@@ -147,7 +149,7 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           .is("seen_at", null);
 
         setupRealtimeSubscription(activeUser.id, otherUserId);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Messages fetch error:", error);
         // Seamless fallback
         const fallback = DEMO_MATCHES[0];
@@ -183,9 +185,10 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
         }, async (payload) => {
           console.log("New message received via realtime:", payload.new);
           if (!mounted) return;
+          const incoming = payload.new as MessageRow;
           setMessages(prev => {
-            if (prev.some(m => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new];
+            if (prev.some(m => m.id === incoming.id)) return prev;
+            return [...prev, incoming];
           });
 
           if (payload.new.sender_id !== currentUserId) {
@@ -202,7 +205,8 @@ export default function MessageDetailPage({ params }: { params: Promise<{ id: st
           filter: `match_id=eq.${matchId}` 
         }, (payload) => {
           if (!mounted) return;
-          setMessages(prev => prev.map(m => m.id === payload.new.id ? payload.new : m));
+          const updated = payload.new as MessageRow;
+          setMessages(prev => prev.map(m => m.id === updated.id ? updated : m));
         })
         .on('broadcast', { event: 'typing' }, (payload) => {
           if (!mounted) return;

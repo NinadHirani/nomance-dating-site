@@ -1,5 +1,6 @@
 "use client";
 
+import type { PostRow, ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -22,8 +23,8 @@ export default function PublicProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [posts, setPosts] = useState<PostRow[]>([]);
 
   useEffect(() => {
     if (params?.id) {
@@ -77,7 +78,7 @@ export default function PublicProfilePage() {
           viewed_id: id,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching profile:", error);
       const fallback = DEMO_PROFILES[0];
       setProfile(fallback);
@@ -140,7 +141,7 @@ export default function PublicProfilePage() {
       }
 
       toast.success("Spark sent!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending spark:", error);
       toast.error("Failed to send spark");
     }
@@ -210,7 +211,7 @@ export default function PublicProfilePage() {
                     {profile.avatar_url ? (
                       <img
                         src={profile.avatar_url}
-                        alt={profile.full_name}
+                        alt={profile.full_name ?? undefined}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                     ) : (
@@ -371,7 +372,7 @@ export default function PublicProfilePage() {
                             ) : (
                               <div className="w-full h-full flex items-center justify-center p-4">
                                 <p className="text-[8px] font-medium italic text-center text-muted-foreground line-clamp-4">
-                                  "{post.content}"
+                                  &quot;{post.content}&quot;
                                 </p>
                               </div>
                             )}

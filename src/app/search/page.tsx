@@ -1,5 +1,6 @@
 "use client";
 
+import type { ProfileRow } from "@/types/models";
 import { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getActiveUser } from "@/lib/auth-helper";
@@ -22,11 +23,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function SearchPage() {
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<ProfileRow | null>(null);
   const router = useRouter();
 
   const [ageRange, setAgeRange] = useState([18, 50]);
@@ -113,7 +114,7 @@ export default function SearchPage() {
       }
 
       setProfiles(filtered);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn("Search fallback to demo profiles:", error);
       const cleanQuery = debouncedSearchQuery.trim().toLowerCase().replace(/^@/, '');
       let results = DEMO_PROFILES;
@@ -303,7 +304,7 @@ export default function SearchPage() {
                         <Card className="bg-card/50 border-border backdrop-blur-md rounded-3xl overflow-hidden hover:border-primary/30 transition-all group cursor-pointer">
                           <CardContent className="p-4 flex items-center gap-4">
                             <Avatar className="w-16 h-16 rounded-2xl ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
-                              <AvatarImage src={profile.avatar_url} className="object-cover" />
+                              <AvatarImage src={profile.avatar_url ?? undefined} className="object-cover" />
                               <AvatarFallback className="bg-secondary rounded-2xl font-black">{profile.full_name?.[0]}</AvatarFallback>
                             </Avatar>
                           
@@ -321,7 +322,7 @@ export default function SearchPage() {
                             <div className="flex items-center gap-3">
                               <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 <MapPin className="w-3 h-3" />
-                                {profile.location_lat && currentUserProfile?.location_lat
+                                {profile.location_lat && profile.location_lng && currentUserProfile?.location_lat && currentUserProfile.location_lng
                                   ? `${Math.round(calculateDistance(currentUserProfile.location_lat, currentUserProfile.location_lng, profile.location_lat, profile.location_lng))}km`
                                   : 'Hidden'}
                               </div>
